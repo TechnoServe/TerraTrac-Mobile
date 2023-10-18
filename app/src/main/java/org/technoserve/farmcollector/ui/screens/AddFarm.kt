@@ -33,12 +33,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -52,7 +54,9 @@ import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -85,7 +89,7 @@ fun FarmForm(navController: NavController) {
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
     var farmerName by remember { mutableStateOf("") }
-    val farmerPhoto = remember { mutableStateOf<Bitmap>(createDefaultBitmap(50, 50)) }
+    var farmerPhoto by remember { mutableStateOf("") }
     var village by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
     var size by remember { mutableStateOf("") }
@@ -150,13 +154,47 @@ fun FarmForm(navController: NavController) {
     }
     val scrollState = rememberScrollState()
 
-    val cameraLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){
-            capturedImageUri = uri
-            farmerPhoto.value = BitmapFactory.decodeStream(
-                uri?.let { it1 -> context.contentResolver?.openInputStream(it1) }
-            )
+//    val cameraLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){
+//            capturedImageUri = uri
+//            farmerPhoto.value = BitmapFactory.decodeStream(
+//                uri?.let { it1 -> context.contentResolver?.openInputStream(it1) }
+//            )
+//            val stream = ByteArrayOutputStream()
+//            farmerPhoto.value?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+//            val imgAsByteArray: ByteArray = stream.toByteArray()
+//            farmerPhoto.value = BitmapFactory.decodeByteArray(imgAsByteArray, 0, imgAsByteArray.size)
+//        }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
+        uri?.let { it1 ->
+            val imageInputStream = context.contentResolver.openInputStream(it1)
+            val imageFileName = "image${Instant.now().millis}.jpg"
+            val storageDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "EGNSS_IMAGES")
+
+            if (!storageDir.exists()) {
+                storageDir.mkdirs()
+            }
+
+            val imageFile = File(storageDir, imageFileName)
+
+            try {
+                imageInputStream?.use { input ->
+                    FileOutputStream(imageFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                // Update the database with the file path
+                farmerPhoto = imageFile.absolutePath
+                Log.d("farmerphoto","${farmerPhoto}")
+                // Update other fields in the Farm object
+                // Then, insert or update the farm object in your database
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
         }
+    }
 
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -172,6 +210,8 @@ fun FarmForm(navController: NavController) {
             Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
         }
     }
+
+
 
 
 
@@ -216,6 +256,9 @@ fun FarmForm(navController: NavController) {
         
         TextField(
             value = size,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number,
+            ),
             onValueChange = { size = it },
             label = { Text("Size in hectares") },
             modifier = Modifier
@@ -224,8 +267,11 @@ fun FarmForm(navController: NavController) {
         )
         TextField(
             value = purchases,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number,
+            ),
             onValueChange = { purchases = it },
-            label = { Text("Purchases in current year") },
+            label = { Text("Purchases in current year in Kgs") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -280,15 +326,24 @@ fun FarmForm(navController: NavController) {
             Text(text = "Get Coordinates")
         }
 
-        if (capturedImageUri.path?.isNotEmpty() == true)
+        if (!farmerPhoto.isBlank())
         {
+            val imgFile = File(farmerPhoto)
+
+            // on below line we are checking if the image file exist or not.
+            var imgBitmap: Bitmap? = null
+            if (imgFile.exists()) {
+                // on below line we are creating an image bitmap variable
+                // and adding a bitmap to it from image file.
+                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+            }
             Image(
                 modifier = Modifier
                     .size(width = 200.dp, height = 150.dp)
                     .padding(16.dp, 8.dp)
                     .align(Alignment.CenterHorizontally)
                     ,
-                painter = rememberAsyncImagePainter(capturedImageUri),
+                painter = rememberAsyncImagePainter(imgBitmap),
                 contentDescription = null
             )
         }
@@ -329,7 +384,7 @@ fun FarmForm(navController: NavController) {
                 if(isValid){
                     val item = addFarm(
                         farmViewModel,
-                        farmerPhoto.value,
+                        farmerPhoto,
                         farmerName,
                         village,
                         district,
@@ -338,6 +393,9 @@ fun FarmForm(navController: NavController) {
                         latitude,
                         longitude
                     )
+                    val returnIntent = Intent()
+                    context.setResult(Activity.RESULT_OK, returnIntent)
+//                    context.finish()
                     navController.navigate("farmList")
                 }
                 else {
@@ -355,7 +413,7 @@ fun FarmForm(navController: NavController) {
 
 fun addFarm(
     farmViewModel: FarmViewModel,
-    farmerPhoto: Bitmap,
+    farmerPhoto: String,
     farmerName: String,
     village:String,
     district:String,
@@ -374,7 +432,8 @@ fun addFarm(
         size,
         latitude,
         longitude,
-        createdAt = Instant.now().millis
+        createdAt = Instant.now().millis,
+        updatedAt = Instant.now().millis
     )
     farmViewModel.addFarm(farm)
     return farm

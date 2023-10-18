@@ -10,12 +10,11 @@ import org.technoserve.farmcollector.database.converters.BitmapConverter
 import org.technoserve.farmcollector.database.converters.DateConverter
 
 
-@Database(entities = [Farm::class], version = 4, exportSchema = true)
+@Database(entities = [Farm::class], version = 6, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun farmsDAO(): FarmDAO
-
     companion object {
 
         private var INSTANCE: AppDatabase? = null

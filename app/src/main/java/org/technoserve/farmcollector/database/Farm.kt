@@ -11,30 +11,29 @@ import org.technoserve.farmcollector.database.converters.DateConverter
 
 @Entity(tableName = "Farms")
 data class Farm(
-    @ColumnInfo(name = "farmerPhoto", typeAffinity = ColumnInfo.BLOB)
-    @TypeConverters(BitmapConverter::class)
-    val farmerPhoto: Bitmap,
+    @ColumnInfo(name = "farmerPhoto")
+    var farmerPhoto: String,
 
     @ColumnInfo(name = "farmerName")
-    val farmerName: String,
+    var farmerName: String,
 
     @ColumnInfo(name = "village")
-    val village: String,
+    var village: String,
 
     @ColumnInfo(name = "district")
-    val district: String,
+    var district: String,
 
     @ColumnInfo(name = "purchases")
-    val purchases: Float,
+    var purchases: Float,
 
     @ColumnInfo(name = "size")
-    val size: Float,
+    var size: Float,
 
     @ColumnInfo(name = "latitude")
-    val latitude: String,
+    var latitude: String,
 
     @ColumnInfo(name = "longitude")
-    val longitude: String,
+    var longitude: String,
 
     @ColumnInfo(name = "synced")
     val synced: Boolean = false,
@@ -44,7 +43,11 @@ data class Farm(
 
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
-    val createdAt: Long
+    val createdAt: Long,
+
+    @ColumnInfo(name = "updatedAt")
+    @TypeConverters(DateConverter::class)
+    var updatedAt: Long
 ) {
     @PrimaryKey(autoGenerate = true)
     @NonNull
