@@ -8,12 +8,17 @@ import kotlinx.coroutines.launch
 class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: FarmRepository
-    val readAllData: RefreshableLiveData<List<Farm>>
-
+    val readAllSites: RefreshableLiveData<List<CollectionSite>>
+    val readData: RefreshableLiveData<List<Farm>>
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
         repository = FarmRepository(farmDAO)
-        readAllData = RefreshableLiveData{repository.readAllFarms}
+        readAllSites = RefreshableLiveData{repository.readAllSites}
+        readData = RefreshableLiveData{repository.readData}
+    }
+
+    fun readAllData(siteId: Long): LiveData<List<Farm>>{
+        return repository.readAllFarms(siteId)
     }
 
     fun getSingleFarm(farmId: Long): LiveData<List<Farm>>{
@@ -23,6 +28,12 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
     fun addFarm(farm: Farm) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addFarm(farm)
+        }
+    }
+
+    fun addSite(site: CollectionSite) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.addSite(site)
         }
     }
 

@@ -24,6 +24,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.screens.AddFarm
+import org.technoserve.farmcollector.ui.screens.AddSite
+import org.technoserve.farmcollector.ui.screens.CollectionSiteList
 import org.technoserve.farmcollector.ui.screens.FarmList
 import org.technoserve.farmcollector.ui.screens.Home
 import org.technoserve.farmcollector.ui.screens.UpdateFarmForm
@@ -39,7 +41,6 @@ class MainActivity : ComponentActivity() {
             FarmCollectorTheme {
                 val multiplePermissionsState = rememberMultiplePermissionsState(
                     listOf(
-                        android.Manifest.permission.CAMERA,
                         android.Manifest.permission.ACCESS_COARSE_LOCATION,
                         android.Manifest.permission.ACCESS_FINE_LOCATION,
                         android.Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -61,7 +62,7 @@ class MainActivity : ComponentActivity() {
                     val farmViewModel: FarmViewModel = viewModel(
                         factory = FarmViewModelFactory(context.applicationContext as Application)
                     )
-                    val listItems by farmViewModel.readAllData.observeAsState(listOf())
+                    val listItems by farmViewModel.readData.observeAsState(listOf())
                     NavHost(
                         navController = navController,
                         startDestination = "home"
@@ -69,11 +70,23 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             Home(navController)
                         }
-                        composable("farmList") {
-                           FarmList(navController)
+                        composable("siteList") {
+                            CollectionSiteList(navController)
                         }
-                        composable("addFarm") {
-                            AddFarm(navController)
+                        composable("farmList/{siteId}") {backStackEntry ->
+                            val siteId = backStackEntry.arguments?.getString("siteId")
+                            if (siteId != null) {
+                                FarmList(navController = navController, siteId = siteId.toLong() )
+                            }
+                        }
+                        composable("addFarm/{siteId}") {backStackEntry ->
+                            val siteId = backStackEntry.arguments?.getString("siteId")
+                            if (siteId != null) {
+                                AddFarm(navController = navController, siteId = siteId.toLong() )
+                            }
+                        }
+                        composable("addSite") {
+                            AddSite(navController)
                         }
 
                         composable("updateFarm/{farmId}") { backStackEntry ->

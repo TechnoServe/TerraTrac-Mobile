@@ -12,6 +12,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -46,16 +48,21 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -90,7 +97,7 @@ import java.util.Objects
 //data class Farm(val farmerName: String, val village: String, val district: String)
 
 @Composable
-fun FarmList(navController: NavController) {
+fun FarmList(navController: NavController,siteId:Long) {
     val context = LocalContext.current
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -110,7 +117,7 @@ fun FarmList(navController: NavController) {
 //        Farm(farmerName = "Farm H", village = "Village 8", district = "District Y"),
 //        Farm(farmerName = "Farm I", village = "Village 9", district = "District Z"),
 //    )
-    val listItems by farmViewModel.readAllData.observeAsState(listOf())
+    val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
 
     fun onDelete(){
         val toDelete = mutableListOf<Long>()
@@ -143,8 +150,8 @@ fun FarmList(navController: NavController) {
         ) {
             item {
                 FarmListHeader(
-                    title = "Farm List",
-                    onAddFarmClicked = { navController.navigate("addFarm") },
+                    title = stringResource(id = R.string.farm_list),
+                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
                     onBackClicked = { navController.navigateUp() },
                     showAdd = true
                 )
@@ -188,8 +195,8 @@ fun FarmList(navController: NavController) {
         Column(modifier = Modifier
             .fillMaxSize() ){
             FarmListHeader(
-                title = "Farm List",
-                onAddFarmClicked = { navController.navigate("addFarm") },
+                title = stringResource(id = R.string.farm_list),
+                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
                 onBackClicked = { navController.navigateUp() },
                 showAdd = true
             )
@@ -219,22 +226,22 @@ fun DeleteAllDialogPresenter(
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDeleteDialog.value = false },
-            title = { Text(text = "Delete this item") },
+            title = { Text(text = stringResource(id = R.string.delete_this_item)) },
             text = {
                 Column {
-                    Text("Are you sure?")
-                    Text("This item will be deleted.")
+                    Text(stringResource(id = R.string.are_you_sure))
+                    Text(stringResource(id = R.string.item_will_be_deleted))
                 }
             },
 
             confirmButton = {
                 TextButton(onClick = { onProceedFn() }) {
-                    Text(text = "yes")
+                    Text(text = stringResource(id = R.string.yes))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog.value = false }) {
-                    Text(text = "No")
+                    Text(text = stringResource(id = R.string.no))
                 }
             }
         )
@@ -317,13 +324,17 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        modifier = Modifier.weight(1.1f)
+                        modifier = Modifier
+                            .weight(1.1f)
                             .padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "size: ${ farm.size } ha",
+                        text = "${stringResource(id = R.string.size)}: ${ farm.size } ${stringResource(
+                            id = R.string.ha
+                        )}",
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(0.9f)
+                        modifier = Modifier
+                            .weight(0.9f)
                             .padding(bottom = 4.dp)
                     )
                     IconButton(
@@ -346,12 +357,12 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Village: ${farm.village}",
+                        text = "${stringResource(id = R.string.village)}: ${farm.village}",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "District: ${farm.district}",
+                        text = "${stringResource(id = R.string.district)}: ${farm.district}",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f)
                     )
@@ -379,7 +390,7 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
 //                        contentColor = Color.White
 //                    )
                 ) {
-                    Text(text = "Close")
+                    Text(text = stringResource(id = R.string.close))
                 }
             },
             confirmButton = {
@@ -389,42 +400,42 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
                               },
 
                 ) {
-                    Text(text = "Update")
+                    Text(text = stringResource(id = R.string.update))
                 }
             },
             text = {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                    ) {
-                        val imgFile = File(farm.farmerPhoto)
-
-                        // on below line we are checking if the image file exist or not.
-                        var imgBitmap: Bitmap? = null
-                        if (imgFile.exists()) {
-                            // on below line we are creating an image bitmap variable
-                            // and adding a bitmap to it from image file.
-                            imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-                        }
-                        Image(
-                            painter = rememberAsyncImagePainter(imgBitmap),
-                            contentDescription = "Farmer Photo",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(start = 10.dp, end = 10.dp)
-                        )
-                    }
-                    Text(text = "Village: ${farm.village}", modifier = Modifier.padding(top=10.dp))
-                    Text(text = "District: ${farm.district}")
-                    Text(text = "Latitude: ${farm.latitude}")
-                    Text(text = "Longitude: ${farm.longitude}")
-                    Text(text = "Size: ${farm.size} hectares")
-                    Text(text = "Purchases: ${farm.purchases} Kgs")
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(300.dp)
+//                    ) {
+//                        val imgFile = File(farm.farmerPhoto)
+//
+//                        // on below line we are checking if the image file exist or not.
+//                        var imgBitmap: Bitmap? = null
+//                        if (imgFile.exists()) {
+//                            // on below line we are creating an image bitmap variable
+//                            // and adding a bitmap to it from image file.
+//                            imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+//                        }
+//                        Image(
+//                            painter = rememberAsyncImagePainter(farm.farmerPhoto),
+//                            contentDescription = stringResource(id = R.string.farmer_photo),
+//                            contentScale = ContentScale.Fit,
+//                            modifier = Modifier
+//                                .fillMaxSize()
+//                                .padding(start = 10.dp, end = 10.dp)
+//                        )
+//                    }
+                    Text(text = "${stringResource(id = R.string.village)}: ${farm.village}", modifier = Modifier.padding(top=10.dp))
+                    Text(text = "${stringResource(id = R.string.district)}: ${farm.district}")
+                    Text(text = "${stringResource(id = R.string.latitude)}: ${farm.latitude}")
+                    Text(text = "${stringResource(id = R.string.longitude)}: ${farm.longitude}")
+                    Text(text = "${stringResource(id = R.string.size)}: ${farm.size} ${stringResource(id = R.string.ha)}")
+//                    Text(text = "${stringResource(id = R.string.harvested_this_year)}: ${farm.purchases} ${stringResource(id = R.string.kgs)}")
                     // Add more fields as needed
                 }
             }
@@ -459,7 +470,7 @@ fun DownloadCsvButton(farms: List<Farm>) {
                     if (outputStream != null) {
                         PrintWriter(outputStream.bufferedWriter()).use { writer ->
                             // Write the header row
-                            writer.println("Farmer Name, Village, District, Size in Ha, Purchases in Kigs, latitude, longitude , createdAt, updatedAt ")
+                            writer.println("Farmer Name, Village, District, Size in Ha, Cherry harvested this year in Kgs, latitude, longitude , createdAt, updatedAt ")
 
                             // Write each farm's data
                             for (farm in farms) {
@@ -532,7 +543,7 @@ fun DownloadCsvButton(farms: List<Farm>) {
         },
         modifier = Modifier.padding(16.dp)
     ) {
-        Text(text = "Download CSV")
+        Text(text = stringResource(id = R.string.download_csv))
     }
 }
 
@@ -566,7 +577,7 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
         fileOutputStream = FileOutputStream(file)
 
         fileOutputStream
-            .write(""""Farmer Name", "Village", "District", "Size in Ha", "Purchases in Kigs", "latitude", "longitude" , "createdAt", "updatedAt" """.toByteArray())
+            .write(""""Farmer Name", "Village", "District", "Size in Ha", "Cherry harvested this year in Kgs", "latitude", "longitude" , "createdAt", "updatedAt" """.toByteArray())
         fileOutputStream.write(10);
         farms.forEach {
             fileOutputStream.write("${it.farmerName}, ${it.village},${it.district},${it.size},${it.purchases},${it.latitude},${it.longitude},${Date(it.createdAt)}, \"${Date(it.updatedAt)}\"".toByteArray())
@@ -589,12 +600,13 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
 
 
 @SuppressLint("MissingPermission")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>) {
     val floatValue: Float = 123.45f
     val item = listItems.find { it.id == farmId }?: Farm(
 //        id = 0,
+        siteId = 0L,
         farmerName = "Default Farmer",
         farmerPhoto = "Default photo",
         village = "Default Village",
@@ -629,6 +641,10 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
         context.packageName + ".provider", file
     )
 
+    val permission_granted = stringResource(id = R.string.permission_granted)
+    val permission_denied = stringResource(id = R.string.permission_denied)
+    val fill_form = stringResource(id = R.string.fill_form)
+
     fun validateForm(): Boolean {
         var isValid = true
 
@@ -652,10 +668,10 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
             // You can display an error message for this field if needed
         }
 
-        if (purchases.isBlank()) {
-            isValid = false
-            // You can display an error message for this field if needed
-        }
+//        if (purchases.isBlank()) {
+//            isValid = false
+//            // You can display an error message for this field if needed
+//        }
 
 //        if (!isImageUploaded) {
 //            isValid = false
@@ -674,7 +690,9 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
         mutableStateOf<Uri>(Uri.EMPTY)
     }
     val scrollState = rememberScrollState()
-
+    val (focusRequester1) = FocusRequester.createRefs()
+    val (focusRequester2) = FocusRequester.createRefs()
+    val (focusRequester3) = FocusRequester.createRefs()
     var imageInputStream: InputStream? = null
     val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -729,12 +747,12 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
     ){
         if (it)
         {
-            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, permission_granted, Toast.LENGTH_SHORT).show()
             cameraLauncher.launch(uri)
         }
         else
         {
-            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, permission_denied, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -755,59 +773,84 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
             .verticalScroll(state = scrollState)
     ) {
         FarmListHeader(
-            title = "Update Farm",
+            title = stringResource(id = R.string.update_farm),
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
             showAdd = false
 
         )
         TextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester1.requestFocus() }
+            ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text("Farm Name") },
+            label = { Text(stringResource(id = R.string.farm_name)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp).onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER){
+                        focusRequester1.requestFocus()
+                        true
+                    }
+                    false
+                }
         )
         TextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester2.requestFocus() }
+            ),
             value = village,
             onValueChange = { village = it },
-            label = { Text("Village") },
+            label = { Text(stringResource(id = R.string.village)) },
             modifier = Modifier
+                .focusRequester(focusRequester1)
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
         TextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester3.requestFocus() }
+            ),
             value = district,
             onValueChange = { district = it },
-            label = { Text("District") },
+            label = { Text(stringResource(id = R.string.district)) },
             modifier = Modifier
+                .focusRequester(focusRequester2)
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
 
         TextField(
+            singleLine = true,
             value = size,
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
             ),
             onValueChange = { size = it },
-            label = { Text("Size in hectares") },
+            label = { Text(stringResource(id = R.string.size_in_hectares)) },
             modifier = Modifier
+                .focusRequester(focusRequester3)
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
-        TextField(
-            value = purchases,
-            onValueChange = { purchases = it },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-            ),
-            label = { Text("Purchases in current year") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
+//        TextField(
+//            value = purchases,
+//            onValueChange = { purchases = it },
+//            keyboardOptions = KeyboardOptions.Default.copy(
+//                keyboardType = KeyboardType.Number,
+//            ),
+//            label = { Text(stringResource(id = R.string.harvested_this_year_in_kgs)) },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(bottom = 16.dp)
+//        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -817,7 +860,7 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                 readOnly = true,
                 value = latitude,
                 onValueChange = { latitude = it },
-                label = { Text("Latitude") },
+                label = { Text(stringResource(id = R.string.latitude)) },
                 modifier = Modifier
                     .weight(1f)
                     .padding(bottom = 16.dp)
@@ -827,7 +870,7 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                 readOnly = true,
                 value = longitude,
                 onValueChange = { longitude = it },
-                label = { Text("Longitude") },
+                label = { Text(stringResource(id = R.string.longitude)) },
                 modifier = Modifier
                     .weight(1f)
                     .padding(bottom = 16.dp)
@@ -851,77 +894,78 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
 
             },
             modifier = Modifier
-                .fillMaxWidth(0.5f)
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
                 .height(50.dp),
         ) {
-            Text(text = "Get Coordinates")
+            Text(text = stringResource(id = R.string.get_coordinates))
         }
 
-        if (!farmerPhoto.isBlank())
-        {
-            val imgFile = File(farmerPhoto)
+//        if (!farmerPhoto.isBlank())
+//        {
+//            val imgFile = File(farmerPhoto)
+//
+//            // on below line we are checking if the image file exist or not.
+//            var imgBitmap: Bitmap? = null
+//            if (imgFile.exists()) {
+//                // on below line we are creating an image bitmap variable
+//                // and adding a bitmap to it from image file.
+//                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+//            }
+//            Image(
+//                modifier = Modifier
+//                    .size(width = 200.dp, height = 150.dp)
+//                    .padding(16.dp, 8.dp)
+//                    .align(Alignment.CenterHorizontally)
+//                ,
+//                painter = rememberAsyncImagePainter(farmerPhoto),
+//                contentDescription = null
+//            )
+//        }
+//        else
+//        {
+//            Image(
+//                modifier = Modifier
+//                    .size(width = 200.dp, height = 150.dp)
+//                    .padding(16.dp, 8.dp)
+//                    .align(Alignment.CenterHorizontally)
+//                ,
+//                painter = painterResource(id = R.drawable.image_placeholder),
+//                contentDescription = null
+//            )
+//        }
 
-            // on below line we are checking if the image file exist or not.
-            var imgBitmap: Bitmap? = null
-            if (imgFile.exists()) {
-                // on below line we are creating an image bitmap variable
-                // and adding a bitmap to it from image file.
-                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-            }
-            Image(
-                modifier = Modifier
-                    .size(width = 200.dp, height = 150.dp)
-                    .padding(16.dp, 8.dp)
-                    .align(Alignment.CenterHorizontally)
-                ,
-                painter = rememberAsyncImagePainter(imgBitmap),
-                contentDescription = null
-            )
-        }
-        else
-        {
-            Image(
-                modifier = Modifier
-                    .size(width = 200.dp, height = 150.dp)
-                    .padding(16.dp, 8.dp)
-                    .align(Alignment.CenterHorizontally)
-                ,
-                painter = painterResource(id = R.drawable.image_placeholder),
-                contentDescription = null
-            )
-        }
-
-        Button(
-            onClick = {
-                val permissionCheckResult =
-                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-
-                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-                {
-                    cameraLauncher.launch(uri)
-                    isImageUploaded = true
-                }
-                else
-                {
-                    permissionLauncher.launch(Manifest.permission.CAMERA)
-                }
-            }
-        ){
-            Text(text = "take picture")
-        }
+//        Button(
+//            onClick = {
+//                val permissionCheckResult =
+//                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+//
+//                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
+//                {
+//                    cameraLauncher.launch(uri)
+//                    isImageUploaded = true
+//                }
+//                else
+//                {
+//                    permissionLauncher.launch(Manifest.permission.CAMERA)
+//                }
+//            }
+//        ){
+//            Text(text = stringResource(id = R.string.take_picture))
+//        }
         Button(
             onClick = {
                 val isValid = validateForm()
                 if(isValid){
-                    item.farmerPhoto = farmerPhoto
+                    item.farmerPhoto = ""
                     item.farmerName = farmerName
                     item.latitude = latitude
                     item.village = village
                     item.district = district
                     item.longitude = longitude
                     item.size = size.toFloat()
-                    item.purchases = purchases.toFloat()
+                    item.purchases = 0.toFloat()
                     item.updatedAt = Instant.now().millis
                     updateFarm(farmViewModel,item)
                     val returnIntent = Intent()
@@ -930,14 +974,14 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                     navController.navigate("farmList")
                 }
                 else {
-                    Toast.makeText(context, "Please fill in all fields and take a picture", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text(text = "Update Farm")
+            Text(text = stringResource(id = R.string.update_farm))
         }
     }
 }

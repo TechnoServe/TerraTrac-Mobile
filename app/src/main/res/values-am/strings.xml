@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EGNSS4COFFEE</string>
+    <string name="farm_list">የእርሻ ዝርዝር</string>
+    <string name="app_intro">የአውሮፓ ህብረት የደን ጭፍጨፋ ደንብን ለማክበር የቡና መከታተያ መሰረታዊ የሞባይል መተግበሪያ</string>
+    <string name="developed_by">የተገነባው በ</string>
+    <string name="delete_this_item">ይህን ንጥል ሰርዝ</string>
+    <string name="are_you_sure">ኧረ</string>
+    <string name="item_will_be_deleted">ይህ ንጥል ይሰረዛል።</string>
+    <string name="yes">አዎ</string>
+    <string name="no">አይ</string>
+    <string name="size">መጠን</string>
+    <string name="ha">ሄክታር</string>
+    <string name="village">መንደር</string>
+    <string name="district">ወረዳ</string>
+    <string name="close">ገጠመ</string>
+    <string name="update">አዘምን</string>
+    <string name="farmer_photo">የገበሬ ፎቶ</string>
+    <string name="latitude">ኬክሮስ</string>
+    <string name="longitude">ኬንትሮስ</string>
+    <string name="harvested_this_year">ቼሪ በዚህ አመት ተሰብስቧል</string>
+    <string name="kgs">ኪሎግራም</string>
+    <string name="download_csv">ሰነድ አውርድ</string>
+    <string name="update_farm">እርሻን አዘምን</string>
+    <string name="farm_name">የእርሻ ስም</string>
+    <string name="size_in_hectares">በሄክታር መጠን</string>
+    <string name="harvested_this_year_in_kgs">ቼሪ በዚህ ዓመት በኪሎግራም ተሰብስቧል</string>
+    <string name="get_coordinates">መጋጠሚያዎችን ያግኙ</string>
+    <string name="take_picture">ፎቶ አንሳ</string>
+    <string name="add_farm">እርሻ አክል</string>
+    <string name="permission_granted">ፍቃድ ተሰጥቷል።</string>
+    <string name="permission_denied">የተሰረዘ ፈቃድ</string>
+    <string name="fill_form">እባክዎን ሁሉንም መስኮች ይሙሉ እና ፎቶ ያንሱ</string>
+    <string name="collection_site_list">Collection sites</string>
+    <string name="add_site">Add site</string>
+    <string name="site_name">Site name</string>
+</resources>

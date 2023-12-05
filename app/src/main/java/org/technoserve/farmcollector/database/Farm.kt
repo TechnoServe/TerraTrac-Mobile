@@ -4,13 +4,27 @@ import android.graphics.Bitmap
 import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import org.technoserve.farmcollector.database.converters.BitmapConverter
 import org.technoserve.farmcollector.database.converters.DateConverter
 
-@Entity(tableName = "Farms")
+@Entity(
+    tableName = "Farms",
+    foreignKeys = [
+        ForeignKey(
+            entity = CollectionSite::class,
+            parentColumns = ["siteId"],
+            childColumns = ["siteId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class Farm(
+    @ColumnInfo(name = "siteId")
+    var siteId: Long,
+
     @ColumnInfo(name = "farmerPhoto")
     var farmerPhoto: String,
 
@@ -67,4 +81,22 @@ data class Farm(
     override fun hashCode(): Int {
         return id.hashCode()
     }
+}
+
+@Entity(tableName = "CollectionSites")
+data class CollectionSite(
+    @ColumnInfo(name = "name")
+    var name: String,
+
+    @ColumnInfo(name = "createdAt")
+    @TypeConverters(DateConverter::class)
+    val createdAt: Long,
+
+    @ColumnInfo(name = "updatedAt")
+    @TypeConverters(DateConverter::class)
+    var updatedAt: Long
+) {
+    @PrimaryKey(autoGenerate = true)
+    @NonNull
+    var siteId: Long = 0L
 }

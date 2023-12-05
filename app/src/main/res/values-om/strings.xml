@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EGNSS4COFFEE</string>
+    <string name="farm_list">Tarree Qonnaa</string>
+    <string name="app_intro">Dambii bosona ciruu Gamtaa Awurooppaa eeguuf appii mobaayilaa bu\'uuraa hordoffii bunaa</string>
+    <string name="developed_by">Kan qopheesse</string>
+    <string name="delete_this_item">Wanticha kana haqi</string>
+    <string name="are_you_sure">Mirkaneeffatteettaa?</string>
+    <string name="item_will_be_deleted">Wanti kun ni haqama.</string>
+    <string name="yes">Eeyyee</string>
+    <string name="no">Lakki</string>
+    <string name="size">Hamma ga\'u</string>
+    <string name="ha">hektaara</string>
+    <string name="village">Baadiyyaa</string>
+    <string name="district">Aanaa</string>
+    <string name="close">Cufuu</string>
+    <string name="update">gulaaluu</string>
+    <string name="farmer_photo">Suuraa Qotee Bulaa</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="harvested_this_year">Cheerii bara kana sassaabame</string>
+    <string name="kgs">kiiloo giraama</string>
+    <string name="download_csv">tarree buufachuuf</string>
+    <string name="update_farm">Qonna Fooyyessi</string>
+    <string name="farm_name">Maqaa qonnaan bulaa</string>
+    <string name="size_in_hectares">Bal’inni isaa hektaaradhaan</string>
+    <string name="harvested_this_year_in_kgs">Cheerii bara kana kiiloogiraamaan sassaabame</string>
+    <string name="get_coordinates">Qindeessitoota Argachuu</string>
+    <string name="take_picture">Suuraa Fudhadhaa</string>
+    <string name="add_farm">Qonna Dabalaa</string>
+    <string name="permission_granted">Hayyamni Kenname</string>
+    <string name="permission_denied">Hayyamni Dhorkame</string>
+    <string name="fill_form">Dirree hunda guutaa suuraa ka\'aa</string>
+    <string name="collection_site_list">Collection sites</string>
+    <string name="add_site">Add site</string>
+    <string name="site_name">Site name</string>
+</resources>

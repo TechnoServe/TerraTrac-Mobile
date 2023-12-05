@@ -10,7 +10,7 @@ import org.technoserve.farmcollector.database.converters.BitmapConverter
 import org.technoserve.farmcollector.database.converters.DateConverter
 
 
-@Database(entities = [Farm::class], version = 6, exportSchema = true)
+@Database(entities = [Farm::class,CollectionSite::class], version = 8, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 

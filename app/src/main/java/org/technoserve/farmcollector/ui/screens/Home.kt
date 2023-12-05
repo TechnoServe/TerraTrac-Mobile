@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -50,17 +51,16 @@ fun Home(navController: NavController) {
         Image(painter = painterResource(id = R.drawable.logo_euspa), null)
         Button(
             onClick = {
-                navController.navigate("farmList")
+                navController.navigate("siteList")
             },
             modifier = Modifier
-                .padding(50.dp)
-                .requiredWidth(160.dp),
+                .padding(50.dp),
             shape = RoundedCornerShape(20.dp),
             enabled = true,
 
         ) {
                 Text(
-                    text = "Farm List",
+                    text = stringResource(id = R.string.collection_site_list),
                     modifier = Modifier.padding(12.dp, 4.dp, 12.dp, 4.dp),
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -74,7 +74,7 @@ fun Home(navController: NavController) {
                 .padding(20.dp)
         ) {
             Text(
-                text = "Basic mobile app for coffee traceability for compliance with EU deforestation regulation",
+                text = stringResource(id = R.string.app_intro),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold
                 ),
@@ -83,7 +83,7 @@ fun Home(navController: NavController) {
             )
         }
         Spacer(modifier = Modifier.height(50.dp))
-        Text(modifier = Modifier.padding(20.dp), text = "Developed By")
+        Text(modifier = Modifier.padding(20.dp), text = stringResource(id = R.string.developed_by))
         Spacer(modifier = Modifier.height(5.dp))
         Image(painter = painterResource(id = R.drawable.technoserve_labs), null)
     }

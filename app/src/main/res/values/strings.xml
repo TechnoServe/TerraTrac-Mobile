@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">EGNSS4COFFEE</string>
+    <string name="farm_list">Farm List</string>
+    <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
+    <string name="developed_by">Developed By</string>
+    <string name="delete_this_item">Delete this item</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="item_will_be_deleted">This item will be deleted.</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="size">Size</string>
+    <string name="ha">Ha</string>
+    <string name="village">Village</string>
+    <string name="district">District</string>
+    <string name="close">Close</string>
+    <string name="update">Update</string>
+    <string name="farmer_photo">Farmer Photo</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="harvested_this_year">Cherry harvested this year</string>
+    <string name="kgs">Kgs</string>
+    <string name="download_csv">Download Csv</string>
+    <string name="update_farm">Update Farm</string>
+    <string name="farm_name">Farmer Name</string>
+    <string name="size_in_hectares">Size in hectares</string>
+    <string name="harvested_this_year_in_kgs">Cherry harvested this year in Kgs</string>
+    <string name="get_coordinates">Get Coordinates</string>
+    <string name="take_picture">Take Picture</string>
+    <string name="add_farm">Add Farm</string>
+    <string name="permission_granted">Permission Granted</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="fill_form">Please fill in all fields and take a picture</string>
+    <string name="collection_site_list">Collection sites</string>
+    <string name="add_site">Add site</string>
+    <string name="site_name">Site name</string>
 </resources>

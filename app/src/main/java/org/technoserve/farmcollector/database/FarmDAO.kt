@@ -7,11 +7,22 @@ import androidx.room.*
 interface FarmDAO {
 
     @Transaction
+    @Query("SELECT * FROM Farms WHERE siteId = :siteId ORDER BY createdAt DESC")
+    fun getAll(siteId: Long): LiveData<List<Farm>>
+
+    @Transaction
+    @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
+    fun getSites(): LiveData<List<CollectionSite>>
+
+    @Transaction
     @Query("SELECT * FROM Farms ORDER BY createdAt DESC")
-    fun getAll(): LiveData<List<Farm>>
+    fun getData(): LiveData<List<Farm>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(farm: Farm)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    fun insertSite(site: CollectionSite)
 
     @Transaction
     @Query("SELECT * FROM Farms WHERE id = :id ORDER BY id DESC")
