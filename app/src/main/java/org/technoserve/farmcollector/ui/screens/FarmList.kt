@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
@@ -74,6 +75,9 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -95,9 +99,10 @@ import java.util.Date
 import java.util.Objects
 
 //data class Farm(val farmerName: String, val village: String, val district: String)
-
+var siteID =0L
 @Composable
 fun FarmList(navController: NavController,siteId:Long) {
+    siteID=siteId
     val context = LocalContext.current
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -152,7 +157,8 @@ fun FarmList(navController: NavController,siteId:Long) {
                 FarmListHeader(
                     title = stringResource(id = R.string.farm_list),
                     onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                    onBackClicked = { navController.navigateUp() },
+                   // onBackClicked = { navController.navigateUp() }, siteList
+                    onBackClicked = { navController.navigate("siteList") },
                     showAdd = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -881,18 +887,30 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                 // Simulate collecting latitude and longitude
 
                 if (context.hasLocationPermission()) {
-                    fusedLocationClient.lastLocation.addOnSuccessListener { locationResult ->
-                        locationResult?.let { lastLocation ->
-                            latitude = "${lastLocation.latitude}"
-                            longitude = "${lastLocation.longitude}"
-                            Log.d("FARM_LOCATION",mylocation.value)
-                        }
-                    }.addOnFailureListener { e ->
-                        Log.d("LOCATION_ERROR","${e.message}")
+                    val locationRequest = LocationRequest.create().apply {
+                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                        interval = 10000 // Update interval in milliseconds
+                        fastestInterval = 5000 // Fastest update interval in milliseconds
                     }
+
+                    fusedLocationClient.requestLocationUpdates(
+                        locationRequest,
+                        object : LocationCallback() {
+                            override fun onLocationResult(locationResult: LocationResult) {
+                                locationResult.lastLocation?.let { lastLocation ->
+                                    // Handle the new location
+                                    latitude = "${lastLocation.latitude}"
+                                    longitude = "${lastLocation.longitude}"
+                                   // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                }
+                            }
+                        },
+                        Looper.getMainLooper()
+                    )
                 }
 
             },
+
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
@@ -971,7 +989,8 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()
-                    navController.navigate("farmList")
+                    navController.navigate("farmList/${siteID}")
+
                 }
                 else {
                     Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()

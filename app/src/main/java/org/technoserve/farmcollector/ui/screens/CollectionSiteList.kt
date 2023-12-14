@@ -63,7 +63,7 @@ fun CollectionSiteList(navController: NavController) {
     fun onDelete(){
         val toDelete = mutableListOf<Long>()
         toDelete.addAll(selectedIds)
-        farmViewModel.deleteList(toDelete)
+        farmViewModel.deleteListSite(toDelete)
         selectedIds.removeAll(selectedIds)
         showDeleteDialog.value = false
     }
@@ -93,7 +93,8 @@ fun CollectionSiteList(navController: NavController) {
                 FarmListHeader(
                     title = stringResource(id = R.string.collection_site_list),
                     onAddFarmClicked = { navController.navigate("addSite") },
-                    onBackClicked = { navController.navigateUp() },
+                  //  onBackClicked = { navController.navigateUp() }
+                    onBackClicked = { navController.navigate("home") },
                     showAdd = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))

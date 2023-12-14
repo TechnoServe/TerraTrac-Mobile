@@ -54,4 +54,7 @@ interface FarmDAO {
     @Query("DELETE FROM Farms WHERE id IN (:ids)")
     fun deleteList(ids: List<Long>)
 
+    @Query("DELETE FROM CollectionSites WHERE siteId IN (:ids)")
+    fun deleteListSite(ids: List<Long>)
+
 }

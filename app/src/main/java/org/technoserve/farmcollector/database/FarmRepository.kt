@@ -49,6 +49,8 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     suspend fun deleteList(ids: List<Long>){
         farmDAO.deleteList(ids)
     }
-
+    suspend fun deleteListSite(ids: List<Long>){
+        farmDAO.deleteListSite(ids)
+    }
 
 }

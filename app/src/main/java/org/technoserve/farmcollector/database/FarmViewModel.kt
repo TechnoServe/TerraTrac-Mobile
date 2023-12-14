@@ -76,6 +76,12 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
             repository.deleteList(ids)
         }
     }
+
+    fun deleteListSite(ids: List<Long>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteListSite(ids)
+        }
+    }
 }
 
 class FarmViewModelFactory(

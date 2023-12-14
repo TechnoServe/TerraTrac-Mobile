@@ -23,6 +23,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.KeyEvent
@@ -56,6 +57,9 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 import org.joda.time.Instant
@@ -360,15 +364,26 @@ fun FarmForm(navController: NavController,siteId: Long) {
                 // Simulate collecting latitude and longitude
 
                 if (context.hasLocationPermission()) {
-                    fusedLocationClient.lastLocation.addOnSuccessListener { locationResult ->
-                        locationResult?.let { lastLocation ->
-                            latitude = "${lastLocation.latitude}"
-                            longitude = "${lastLocation.longitude}"
-                            Log.d("FARM_LOCATION",mylocation.value)
-                        }
-                    }.addOnFailureListener { e ->
-                        Log.d("LOCATION_ERROR","${e.message}")
+                    val locationRequest = LocationRequest.create().apply {
+                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                        interval = 10000 // Update interval in milliseconds
+                        fastestInterval = 5000 // Fastest update interval in milliseconds
                     }
+
+                    fusedLocationClient.requestLocationUpdates(
+                        locationRequest,
+                        object : LocationCallback() {
+                            override fun onLocationResult(locationResult: LocationResult) {
+                                locationResult.lastLocation?.let { lastLocation ->
+                                    // Handle the new location
+                                    latitude = "${lastLocation.latitude}"
+                                    longitude = "${lastLocation.longitude}"
+                                    //Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                }
+                            }
+                        },
+                        Looper.getMainLooper()
+                    )
                 }
 
             },
