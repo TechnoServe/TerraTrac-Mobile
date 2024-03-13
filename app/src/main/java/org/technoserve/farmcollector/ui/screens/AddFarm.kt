@@ -32,6 +32,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -42,6 +43,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.onKeyEvent
@@ -78,7 +80,7 @@ import java.util.Objects
 
 
 @Composable
-fun AddFarm(navController: NavController,siteId: Long) {
+fun AddFarm(navController: NavController, siteId: Long) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -92,14 +94,14 @@ fun AddFarm(navController: NavController,siteId: Long) {
 
         )
         Spacer(modifier = Modifier.height(16.dp))
-        FarmForm(navController,siteId)
+        FarmForm(navController, siteId)
     }
 }
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun FarmForm(navController: NavController,siteId: Long) {
+fun FarmForm(navController: NavController, siteId: Long) {
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
     var farmerName by remember { mutableStateOf("") }
@@ -183,61 +185,61 @@ fun FarmForm(navController: NavController,siteId: Long) {
 //        }
 
     var imageInputStream: InputStream? = null
-    val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val treeUri = result.data?.data
+    val resultLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val treeUri = result.data?.data
 
-            if (treeUri != null) {
-                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
+                if (treeUri != null) {
+                    val takeFlags =
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
 
-                // Now, you have permission to write to the selected directory
-                val imageFileName = "image${Instant.now().millis}.jpg"
+                    // Now, you have permission to write to the selected directory
+                    val imageFileName = "image${Instant.now().millis}.jpg"
 
-                val selectedDir = DocumentFile.fromTreeUri(context, treeUri)
-                val imageFile = selectedDir?.createFile("image/jpeg", imageFileName)
+                    val selectedDir = DocumentFile.fromTreeUri(context, treeUri)
+                    val imageFile = selectedDir?.createFile("image/jpeg", imageFileName)
 
-                imageFile?.uri?.let { fileUri ->
-                    try {
-                        imageInputStream?.use { input ->
-                            context.contentResolver.openOutputStream(fileUri)?.use { output ->
-                                input.copyTo(output)
+                    imageFile?.uri?.let { fileUri ->
+                        try {
+                            imageInputStream?.use { input ->
+                                context.contentResolver.openOutputStream(fileUri)?.use { output ->
+                                    input.copyTo(output)
+                                }
                             }
-                        }
 
-                        // Update the database with the file path
-                        farmerPhoto = fileUri.toString()
-                        Log.d("farmerphoto", "$farmerPhoto")
-                        // Update other fields in the Farm object
-                        // Then, insert or update the farm object in your database
-                    } catch (e: IOException) {
-                        e.printStackTrace()
+                            // Update the database with the file path
+                            farmerPhoto = fileUri.toString()
+                            Log.d("farmerphoto", "$farmerPhoto")
+                            // Update other fields in the Farm object
+                            // Then, insert or update the farm object in your database
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
         }
-    }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
-        uri?.let { it1 ->
-            imageInputStream = context.contentResolver.openInputStream(it1)
+    val cameraLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
+            uri?.let { it1 ->
+                imageInputStream = context.contentResolver.openInputStream(it1)
 
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-            resultLauncher.launch(intent)
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                resultLauncher.launch(intent)
+            }
         }
-    }
 
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ){
-        if (it)
-        {
+    ) {
+        if (it) {
             Toast.makeText(context, permission_granted, Toast.LENGTH_SHORT).show()
             cameraLauncher.launch(uri)
-        }
-        else
-        {
+        } else {
             Toast.makeText(context, permission_denied, Toast.LENGTH_SHORT).show()
         }
     }
@@ -273,8 +275,9 @@ fun FarmForm(navController: NavController,siteId: Long) {
             label = { Text(stringResource(id = R.string.farm_name)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp).onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER){
+                .padding(bottom = 16.dp)
+                .onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
                         true
                     }
@@ -309,14 +312,16 @@ fun FarmForm(navController: NavController,siteId: Long) {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
-        
+
         TextField(
             singleLine = true,
             value = size,
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
             ),
-            onValueChange = { size = it },
+            onValueChange = {
+                size = it
+            },
             label = { Text(stringResource(id = R.string.size_in_hectares)) },
             modifier = Modifier
                 .focusRequester(focusRequester3)
@@ -335,35 +340,37 @@ fun FarmForm(navController: NavController,siteId: Long) {
 //                .padding(bottom = 16.dp)
 //        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextField(
-                readOnly = true,
-                value = latitude,
-                onValueChange = { latitude = it },
-                label = { Text(stringResource(id = R.string.latitude)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(bottom = 16.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
-            TextField(
-                readOnly = true,
-                value = longitude,
-                onValueChange = { longitude = it },
-                label = { Text(stringResource(id = R.string.longitude)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(bottom = 16.dp)
-            )
+        if (size.toFloatOrNull() ?: 0f <= 4f) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                TextField(
+                    readOnly = true,
+                    value = latitude,
+                    onValueChange = { latitude = it },
+                    label = { Text(stringResource(id = R.string.latitude)) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(bottom = 16.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
+                TextField(
+                    readOnly = true,
+                    value = longitude,
+                    onValueChange = { longitude = it },
+                    label = { Text(stringResource(id = R.string.longitude)) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(bottom = 16.dp)
+                )
+            }
         }
         Button(
             onClick = {
                 // Simulate collecting latitude and longitude
 
-                if (context.hasLocationPermission()) {
+                if (context.hasLocationPermission() && (size.toFloatOrNull() ?: 0f < 4f)) {
                     val locationRequest = LocationRequest.create().apply {
                         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                         interval = 10000 // Update interval in milliseconds
@@ -384,6 +391,9 @@ fun FarmForm(navController: NavController,siteId: Long) {
                         },
                         Looper.getMainLooper()
                     )
+                }else
+                {
+                    navController.navigate("setPolygon")
                 }
 
             },
@@ -393,7 +403,13 @@ fun FarmForm(navController: NavController,siteId: Long) {
                 .padding(bottom = 5.dp)
                 .height(50.dp),
         ) {
-            Text(text = stringResource(id = R.string.get_coordinates))
+            Text(
+                text = if (size.toFloatOrNull() ?: 0f > 4f) {
+                    stringResource(id = R.string.set_polygon)
+                } else {
+                    stringResource(id = R.string.get_coordinates)
+                }
+            )
         }
 
 //        if (!farmerPhoto.isBlank())
@@ -451,7 +467,7 @@ fun FarmForm(navController: NavController,siteId: Long) {
         Button(
             onClick = {
                 val isValid = validateForm()
-                if(isValid){
+                if (isValid) {
                     val item = addFarm(
                         farmViewModel,
                         siteId,
@@ -468,11 +484,10 @@ fun FarmForm(navController: NavController,siteId: Long) {
                     context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()
                     navController.navigate("farmList/${siteId}")
-                }
-                else {
+                } else {
                     Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
                 }
-                      },
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -487,12 +502,12 @@ fun addFarm(
     siteId: Long,
     farmerPhoto: String,
     farmerName: String,
-    village:String,
-    district:String,
-    purchases:Float,
-    size:Float,
-    latitude:String,
-    longitude:String
+    village: String,
+    district: String,
+    purchases: Float,
+    size: Float,
+    latitude: String,
+    longitude: String
 
 ): Farm {
     val farm = Farm(
