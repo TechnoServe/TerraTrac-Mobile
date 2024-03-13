@@ -5,7 +5,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Looper
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
@@ -41,6 +43,7 @@ import com.google.android.gms.location.LocationServices
 import org.technoserve.farmcollector.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.BiasAlignment
 import androidx.core.app.ActivityCompat
 import org.technoserve.farmcollector.hasLocationPermission
 
@@ -77,10 +80,14 @@ fun SetPolygon(navController: NavController) {
                 fontSize = 20.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = coordinates.joinToString(separator = ", "))
-
+            Text(
+                text = coordinates.joinToString(separator = ", "),
+                modifier = Modifier
+                    .fillMaxHeight(0.5f)
+                    .verticalScroll(state = ScrollState(1)),
+            )
             Row(
-                modifier = Modifier.fillMaxWidth(0.6f),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -88,14 +95,13 @@ fun SetPolygon(navController: NavController) {
                     onClick = {
                         isCapturingCoordinates = !isCapturingCoordinates
                         if (isCapturingCoordinates) {
-                            coordinates// Clear coordinates array when starting
+                            coordinates = listOf()// Clear coordinates array when starting
                         }
                     }
                 ) {
                     Text(text = if (isCapturingCoordinates) "Close" else "Start")
                 }
                 Spacer(modifier = Modifier.width(16.dp))
-
                 Button(
                     onClick = {
                         if (context.hasLocationPermission() && isCapturingCoordinates) {
