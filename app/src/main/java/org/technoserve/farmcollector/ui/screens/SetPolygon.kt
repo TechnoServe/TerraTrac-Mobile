@@ -3,8 +3,12 @@ package org.technoserve.farmcollector.ui.screens
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Looper
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,10 +49,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.BiasAlignment
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.codingwithmitch.composegooglemaps.MapViewModel
+import com.google.android.gms.tasks.CancellationToken
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.tasks.OnTokenCanceledListener
+import org.technoserve.farmcollector.clusters.MapScreen
 import org.technoserve.farmcollector.hasLocationPermission
 
+
 @Composable
-fun SetPolygon(navController: NavController) {
+fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val context = LocalContext.current as Activity
     var coordinates by remember { mutableStateOf(listOf<String>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
@@ -65,7 +76,12 @@ fun SetPolygon(navController: NavController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Oops! You are Offline!!")
+            MapScreen(
+                state = viewModel.state.value,
+                setupClusterManager = viewModel::setupClusterManager,
+                calculateZoneViewCenter = viewModel::calculateZoneLatLngBounds
+            )
+
         }
 
         Column(
@@ -107,22 +123,55 @@ fun SetPolygon(navController: NavController) {
                         if (context.hasLocationPermission() && isCapturingCoordinates) {
                             val locationRequest = LocationRequest.create().apply {
                                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//                                interval = 10000 // Update interval in milliseconds
-//                                fastestInterval = 5000 // Fastest update interval in milliseconds
+                                interval = 10000 // Update interval in milliseconds
+                                fastestInterval = 5000 // Fastest update interval in milliseconds
+
                             }
-                            fusedLocationClient.requestLocationUpdates(
-                                locationRequest,
-                                object : LocationCallback() {
-                                    @SuppressLint("MissingPermission")
-                                    override fun onLocationResult(locationResult: LocationResult) {
-                                        locationResult.lastLocation?.let { lastLocation ->
-                                            coordinates =
-                                                coordinates + "[${lastLocation.latitude}, ${lastLocation.longitude}]"
-                                        }
+//                            fusedLocationClient.requestLocationUpdates(
+//                                locationRequest,
+//                                object : LocationCallback() {
+//                                    @SuppressLint("MissingPermission")
+//                                    override fun onLocationResult(locationResult: LocationResult) {
+//                                        locationResult.lastLocation?.let { lastLocation ->
+//                                            coordinates =
+//                                                coordinates + "[${lastLocation.latitude}, ${lastLocation.longitude}]"
+//                                        }
+//                                    }
+//                                },
+//                                Looper.getMainLooper()
+//                            )
+
+
+//                            Get Last know Phone Location
+//                            if (context.hasLocationPermission()) {
+//                                fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
+//                                    .addOnSuccessListener { location : Location ->
+//                                        // Got last known location. In some rare situations this can be null.
+//                                        coordinates = coordinates + "[${location.latitude}, ++${location.longitude}]"
+//                                    }
+//                            }
+
+                            fusedLocationClient.getCurrentLocation(
+                                LocationRequest.PRIORITY_HIGH_ACCURACY,
+                                object : CancellationToken() {
+                                    override fun onCanceledRequested(p0: OnTokenCanceledListener) =
+                                        CancellationTokenSource().token
+
+                                    override fun isCancellationRequested() = false
+                                })
+                                .addOnSuccessListener { location: Location? ->
+                                    if (location == null)
+//                                        Toast.makeText(
+//                                            this,
+//                                            "Cannot get location.",
+//                                            Toast.LENGTH_SHORT
+//                                        ).show()
+                                    else {
+                                        viewModel.addCoordinate(location.latitude, location.longitude)
+                                        coordinates = coordinates + "[${location.latitude}, ${location.longitude}]"
                                     }
-                                },
-                                Looper.getMainLooper()
-                            )
+                                }
+
                         }
                     }
                 ) {

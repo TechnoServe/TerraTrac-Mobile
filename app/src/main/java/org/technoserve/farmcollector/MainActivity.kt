@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,7 +21,9 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.codingwithmitch.composegooglemaps.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import org.technoserve.farmcollector.clusters.MapScreen
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.screens.AddFarm
@@ -33,6 +36,7 @@ import org.technoserve.farmcollector.ui.screens.UpdateFarmForm
 import org.technoserve.farmcollector.ui.theme.FarmCollectorTheme
 
 class MainActivity : ComponentActivity() {
+    private val viewModel: MapViewModel by viewModels()
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +70,7 @@ class MainActivity : ComponentActivity() {
                     val listItems by farmViewModel.readData.observeAsState(listOf())
                     NavHost(
                         navController = navController,
-                        startDestination = "setPolygon"
+                        startDestination = "home"
                     ) {
                         composable("home") {
                             Home(navController)
@@ -103,7 +107,7 @@ class MainActivity : ComponentActivity() {
                         // Screen for displaying and setting farm polygon coordinates
                         composable("setPolygon")
                         {
-                            SetPolygon(navController)
+                            SetPolygon(navController, viewModel)
                         }
                     }
                 }
