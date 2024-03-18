@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -63,6 +64,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -77,6 +79,7 @@ import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
+import javax.inject.Inject
 
 
 @Composable
@@ -542,5 +545,40 @@ fun Context.createImageFile(): File {
 fun createDefaultBitmap(width: Int, height: Int): Bitmap {
     return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 }
+
+@HiltViewModel
+class FarmFormViewModel @Inject constructor() : ViewModel() {
+    val farmerName = mutableStateOf("")
+    val village = mutableStateOf("")
+    val district = mutableStateOf("")
+    val size = mutableStateOf("")
+    val latitude = mutableStateOf("")
+    val longitude = mutableStateOf("")
+
+    fun setFarmerName(name: String) {
+        farmerName.value = name
+    }
+
+    fun setVillage(villageName: String) {
+        village.value = villageName
+    }
+
+    fun setDistrict(districtName: String) {
+        district.value = districtName
+    }
+
+    fun setSize(sizeValue: String) {
+        size.value = sizeValue
+    }
+
+    fun setLatitude(latitudeValue: String) {
+        latitude.value = latitudeValue
+    }
+
+    fun setLongitude(longitudeValue: String) {
+        longitude.value = longitudeValue
+    }
+}
+
 
 

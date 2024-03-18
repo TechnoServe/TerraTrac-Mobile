@@ -3,6 +3,7 @@ package com.codingwithmitch.composegooglemaps
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.MarkerInfoWindow
+import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.ktx.model.polygonOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -111,7 +114,6 @@ class MapViewModel @Inject constructor(): ViewModel() {
                         add(LatLng(7.586394, -4.717112))
                         fillColor(POLYGON_FILL_COLOR)
                     }
-
                 )
             )
         )
@@ -154,6 +156,20 @@ class MapViewModel @Inject constructor(): ViewModel() {
                 .map { it.points.map { LatLng(it.latitude, it.longitude) } }.flatten()
        return latLngs.calculateCameraViewPoints().getCenterOfPolygon()
     }
+    @Composable
+    fun addMarker(latitude: Double, longitude: Double)
+    {
+        MarkerInfoWindow(
+            state = rememberMarkerState(position = LatLng(latitude, longitude)),
+            snippet = "Some stuff",
+            onClick = {
+                System.out.println("Mitchs_: Cannot be clicked")
+                true
+            },
+            draggable = true
+        )
+    }
+
 
 
 

@@ -441,6 +441,11 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
                     Text(text = "${stringResource(id = R.string.latitude)}: ${farm.latitude}")
                     Text(text = "${stringResource(id = R.string.longitude)}: ${farm.longitude}")
                     Text(text = "${stringResource(id = R.string.size)}: ${farm.size} ${stringResource(id = R.string.ha)}")
+                    Button(onClick = {
+                        navController.navigate("setPolygon")
+                    }) {
+                        Text(text = "View location")
+                    }
 //                    Text(text = "${stringResource(id = R.string.harvested_this_year)}: ${farm.purchases} ${stringResource(id = R.string.kgs)}")
                     // Add more fields as needed
                 }
@@ -796,8 +801,9 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
             label = { Text(stringResource(id = R.string.farm_name)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp).onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER){
+                .padding(bottom = 16.dp)
+                .onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
                         true
                     }

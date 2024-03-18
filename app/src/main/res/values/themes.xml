@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.FarmCollector" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="ThemeOverlay.FarmCollector.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/light_blue_600</item>
+        <item name="fullscreenTextColor">@color/light_blue_A200</item>
+    </style>
 </resources>

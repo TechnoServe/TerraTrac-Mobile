@@ -48,7 +48,8 @@ fun Home(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Image(painter = painterResource(id = R.drawable.logo_euspa), null)
+        Image( painter = painterResource(id = R.drawable.technoserve_logo_vector), null, modifier = Modifier.fillMaxHeight(0.4f),)
+        Spacer(modifier = Modifier.height(40.dp))
         Button(
             onClick = {
                 navController.navigate("siteList")
@@ -82,10 +83,9 @@ fun Home(navController: NavController) {
                 modifier = Modifier.align(Alignment.Center)
             )
         }
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(30.dp))
         Text(modifier = Modifier.padding(20.dp), text = stringResource(id = R.string.developed_by))
         Spacer(modifier = Modifier.height(5.dp))
-        Image(painter = painterResource(id = R.drawable.technoserve_labs), null)
     }
 }
 

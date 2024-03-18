@@ -1,4 +1,4 @@
-package org.technoserve.farmcollector.clusters
+package org.technoserve.farmcollector.map
 
 import android.content.Context
 import android.location.Location
@@ -15,6 +15,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun MapScreen(
@@ -45,6 +46,8 @@ fun MapScreen(
                     map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
                         map.addPolygon(clusterItem.polygonOptions)
+//                        val markerOptions = MarkerOptions()
+//                        markerOptions.position(LatLng(-1.9469551, 30.069836))
                     }
                     map.setOnMapLoadedCallback {
                         if (state.clusterItems.isNotEmpty()) {
@@ -64,16 +67,15 @@ fun MapScreen(
             // NOTE: Some features of the MarkerInfoWindow don't work currently. See docs:
             // https://github.com/googlemaps/android-maps-compose#obtaining-access-to-the-raw-googlemap-experimental
             // So you can use clusters as an alternative to markers.
-            MarkerInfoWindow(
-                state = rememberMarkerState(position = LatLng(49.1, -122.5)),
-                snippet = "Some stuff",
-                onClick = {
-                    // This won't work :(
-                    System.out.println("Mitchs_: Cannot be clicked")
-                    true
-                },
-                draggable = true
-            )
+//            MarkerInfoWindow(
+//                state = rememberMarkerState(position = LatLng(-1.9469551, 30.069836)),
+//                snippet = "Some stuff",
+//                onClick = {
+//                    System.out.println("Mitchs_: Cannot be clicked")
+//                    true
+//                },
+//                draggable = true
+//            )
         }
     }
 //    // Center camera to include all the Zones.

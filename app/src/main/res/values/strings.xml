@@ -2,7 +2,7 @@
     <string name="app_name">EGNSS4COFFEE</string>
     <string name="farm_list">Farm List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
-    <string name="developed_by">Developed By</string>
+    <string name="developed_by">Developed By TechnoServe</string>
     <string name="delete_this_item">Delete this item</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="item_will_be_deleted">This item will be deleted.</string>
@@ -34,4 +34,6 @@
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
     <string name="set_polygon">Set Polygon</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

@@ -1,19 +1,9 @@
 package org.technoserve.farmcollector.ui.screens
 
-import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
-import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Looper
-import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,38 +13,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import org.technoserve.farmcollector.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.BiasAlignment
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.codingwithmitch.composegooglemaps.MapViewModel
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
-import org.technoserve.farmcollector.clusters.MapScreen
+import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.hasLocationPermission
 
 
@@ -112,6 +90,13 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         isCapturingCoordinates = !isCapturingCoordinates
                         if (isCapturingCoordinates) {
                             coordinates = listOf()// Clear coordinates array when starting
+                        }else
+                        {
+//                            navController.previousBackStackEntry
+//                                ?.savedStateHandle
+//                                ?.set("cordinates", coordinates)
+//                            navController.popBackStack()
+                            navController.navigateUp()
                         }
                     }
                 ) {
@@ -127,30 +112,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 fastestInterval = 5000 // Fastest update interval in milliseconds
 
                             }
-//                            fusedLocationClient.requestLocationUpdates(
-//                                locationRequest,
-//                                object : LocationCallback() {
-//                                    @SuppressLint("MissingPermission")
-//                                    override fun onLocationResult(locationResult: LocationResult) {
-//                                        locationResult.lastLocation?.let { lastLocation ->
-//                                            coordinates =
-//                                                coordinates + "[${lastLocation.latitude}, ${lastLocation.longitude}]"
-//                                        }
-//                                    }
-//                                },
-//                                Looper.getMainLooper()
-//                            )
-
-
-//                            Get Last know Phone Location
-//                            if (context.hasLocationPermission()) {
-//                                fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
-//                                    .addOnSuccessListener { location : Location ->
-//                                        // Got last known location. In some rare situations this can be null.
-//                                        coordinates = coordinates + "[${location.latitude}, ++${location.longitude}]"
-//                                    }
-//                            }
-
                             fusedLocationClient.getCurrentLocation(
                                 LocationRequest.PRIORITY_HIGH_ACCURACY,
                                 object : CancellationToken() {
