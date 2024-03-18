@@ -6,8 +6,12 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.technoserve.farmcollector.database.converters.BitmapConverter
+import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
 
 @Entity(
@@ -21,6 +25,7 @@ import org.technoserve.farmcollector.database.converters.DateConverter
         )
     ]
 )
+@TypeConverters(CoordinateListConvert::class)
 data class Farm(
     @ColumnInfo(name = "siteId")
     var siteId: Long,
@@ -48,6 +53,9 @@ data class Farm(
 
     @ColumnInfo(name = "longitude")
     var longitude: String,
+
+    @ColumnInfo(name = "coordinates")
+    var coordinates: List<Pair<Double,Double>>?,
 
     @ColumnInfo(name = "synced")
     val synced: Boolean = false,

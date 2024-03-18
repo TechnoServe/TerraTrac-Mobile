@@ -103,6 +103,8 @@ dependencies {
     // For loading and tinting drawables on older versions of the platform
     implementation("androidx.appcompat:appcompat-resources:$appcompat_version")
 
+    implementation("com.google.code.gson:gson:2.8.9")
+
 
 
 

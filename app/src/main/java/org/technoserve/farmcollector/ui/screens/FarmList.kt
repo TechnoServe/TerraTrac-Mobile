@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import org.technoserve.farmcollector.database.Farm
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -441,6 +442,12 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
                     Text(text = "${stringResource(id = R.string.latitude)}: ${farm.latitude}")
                     Text(text = "${stringResource(id = R.string.longitude)}: ${farm.longitude}")
                     Text(text = "${stringResource(id = R.string.size)}: ${farm.size} ${stringResource(id = R.string.ha)}")
+                    Text(
+                        text = "${stringResource(id = R.string.coordinates)}: ${farm.coordinates!!.joinToString(separator = ", ")}",
+                        modifier = Modifier
+                            .fillMaxHeight(0.5f)
+                            .verticalScroll(state = ScrollState(1)),
+                    )
                     Button(onClick = {
                         navController.navigate("setPolygon")
                     }) {
@@ -624,6 +631,7 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
         district = "Default District",
         latitude = "Default Village",
         longitude = "Default Village",
+        coordinates = null,
         size = floatValue,
         purchases = floatValue,
         createdAt = 1L,

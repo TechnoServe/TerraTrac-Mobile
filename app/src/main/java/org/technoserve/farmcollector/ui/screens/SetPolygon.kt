@@ -39,7 +39,7 @@ import org.technoserve.farmcollector.hasLocationPermission
 @Composable
 fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val context = LocalContext.current as Activity
-    var coordinates by remember { mutableStateOf(listOf<String>()) }
+    var coordinates by remember { mutableStateOf(listOf<Pair<Double, Double>>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
@@ -59,7 +59,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 setupClusterManager = viewModel::setupClusterManager,
                 calculateZoneViewCenter = viewModel::calculateZoneLatLngBounds
             )
-
         }
 
         Column(
@@ -92,9 +91,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             coordinates = listOf()// Clear coordinates array when starting
                         }else
                         {
-//                            navController.previousBackStackEntry
-//                                ?.savedStateHandle
-//                                ?.set("cordinates", coordinates)
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("coordinates", coordinates)
 //                            navController.popBackStack()
                             navController.navigateUp()
                         }
@@ -128,11 +127,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 //                                            Toast.LENGTH_SHORT
 //                                        ).show()
                                     else {
+                                        val coordinate = Pair(location.latitude, location.longitude)
+                                        coordinates = coordinates + coordinate
                                         viewModel.addCoordinate(location.latitude, location.longitude)
-                                        coordinates = coordinates + "[${location.latitude}, ${location.longitude}]"
                                     }
                                 }
-
                         }
                     }
                 ) {

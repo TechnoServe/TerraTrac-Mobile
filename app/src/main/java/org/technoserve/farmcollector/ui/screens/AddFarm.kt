@@ -24,6 +24,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
 import android.os.Looper
+import android.os.Parcel
 import android.provider.MediaStore
 import android.util.Log
 import android.view.KeyEvent
@@ -41,6 +42,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.alpha
@@ -59,11 +61,14 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.codingwithmitch.composegooglemaps.clusters.getCenterOfPolygon
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.joda.time.Instant
@@ -84,6 +89,14 @@ import javax.inject.Inject
 
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
+    var coordinatesData: List<Pair<Double, Double>>? = null
+    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
+        coordinatesData = navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+                "coordinates"
+            )
+        System.out.println("**********Retreived data*********=>${coordinatesData}")
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -97,24 +110,24 @@ fun AddFarm(navController: NavController, siteId: Long) {
 
         )
         Spacer(modifier = Modifier.height(16.dp))
-        FarmForm(navController, siteId)
+        FarmForm(navController, siteId, coordinatesData )
     }
 }
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun FarmForm(navController: NavController, siteId: Long) {
+fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<Pair<Double, Double>>?) {
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
-    var farmerName by remember { mutableStateOf("") }
-    var farmerPhoto by remember { mutableStateOf("") }
-    var village by remember { mutableStateOf("") }
-    var district by remember { mutableStateOf("") }
-    var size by remember { mutableStateOf("") }
+    var farmerName by rememberSaveable { mutableStateOf("") }
+    var farmerPhoto by rememberSaveable { mutableStateOf("") }
+    var village by rememberSaveable { mutableStateOf("") }
+    var district by rememberSaveable { mutableStateOf("") }
+    var size by rememberSaveable { mutableStateOf("") }
     var purchases by remember { mutableStateOf("") }
-    var latitude by remember { mutableStateOf("") }
-    var longitude by remember { mutableStateOf("") }
+    var latitude by rememberSaveable { mutableStateOf("") }
+    var longitude by rememberSaveable { mutableStateOf("") }
     val mylocation = remember { mutableStateOf("") }
     val currentPhotoPath = remember { mutableStateOf("") }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -469,6 +482,14 @@ fun FarmForm(navController: NavController, siteId: Long) {
 //        }
         Button(
             onClick = {
+//                Finding the center of the polygon captured
+                if(coordinatesData!!.isNotEmpty() && latitude.isBlank() && longitude.isBlank())
+                {
+                    var center = coordinatesData.toLatLngList().getCenterOfPolygon();
+                    var bounds: LatLngBounds = center
+                    longitude = bounds.northeast.longitude.toString()
+                    latitude = bounds.southwest.latitude.toString()
+                }
                 val isValid = validateForm()
                 if (isValid) {
                     val item = addFarm(
@@ -481,7 +502,8 @@ fun FarmForm(navController: NavController, siteId: Long) {
                         0.toFloat(),
                         size.toFloat(),
                         latitude,
-                        longitude
+                        longitude,
+                        coordinatesData
                     )
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
@@ -510,7 +532,8 @@ fun addFarm(
     purchases: Float,
     size: Float,
     latitude: String,
-    longitude: String
+    longitude: String,
+    coordinates: List<Pair<Double, Double>>?
 
 ): Farm {
     val farm = Farm(
@@ -523,6 +546,7 @@ fun addFarm(
         size,
         latitude,
         longitude,
+        coordinates,
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
@@ -580,5 +604,8 @@ class FarmFormViewModel @Inject constructor() : ViewModel() {
     }
 }
 
+fun List<Pair<Double, Double>>.toLatLngList(): List<LatLng> {
+    return map { LatLng(it.first, it.second) }
+}
 
 

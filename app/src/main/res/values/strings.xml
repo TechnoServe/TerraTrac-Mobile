@@ -17,6 +17,7 @@
     <string name="farmer_photo">Farmer Photo</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
+    <string name="coordinates">Coordinates</string>
     <string name="harvested_this_year">Cherry harvested this year</string>
     <string name="kgs">Kgs</string>
     <string name="download_csv">Download Csv</string>
