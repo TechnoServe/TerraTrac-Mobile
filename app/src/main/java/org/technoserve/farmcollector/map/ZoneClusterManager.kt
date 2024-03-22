@@ -1,4 +1,4 @@
-package com.codingwithmitch.composegooglemaps.clusters
+package com.tns.lab.composegooglemaps.clusters
 
 import android.content.Context
 import com.google.android.gms.maps.GoogleMap

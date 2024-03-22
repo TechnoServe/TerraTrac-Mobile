@@ -34,4 +34,6 @@
     <string name="collection_site_list">Collection sites</string>
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
+    <string name="confirm_add_farm">Want to set the farm\'s polygon? If not, add farm.</string>
+    <string name="set_polygon">Set Polygon</string>
 </resources>

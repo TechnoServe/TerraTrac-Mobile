@@ -4,17 +4,27 @@ import android.content.Context
 import android.location.Location
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.codingwithmitch.composegooglemaps.MapState
-import com.codingwithmitch.composegooglemaps.clusters.ZoneClusterManager
+import com.tns.lab.composegooglemaps.MapState
+import com.tns.lab.composegooglemaps.clusters.ZoneClusterManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.compose.*
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapEffect
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MarkerInfoWindow
+import com.google.maps.android.compose.MarkerInfoWindowContent
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
+import okhttp3.internal.wait
 
 
 @Composable
@@ -39,15 +49,35 @@ fun MapScreen(
         ) {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
+            MapEffect(state.markers) { map ->
+                if(state.clearMap)
+                {
+                    map.clear()
+                    state.clearMap = false
+                }
+                System.out.println("------MapEffect Affected---latLong:(${state.markers})")
+                val clusterManager = setupClusterManager(context, map)
+                map.setOnCameraIdleListener(clusterManager)
+                if (state.markers?.isNotEmpty() == true) {
+                    state.markers!!.forEach { (latitude, longitude) ->
+                        val markerOptions = MarkerOptions()
+                        markerOptions.position(LatLng(latitude, longitude))
+                        markerOptions.snippet("(${latitude}, ${longitude})")
+                            .title("Point")
+                            .draggable(true)
+                        val marker = map.addMarker(markerOptions)
+                    }
+                }
+            }
             MapEffect(state.clusterItems) { map ->
-                if (state.clusterItems.isNotEmpty()) {
+                 System.out.println("------Cluster Items Affected------Data:${state.clusterItems}")
+                 if (state.clusterItems.isNotEmpty()) {
                     val clusterManager = setupClusterManager(context, map)
                     map.setOnCameraIdleListener(clusterManager)
                     map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
+                        System.out.println("------map Polygon------Data:${clusterItem.polygonOptions.toString()}")
                         map.addPolygon(clusterItem.polygonOptions)
-//                        val markerOptions = MarkerOptions()
-//                        markerOptions.position(LatLng(-1.9469551, 30.069836))
                     }
                     map.setOnMapLoadedCallback {
                         if (state.clusterItems.isNotEmpty()) {
@@ -64,18 +94,6 @@ fun MapScreen(
                 }
             }
 
-            // NOTE: Some features of the MarkerInfoWindow don't work currently. See docs:
-            // https://github.com/googlemaps/android-maps-compose#obtaining-access-to-the-raw-googlemap-experimental
-            // So you can use clusters as an alternative to markers.
-//            MarkerInfoWindow(
-//                state = rememberMarkerState(position = LatLng(-1.9469551, 30.069836)),
-//                snippet = "Some stuff",
-//                onClick = {
-//                    System.out.println("Mitchs_: Cannot be clicked")
-//                    true
-//                },
-//                draggable = true
-//            )
         }
     }
 //    // Center camera to include all the Zones.
@@ -90,7 +108,6 @@ fun MapScreen(
 //        }
 //    }
 }
-
 /**
  * If you want to center on a specific location.
  */
@@ -102,3 +119,5 @@ private suspend fun CameraPositionState.centerOnLocation(
         15f
     ),
 )
+
+

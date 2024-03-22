@@ -14,11 +14,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import com.codingwithmitch.composegooglemaps.MapViewModel
+import com.tns.lab.composegooglemaps.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
@@ -101,7 +103,8 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         // Screen for displaying and setting farm polygon coordinates
-                        composable("setPolygon")
+                        composable("setPolygon",
+                            arguments = listOf(navArgument("coordinates") { type = NavType.StringType }))
                         {
                             SetPolygon(navController, viewModel)
                         }

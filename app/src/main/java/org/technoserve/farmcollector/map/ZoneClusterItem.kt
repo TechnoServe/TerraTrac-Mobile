@@ -1,7 +1,9 @@
-package com.codingwithmitch.composegooglemaps.clusters
+package com.tns.lab.composegooglemaps.clusters
 
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolygonOptions
 import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.compose.rememberMarkerState
 
 data class ZoneClusterItem(
     val id: String,
@@ -15,4 +17,5 @@ data class ZoneClusterItem(
     override fun getTitle() = title
 
     override fun getPosition() = polygonOptions.points.getCenterOfPolygon().center
+
 }

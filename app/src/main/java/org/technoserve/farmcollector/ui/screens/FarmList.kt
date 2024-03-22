@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
 import android.util.Log
@@ -72,9 +73,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDeepLinkBuilder
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -405,7 +408,6 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
                     onClick = {
                               navController.navigate("updateFarm/${farm.id}")
                               },
-
                 ) {
                     Text(text = stringResource(id = R.string.update))
                 }
@@ -449,7 +451,19 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
                             .verticalScroll(state = ScrollState(1)),
                     )
                     Button(onClick = {
+//                        val bundle = Bundle()
+//                        bundle.putFloatArray("key", farm.coordinates)
+                        val bundle = Bundle().apply {
+                            putSerializable("coordinates", ArrayList(farm.coordinates))
+                        }
+
+                        navController.currentBackStackEntry?.arguments?.apply {
+                            putSerializable("coordinates", ArrayList(farm.coordinates))
+                            putSerializable("latLong", Pair(farm.latitude.toDouble(), farm.longitude.toDouble()))
+                        }
+//                        navController.currentBackStackEntry?.savedStateHandle?.set("coordinates", farm.coordinates)
                         navController.navigate("setPolygon")
+
                     }) {
                         Text(text = "View location")
                     }

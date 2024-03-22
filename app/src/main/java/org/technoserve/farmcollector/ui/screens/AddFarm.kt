@@ -55,13 +55,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import com.codingwithmitch.composegooglemaps.clusters.getCenterOfPolygon
+import com.tns.lab.composegooglemaps.clusters.getCenterOfPolygon
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -91,12 +92,12 @@ import javax.inject.Inject
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-        coordinatesData = navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+        coordinatesData =
+            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
                 "coordinates"
             )
         System.out.println("**********Retreived data*********=>${coordinatesData}")
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -110,14 +111,18 @@ fun AddFarm(navController: NavController, siteId: Long) {
 
         )
         Spacer(modifier = Modifier.height(16.dp))
-        FarmForm(navController, siteId, coordinatesData )
+        FarmForm(navController, siteId, coordinatesData)
     }
 }
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<Pair<Double, Double>>?) {
+fun FarmForm(
+    navController: NavController,
+    siteId: Long,
+    coordinatesData: List<Pair<Double, Double>>?
+) {
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
     var farmerName by rememberSaveable { mutableStateOf("") }
@@ -139,6 +144,61 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
         Objects.requireNonNull(context),
         context.packageName + ".provider", file
     )
+    val showDialog = remember { mutableStateOf(false) }
+    fun saveFarm()
+    {
+        // Add farm
+        val item = addFarm(
+            farmViewModel,
+            siteId,
+            "",
+            farmerName,
+            village,
+            district,
+            0.toFloat(),
+            size.toFloat(),
+            latitude,
+            longitude,
+            coordinatesData
+        )
+        val returnIntent = Intent()
+        context.setResult(Activity.RESULT_OK, returnIntent)
+//                    context.finish()
+        navController.navigate("farmList/${siteId}")
+    }
+
+
+    if(showDialog.value)
+    {
+        AlertDialog(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(text = "Add Farm") },
+            text = {
+                Column {
+                    Text(text = stringResource(id = R.string.confirm_add_farm))
+                }
+            },
+
+            confirmButton = {
+                TextButton(onClick = {
+                    saveFarm()
+                }) {
+                    Text(text = stringResource(id = R.string.add_farm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick =
+                {
+                    showDialog.value = false
+                    navController.navigate("setPolygon")
+                }) {
+                    Text(text = stringResource(id = R.string.set_polygon))
+                }
+            }
+        )
+    }
+
 
     fun validateForm(): Boolean {
         var isValid = true
@@ -158,7 +218,7 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
             // You can display an error message for this field if needed
         }
 
-        if (size.isBlank()) {
+        if (size.isBlank() || size.toFloatOrNull() == null) {
             isValid = false
             // You can display an error message for this field if needed
         }
@@ -360,7 +420,7 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
+            ) {
                 TextField(
                     readOnly = true,
                     value = latitude,
@@ -386,7 +446,7 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
             onClick = {
                 // Simulate collecting latitude and longitude
 
-                if (context.hasLocationPermission() && (size.toFloatOrNull() ?: 0f < 4f)) {
+                if (context.hasLocationPermission() && (size.toFloatOrNull() ?: 0f <= 4f)) {
                     val locationRequest = LocationRequest.create().apply {
                         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                         interval = 10000 // Update interval in milliseconds
@@ -407,11 +467,9 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
                         },
                         Looper.getMainLooper()
                     )
-                }else
-                {
+                } else {
                     navController.navigate("setPolygon")
                 }
-
             },
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -483,8 +541,7 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
         Button(
             onClick = {
 //                Finding the center of the polygon captured
-                if(coordinatesData!!.isNotEmpty() && latitude.isBlank() && longitude.isBlank())
-                {
+                if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
                     var center = coordinatesData.toLatLngList().getCenterOfPolygon();
                     var bounds: LatLngBounds = center
                     longitude = bounds.northeast.longitude.toString()
@@ -492,23 +549,9 @@ fun FarmForm(navController: NavController, siteId: Long, coordinatesData: List<P
                 }
                 val isValid = validateForm()
                 if (isValid) {
-                    val item = addFarm(
-                        farmViewModel,
-                        siteId,
-                        "",
-                        farmerName,
-                        village,
-                        district,
-                        0.toFloat(),
-                        size.toFloat(),
-                        latitude,
-                        longitude,
-                        coordinatesData
-                    )
-                    val returnIntent = Intent()
-                    context.setResult(Activity.RESULT_OK, returnIntent)
-//                    context.finish()
-                    navController.navigate("farmList/${siteId}")
+                    // Ask user to confirm before addding farm
+                    if(coordinatesData?.isNotEmpty() == true) saveFarm()
+                    else showDialog.value = true
                 } else {
                     Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
                 }

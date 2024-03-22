@@ -1,4 +1,4 @@
-package com.codingwithmitch.composegooglemaps
+package com.tns.lab.composegooglemaps
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
