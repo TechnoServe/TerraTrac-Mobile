@@ -127,7 +127,6 @@ class MapViewModel @Inject constructor(): ViewModel() {
     }
     fun addMarker(coordinate: Pair<Double, Double>)
     {
-        System.out.println("*-*-*-*Add Marker ${coordinate}")
         val currentMarkers = state.value.markers?.toMutableList() ?: mutableListOf() // If markers list is null, initialize it with a new mutable list
         currentMarkers?.let {
             it.add(coordinate)
@@ -139,10 +138,11 @@ class MapViewModel @Inject constructor(): ViewModel() {
     }
 
     fun removeLastCoordinate() {
-        val currentClusterItems = state.value.clusterItems.toMutableList()
-        if (currentClusterItems.isNotEmpty()) {
-            currentClusterItems.removeAt(currentClusterItems.size - 1)
-            state.value = state.value.copy(clusterItems = currentClusterItems)
+        System.out.println("*-*-*-*am allowed to removing something ${state.value.markers?.isNotEmpty() == true}")
+        if (state.value.markers?.isNotEmpty() == true) {
+            val currentMarker = state.value.markers?.dropLast(1)
+            System.out.println("*-*-*-*remove Marker ${currentMarker}")
+            state.value = state.value.copy( markers = currentMarker)
         }
     }
 

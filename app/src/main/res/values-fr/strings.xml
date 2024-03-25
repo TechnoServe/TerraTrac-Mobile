@@ -30,7 +30,7 @@
     <string name="add_farm">Ajouter une ferme</string>
     <string name="permission_granted">Permission accordée</string>
     <string name="permission_denied">Permission refusée</string>
-    <string name="fill_form">Veuillez remplir tous les champs et prendre une photo</string>
+    <string name="fill_form">Veuillez remplir tous les champs</string>
     <string name="collection_site_list">Collection sites</string>
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>

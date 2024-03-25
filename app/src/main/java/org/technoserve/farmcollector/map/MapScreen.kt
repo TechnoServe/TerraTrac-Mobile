@@ -1,32 +1,39 @@
 package org.technoserve.farmcollector.map
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.tns.lab.composegooglemaps.MapState
-import com.tns.lab.composegooglemaps.clusters.ZoneClusterManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MarkerInfoWindow
-import com.google.maps.android.compose.MarkerInfoWindowContent
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.ktx.infoWindowClickEvents
+import com.tns.lab.composegooglemaps.MapState
+import com.tns.lab.composegooglemaps.clusters.ZoneClusterManager
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@SuppressLint("PotentialBehaviorOverride")
 @Composable
 fun MapScreen(
     state: MapState,
@@ -39,6 +46,9 @@ fun MapScreen(
         isMyLocationEnabled = state.lastKnownLocation != null,
     )
     val cameraPositionState = rememberCameraPositionState()
+    val polylineOptions = remember { // MutableState for polyline
+        mutableStateOf(PolylineOptions())
+    }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -50,31 +60,45 @@ fun MapScreen(
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
             MapEffect(state.markers) { map ->
-                if(state.clearMap)
-                {
+
+                if (state.clearMap) {
                     map.clear()
                     state.clearMap = false
                 }
                 System.out.println("------MapEffect Affected---latLong:(${state.markers})")
+                map.clear()
                 val clusterManager = setupClusterManager(context, map)
                 map.setOnCameraIdleListener(clusterManager)
+                polylineOptions.value = PolylineOptions().color(android.graphics.Color.RED)
+                val markerPositions = mutableListOf<LatLng>()
                 if (state.markers?.isNotEmpty() == true) {
-                    state.markers!!.forEach { (latitude, longitude) ->
+                    state.markers?.forEach { (latitude, longitude) ->
+//                        polylineOptions.value = PolylineOptions()
                         val markerOptions = MarkerOptions()
                         markerOptions.position(LatLng(latitude, longitude))
                         markerOptions.snippet("(${latitude}, ${longitude})")
                             .title("Point")
                             .draggable(true)
+
                         val marker = map.addMarker(markerOptions)
+                        // Update polyline with each marker position
+                        markerPositions.add(LatLng(latitude, longitude))
                     }
+                    println("********PolylineAdded:::::${polylineOptions.value}")
+                    polylineOptions.value.addAll(markerPositions)
+                    map.addPolyline(polylineOptions.value)
+                }else
+                {
+                    map.clear()
                 }
             }
             MapEffect(state.clusterItems) { map ->
                  System.out.println("------Cluster Items Affected------Data:${state.clusterItems}")
                  if (state.clusterItems.isNotEmpty()) {
+
                     val clusterManager = setupClusterManager(context, map)
                     map.setOnCameraIdleListener(clusterManager)
-                    map.setOnMarkerClickListener(clusterManager)
+//                    map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
                         System.out.println("------map Polygon------Data:${clusterItem.polygonOptions.toString()}")
                         map.addPolygon(clusterItem.polygonOptions)
@@ -108,6 +132,7 @@ fun MapScreen(
 //        }
 //    }
 }
+
 /**
  * If you want to center on a specific location.
  */
@@ -120,4 +145,9 @@ private suspend fun CameraPositionState.centerOnLocation(
     ),
 )
 
+// Marker click listener
+private fun onMarkerClick(marker: Marker) {
+    // Remove the clicked marker
+    marker.remove()
+}
 

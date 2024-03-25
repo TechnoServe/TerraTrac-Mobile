@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -70,6 +71,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -103,10 +105,11 @@ import java.util.Date
 import java.util.Objects
 
 //data class Farm(val farmerName: String, val village: String, val district: String)
-var siteID =0L
+var siteID = 0L
+
 @Composable
-fun FarmList(navController: NavController,siteId:Long) {
-    siteID=siteId
+fun FarmList(navController: NavController, siteId: Long) {
+    siteID = siteId
     val context = LocalContext.current
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -128,7 +131,7 @@ fun FarmList(navController: NavController,siteId:Long) {
 //    )
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
 
-    fun onDelete(){
+    fun onDelete() {
         val toDelete = mutableListOf<Long>()
         toDelete.addAll(selectedIds)
         farmViewModel.deleteList(toDelete)
@@ -151,7 +154,7 @@ fun FarmList(navController: NavController,siteId:Long) {
             restoreState = true
         }
     }
-    if(listItems.size>0){
+    if (listItems.size > 0) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -161,7 +164,7 @@ fun FarmList(navController: NavController,siteId:Long) {
                 FarmListHeader(
                     title = stringResource(id = R.string.farm_list),
                     onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                   // onBackClicked = { navController.navigateUp() }, siteList
+                    // onBackClicked = { navController.navigateUp() }, siteList
                     onBackClicked = { navController.navigate("siteList") },
                     showAdd = true
                 )
@@ -199,11 +202,13 @@ fun FarmList(navController: NavController,siteId:Long) {
                 }
             )
         }
-    }else{
+    } else {
 
 
-        Column(modifier = Modifier
-            .fillMaxSize() ){
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
             FarmListHeader(
                 title = stringResource(id = R.string.farm_list),
                 onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
@@ -215,9 +220,7 @@ fun FarmList(navController: NavController,siteId:Long) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.CenterHorizontally)
-                    .padding(16.dp, 8.dp)
-
-                ,
+                    .padding(16.dp, 8.dp),
                 painter = painterResource(id = R.drawable.no_data2),
                 contentDescription = null
             )
@@ -260,7 +263,12 @@ fun DeleteAllDialogPresenter(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FarmListHeader(title: String, onAddFarmClicked: () -> Unit, onBackClicked: () -> Unit, showAdd: Boolean) {
+fun FarmListHeader(
+    title: String,
+    onAddFarmClicked: () -> Unit,
+    onBackClicked: () -> Unit,
+    showAdd: Boolean
+) {
     TopAppBar(
 //        elevation = 4.dp,
         modifier = Modifier
@@ -287,7 +295,7 @@ fun FarmListHeader(title: String, onAddFarmClicked: () -> Unit, onBackClicked: (
             )
         },
         actions = {
-            if(showAdd){
+            if (showAdd) {
                 IconButton(onClick = onAddFarmClicked) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                 }
@@ -339,9 +347,11 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                             .padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "${stringResource(id = R.string.size)}: ${ farm.size } ${stringResource(
-                            id = R.string.ha
-                        )}",
+                        text = "${stringResource(id = R.string.size)}: ${farm.size} ${
+                            stringResource(
+                                id = R.string.ha
+                            )
+                        }",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier
                             .weight(0.9f)
@@ -384,10 +394,8 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
 }
 
 
-
-
 @Composable
-fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) {
+fun FarmDialog(navController: NavController, farm: Farm?, onDismiss: () -> Unit) {
     if (farm != null) {
         AlertDialog(
             onDismissRequest = { onDismiss() },
@@ -406,8 +414,8 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
             confirmButton = {
                 Button(
                     onClick = {
-                              navController.navigate("updateFarm/${farm.id}")
-                              },
+                        navController.navigate("updateFarm/${farm.id}")
+                    },
                 ) {
                     Text(text = stringResource(id = R.string.update))
                 }
@@ -439,32 +447,43 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
 //                                .padding(start = 10.dp, end = 10.dp)
 //                        )
 //                    }
-                    Text(text = "${stringResource(id = R.string.village)}: ${farm.village}", modifier = Modifier.padding(top=10.dp))
+                    Text(
+                        text = "${stringResource(id = R.string.village)}: ${farm.village}",
+                        modifier = Modifier.padding(top = 10.dp)
+                    )
                     Text(text = "${stringResource(id = R.string.district)}: ${farm.district}")
                     Text(text = "${stringResource(id = R.string.latitude)}: ${farm.latitude}")
                     Text(text = "${stringResource(id = R.string.longitude)}: ${farm.longitude}")
-                    Text(text = "${stringResource(id = R.string.size)}: ${farm.size} ${stringResource(id = R.string.ha)}")
                     Text(
-                        text = "${stringResource(id = R.string.coordinates)}: ${farm.coordinates!!.joinToString(separator = ", ")}",
+                        text = "${stringResource(id = R.string.size)}: ${farm.size} ${
+                            stringResource(
+                                id = R.string.ha
+                            )
+                        }"
+                    )
+                    Text(
+                        text = "${stringResource(id = R.string.coordinates)}: ${
+                            if (farm.coordinates?.isNotEmpty() == true) farm.coordinates!!.joinToString(separator = ", ") else " - "}",
                         modifier = Modifier
                             .fillMaxHeight(0.5f)
                             .verticalScroll(state = ScrollState(1)),
                     )
-                    Button(onClick = {
-//                        val bundle = Bundle()
-//                        bundle.putFloatArray("key", farm.coordinates)
-                        val bundle = Bundle().apply {
-                            putSerializable("coordinates", ArrayList(farm.coordinates))
-                        }
+                    Button(
+                        shape = RoundedCornerShape(10.dp), onClick = {
+                            val bundle = Bundle().apply {
+                                putSerializable("coordinates", ArrayList(farm.coordinates))
+                            }
 
-                        navController.currentBackStackEntry?.arguments?.apply {
-                            putSerializable("coordinates", ArrayList(farm.coordinates))
-                            putSerializable("latLong", Pair(farm.latitude.toDouble(), farm.longitude.toDouble()))
-                        }
-//                        navController.currentBackStackEntry?.savedStateHandle?.set("coordinates", farm.coordinates)
-                        navController.navigate("setPolygon")
+                            navController.currentBackStackEntry?.arguments?.apply {
+                                putSerializable("coordinates", ArrayList(farm.coordinates))
+                                putSerializable(
+                                    "latLong",
+                                    Pair(farm.latitude.toDouble(), farm.longitude.toDouble())
+                                )
+                            }
+                            navController.navigate("setPolygon")
 
-                    }) {
+                        }) {
                         Text(text = "View location")
                     }
 //                    Text(text = "${stringResource(id = R.string.harvested_this_year)}: ${farm.purchases} ${stringResource(id = R.string.kgs)}")
@@ -474,6 +493,7 @@ fun FarmDialog(navController:NavController, farm: Farm?, onDismiss: () -> Unit) 
         )
     }
 }
+
 fun OutputStream.writeCsv(farms: List<Farm>) {
     val writer = bufferedWriter()
     writer.write(""""Farmer Name", "Village", "District"""")
@@ -489,32 +509,36 @@ fun OutputStream.writeCsv(farms: List<Farm>) {
 fun DownloadCsvButton(farms: List<Farm>) {
     val context = LocalContext.current
     val activity = context as Activity
-     val createDocumentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            // Handle the result as needed
-            if (data != null) {
-                val uri = data.data
-                uri?.let {
-                    val contentResolver = context.contentResolver
-                    val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
+    val createDocumentLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data = result.data
+                // Handle the result as needed
+                if (data != null) {
+                    val uri = data.data
+                    uri?.let {
+                        val contentResolver = context.contentResolver
+                        val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
 
-                    if (outputStream != null) {
-                        PrintWriter(outputStream.bufferedWriter()).use { writer ->
-                            // Write the header row
-                            writer.println("Farmer Name, Village, District, Size in Ha, Cherry harvested this year in Kgs, latitude, longitude , createdAt, updatedAt ")
+                        if (outputStream != null) {
+                            PrintWriter(outputStream.bufferedWriter()).use { writer ->
+                                // Write the header row
+                                writer.println("Farmer Name, Village, District, Size in Ha, Cherry harvested this year in Kgs, latitude, longitude , createdAt, updatedAt ")
 
-                            // Write each farm's data
-                            for (farm in farms) {
-                                val line = "${farm.farmerName}, ${farm.village},${farm.district},${farm.size},${farm.purchases},${farm.latitude},${farm.longitude},${Date(farm.createdAt)}, ${Date(farm.updatedAt)}"
-                                writer.println(line)
+                                // Write each farm's data
+                                for (farm in farms) {
+                                    val line =
+                                        "${farm.farmerName}, ${farm.village},${farm.district},${farm.size},${farm.purchases},${farm.latitude},${farm.longitude},${
+                                            Date(farm.createdAt)
+                                        }, ${Date(farm.updatedAt)}"
+                                    writer.println(line)
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
 
     Button(
 //        onClick = {
@@ -550,16 +574,16 @@ fun DownloadCsvButton(farms: List<Farm>) {
                 // File was successfully written
             } catch (e: IOException) {
                 // Handle file writing errors here
-                Log.d("saving",e.message.toString())
+                Log.d("saving", e.message.toString())
             }
             // Create an intent to send the file
 
             val csvURI: Uri = context.let {
-                    FileProvider.getUriForFile(
-                        it,
-                        context.applicationContext.packageName.toString() + ".provider",
-                        file
-                    )
+                FileProvider.getUriForFile(
+                    it,
+                    context.applicationContext.packageName.toString() + ".provider",
+                    file
+                )
             }
 //            val content = getContentFromUri(csvURI, context)
 //            Log.d("FileContent", "Content of $csvURI:\n$content")
@@ -599,9 +623,6 @@ fun DownloadCsvButton(farms: List<Farm>) {
 //}
 
 
-
-
-
 // on below line creating a method to write data to txt file.
 private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
     var fileOutputStream: FileOutputStream? = null
@@ -612,7 +633,13 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
             .write(""""Farmer Name", "Village", "District", "Size in Ha", "Cherry harvested this year in Kgs", "latitude", "longitude" , "createdAt", "updatedAt" """.toByteArray())
         fileOutputStream.write(10);
         farms.forEach {
-            fileOutputStream.write("${it.farmerName}, ${it.village},${it.district},${it.size},${it.purchases},${it.latitude},${it.longitude},${Date(it.createdAt)}, \"${Date(it.updatedAt)}\"".toByteArray())
+            fileOutputStream.write(
+                "${it.farmerName}, ${it.village},${it.district},${it.size},${it.purchases},${it.latitude},${it.longitude},${
+                    Date(
+                        it.createdAt
+                    )
+                }, \"${Date(it.updatedAt)}\"".toByteArray()
+            )
             fileOutputStream.write(10);
         }
 
@@ -630,13 +657,12 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
 }
 
 
-
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>) {
+fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<Farm>) {
     val floatValue: Float = 123.45f
-    val item = listItems.find { it.id == farmId }?: Farm(
+    val item = listItems.find { it.id == farmId } ?: Farm(
 //        id = 0,
         siteId = 0L,
         farmerName = "Default Farmer",
@@ -727,64 +753,61 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
     var imageInputStream: InputStream? = null
-    val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val treeUri = result.data?.data
+    val resultLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val treeUri = result.data?.data
 
-            if (treeUri != null) {
-                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
+                if (treeUri != null) {
+                    val takeFlags =
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
 
-                // Now, you have permission to write to the selected directory
-                val imageFileName = "image${Instant.now().millis}.jpg"
+                    // Now, you have permission to write to the selected directory
+                    val imageFileName = "image${Instant.now().millis}.jpg"
 
-                val selectedDir = DocumentFile.fromTreeUri(context, treeUri)
-                val imageFile = selectedDir?.createFile("image/jpeg", imageFileName)
+                    val selectedDir = DocumentFile.fromTreeUri(context, treeUri)
+                    val imageFile = selectedDir?.createFile("image/jpeg", imageFileName)
 
-                imageFile?.uri?.let { fileUri ->
-                    try {
-                        imageInputStream?.use { input ->
-                            context.contentResolver.openOutputStream(fileUri)?.use { output ->
-                                input.copyTo(output)
+                    imageFile?.uri?.let { fileUri ->
+                        try {
+                            imageInputStream?.use { input ->
+                                context.contentResolver.openOutputStream(fileUri)?.use { output ->
+                                    input.copyTo(output)
+                                }
                             }
-                        }
 
-                        // Update the database with the file path
-                        farmerPhoto = fileUri.toString()
-                        Log.d("farmerphoto", "$farmerPhoto")
-                        // Update other fields in the Farm object
-                        // Then, insert or update the farm object in your database
-                    } catch (e: IOException) {
-                        e.printStackTrace()
+                            // Update the database with the file path
+                            farmerPhoto = fileUri.toString()
+                            Log.d("farmerphoto", "$farmerPhoto")
+                            // Update other fields in the Farm object
+                            // Then, insert or update the farm object in your database
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
         }
-    }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
-        uri?.let { it1 ->
-            imageInputStream = context.contentResolver.openInputStream(it1)
+    val cameraLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
+            uri?.let { it1 ->
+                imageInputStream = context.contentResolver.openInputStream(it1)
 
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-            resultLauncher.launch(intent)
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                resultLauncher.launch(intent)
+            }
         }
-    }
-
-
-
 
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ){
-        if (it)
-        {
+    ) {
+        if (it) {
             Toast.makeText(context, permission_granted, Toast.LENGTH_SHORT).show()
             cameraLauncher.launch(uri)
-        }
-        else
-        {
+        } else {
             Toast.makeText(context, permission_denied, Toast.LENGTH_SHORT).show()
         }
     }
@@ -929,7 +952,7 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                                     // Handle the new location
                                     latitude = "${lastLocation.latitude}"
                                     longitude = "${lastLocation.longitude}"
-                                   // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                    // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
                                 }
                             }
                         },
@@ -1003,7 +1026,7 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
         Button(
             onClick = {
                 val isValid = validateForm()
-                if(isValid){
+                if (isValid) {
                     item.farmerPhoto = ""
                     item.farmerName = farmerName
                     item.latitude = latitude
@@ -1013,14 +1036,13 @@ fun UpdateFarmForm(navController:NavController,farmId:Long?,listItems:List<Farm>
                     item.size = size.toFloat()
                     item.purchases = 0.toFloat()
                     item.updatedAt = Instant.now().millis
-                    updateFarm(farmViewModel,item)
+                    updateFarm(farmViewModel, item)
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()
                     navController.navigate("farmList/${siteID}")
 
-                }
-                else {
+                } else {
                     Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
                 }
             },

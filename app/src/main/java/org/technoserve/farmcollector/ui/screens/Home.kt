@@ -43,22 +43,20 @@ import androidx.navigation.NavController
 fun Home(navController: NavController) {
     Column(
         Modifier
-            .padding(top = 30.dp)
+            .padding(top = 20.dp)
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Image( painter = painterResource(id = R.drawable.technoserve_logo_vector), null, modifier = Modifier.fillMaxHeight(0.4f),)
-        Spacer(modifier = Modifier.height(40.dp))
-        Button(
+    Button(
             onClick = {
                 navController.navigate("siteList")
             },
             modifier = Modifier
-                .padding(50.dp),
-            shape = RoundedCornerShape(20.dp),
+                .padding(30.dp),
+            shape = RoundedCornerShape(10.dp),
             enabled = true,
-
         ) {
                 Text(
                     text = stringResource(id = R.string.collection_site_list),
@@ -66,12 +64,11 @@ fun Home(navController: NavController) {
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-
         }
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.fillMaxHeight(0.2f))
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.8f)
                 .padding(20.dp)
         ) {
             Text(
@@ -83,7 +80,7 @@ fun Home(navController: NavController) {
                 modifier = Modifier.align(Alignment.Center)
             )
         }
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         Text(modifier = Modifier.padding(20.dp), text = stringResource(id = R.string.developed_by))
         Spacer(modifier = Modifier.height(5.dp))
     }

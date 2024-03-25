@@ -30,7 +30,7 @@
     <string name="add_farm">Add Farm</string>
     <string name="permission_granted">Permission Granted</string>
     <string name="permission_denied">Permission Denied</string>
-    <string name="fill_form">Please fill in all fields and take a picture</string>
+    <string name="fill_form">Please fill in all fields</string>
     <string name="collection_site_list">Collection sites</string>
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
@@ -39,4 +39,5 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="confirm_add_farm">Want to set the farm polygon? If not, add farm.</string>
     <string name="accuracy">Accuracy</string>
+    <string name="confirm_set_polygon">Have you finished setting the polygon? If so, proceed and save by selecting the \'Yes\' button.</string>
 </resources>

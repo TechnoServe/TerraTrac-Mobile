@@ -53,6 +53,7 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 import com.google.maps.android.compose.GoogleMap
 import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.ui.composes.ConfirmDialog
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -63,6 +64,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     var coordinates by remember { mutableStateOf(listOf<Pair<Double, Double>>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val showConfirmDialog = remember { mutableStateOf(false) }
     val arguments = navController.currentBackStackEntry?.arguments
     //  Getting farm details such as polygon or single pair of lat and long if shared
     var farmCoordinate =
@@ -85,13 +87,26 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         navController.previousBackStackEntry?.arguments?.remove("latLong")
         viewSelectFarm = true
     }
+    // Confirm setting farm polygon
+    if(showConfirmDialog.value){
+        // Confirm farm polygon setup
+        ConfirmDialog(stringResource(id = R.string.set_polygon),
+            stringResource(id = R.string.confirm_set_polygon),showConfirmDialog, fun(){
+            viewModel.clearCoordinates()
+            viewModel.addCoordinates(coordinates)
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set("coordinates", coordinates)
+            navController.navigateUp()
+        })
+    }
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.6f)
+                .fillMaxHeight( if (viewSelectFarm) 0.8f else 0.6f)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -102,14 +117,13 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 calculateZoneViewCenter = viewModel::calculateZoneLatLngBounds
             )
         }
-
-
         Column(
             modifier = Modifier
                 .background(Color.DarkGray)
                 .padding(14.dp)
                 .fillMaxWidth()
                 .fillMaxHeight()
+
 
         ) {
             Text(
@@ -139,18 +153,16 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 } else {
                     Button(
                         onClick = {
-                            isCapturingCoordinates = !isCapturingCoordinates
-                            if (isCapturingCoordinates) {
-                                coordinates = listOf()// Clear coordinates array when starting
+                            if(!isCapturingCoordinates && !showConfirmDialog.value)
+                            {
+                                coordinates = listOf() // Clear coordinates array when starting
                                 viewModel.clearCoordinates()
-                            } else {
-                                viewModel.clearCoordinates()
-                                viewModel.addCoordinates(coordinates)
-                                navController.previousBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("coordinates", coordinates)
-                                navController.navigateUp()
+                                isCapturingCoordinates = true
+                            }else if(isCapturingCoordinates && !showConfirmDialog.value)
+                            {
+                                showConfirmDialog.value = true
                             }
+
                         }
                     ) {
                         Text(text = if (isCapturingCoordinates) "Close" else "Start")
@@ -220,6 +232,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                     Spacer(modifier = Modifier.width(16.dp))
                     Button(
                         onClick = {
+                            coordinates = coordinates.dropLast(1)
                             viewModel.removeLastCoordinate();
                         }
                     ) {
