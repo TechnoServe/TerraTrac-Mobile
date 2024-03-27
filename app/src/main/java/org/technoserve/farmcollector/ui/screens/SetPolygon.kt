@@ -169,7 +169,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 
         ) {
             Column(modifier = Modifier
-                .fillMaxHeight(0.80f)
+                .fillMaxHeight( if (!viewSelectFarm) 0.80f else 0.7f)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp)
             ){
@@ -182,7 +182,13 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 if (!viewSelectFarm) Text(modifier = Modifier.padding(horizontal = 2.dp), color = Color(0xFFFAF6D9), text = stringResource(id = R.string.accuracy) + ": ${accuracy}")
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = coordinates.joinToString(separator = ", "),
+                    text = if (farmCoordinate?.isNotEmpty() == true) {
+                        farmCoordinate.joinToString(separator = ", ")
+                    } else if (latLong?.toList()?.isNotEmpty() == true) {
+                        latLong.toString()
+                    }else {
+                        coordinates.joinToString(separator = ", ")
+                    },
                     color = Color(0xFFFAF6D9),
                     modifier = Modifier
                         .fillMaxHeight(0.4f)
@@ -192,18 +198,24 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             }
 
             FlowRow(
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .align(alignment = Alignment.End),
+                    horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start
             ) {
                 // Hidding some buttons depending on page usage. Viewing verse setting farm polygon
                 if (viewSelectFarm) {
                     Button(
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.width(120.dp)
+                            .fillMaxHeight(1f),
                         onClick = {
                             viewModel.clearCoordinates()
                             navController.navigateUp()
                         }
+
                     ) {
                         Text(text = "Close")
                     }

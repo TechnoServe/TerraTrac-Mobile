@@ -752,7 +752,35 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
         return isValid
     }
-    // Update Farm Polygon
+    /**
+     * Updating Farm details
+     * Before sending to the database
+     */
+    fun updateFarmIntance()
+    {
+        val isValid = validateForm()
+        if (isValid) {
+            item.farmerPhoto = ""
+            item.farmerName = farmerName
+            item.latitude = latitude
+            item.village = village
+            item.district = district
+            item.longitude = longitude
+            item.coordinates = coordinates
+            item.size = size.toFloat()
+            item.purchases = 0.toFloat()
+            item.updatedAt = Instant.now().millis
+            updateFarm(farmViewModel, item)
+            val returnIntent = Intent()
+            context.setResult(Activity.RESULT_OK, returnIntent)
+//                    context.finish()
+            navController.navigate("farmList/${siteID}")
+
+        } else {
+            Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
+        }
+    }
+    // Confirm farm update and ask if they wish to capture new polygon
     if(showDialog.value)
     {
         AlertDialog(
@@ -764,30 +792,9 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     Text(text = stringResource(id = R.string.confirm_update_farm))
                 }
             },
-
             confirmButton = {
                 TextButton(onClick = {
-                    val isValid = validateForm()
-                    if (isValid) {
-                        item.farmerPhoto = ""
-                        item.farmerName = farmerName
-                        item.latitude = latitude
-                        item.village = village
-                        item.district = district
-                        item.longitude = longitude
-                        item.coordinates = coordinates
-                        item.size = size.toFloat()
-                        item.purchases = 0.toFloat()
-                        item.updatedAt = Instant.now().millis
-                        updateFarm(farmViewModel, item)
-                        val returnIntent = Intent()
-                        context.setResult(Activity.RESULT_OK, returnIntent)
-//                    context.finish()
-                        navController.navigate("farmList/${siteID}")
-
-                    } else {
-                        Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
-                    }
+                    updateFarmIntance()
                 }) {
                     Text(text = stringResource(id = R.string.update_farm))
                 }
