@@ -12,6 +12,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
 
+/**
+ * This popup dialog allows you to confirm and deny moving forward.
+ */
 @Composable
 fun ConfirmDialog(title: String, message: String, showDialog: MutableState<Boolean>,
                   onProceedFn: () -> Unit) {

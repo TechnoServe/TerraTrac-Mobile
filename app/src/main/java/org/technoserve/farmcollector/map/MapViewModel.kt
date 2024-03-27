@@ -78,7 +78,6 @@ class MapViewModel @Inject constructor(): ViewModel() {
             state = rememberMarkerState(position = LatLng(latitude, longitude)),
             snippet = "Some stuff",
             onClick = {
-                System.out.println("Mitchs_: Cannot be clicked")
                 true
             },
             draggable = true
@@ -102,6 +101,7 @@ class MapViewModel @Inject constructor(): ViewModel() {
     }
 
     fun addCoordinates(coordinates: List<Pair<Double, Double>>) {
+        // Add coordinates on the map, this list of of LatLong form a polygons
         if (coordinates.isEmpty()) {
             return  // Return early without performing any further actions
         }
@@ -114,7 +114,7 @@ class MapViewModel @Inject constructor(): ViewModel() {
             }
             fillColor(POLYGON_FILL_COLOR)
         }
-
+        // This detail displays when user hit on the polygon
         val newClusterItem = ZoneClusterItem(
             id = "zone-${lastItemId + 1}",
             title = "Zone ${lastItemId + 1}",
@@ -127,6 +127,7 @@ class MapViewModel @Inject constructor(): ViewModel() {
     }
     fun addMarker(coordinate: Pair<Double, Double>)
     {
+        // Add marker or point on google map
         val currentMarkers = state.value.markers?.toMutableList() ?: mutableListOf() // If markers list is null, initialize it with a new mutable list
         currentMarkers?.let {
             it.add(coordinate)
@@ -134,14 +135,14 @@ class MapViewModel @Inject constructor(): ViewModel() {
         }
     }
     fun clearCoordinates() {
+        // Clear everything on google map (polylines, polygons, markers,etc)
         state.value = state.value.copy(clusterItems = emptyList(), markers = emptyList(), clearMap = true)
     }
 
     fun removeLastCoordinate() {
-        System.out.println("*-*-*-*am allowed to removing something ${state.value.markers?.isNotEmpty() == true}")
+        // Remove the last added marker on the map
         if (state.value.markers?.isNotEmpty() == true) {
             val currentMarker = state.value.markers?.dropLast(1)
-            System.out.println("*-*-*-*remove Marker ${currentMarker}")
             state.value = state.value.copy( markers = currentMarker)
         }
     }

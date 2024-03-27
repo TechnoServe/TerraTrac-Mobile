@@ -59,13 +59,13 @@ fun MapScreen(
         ) {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
+            // Listen every changes made on state.markers and then run beneath code
             MapEffect(state.markers) { map ->
 
                 if (state.clearMap) {
                     map.clear()
                     state.clearMap = false
                 }
-                System.out.println("------MapEffect Affected---latLong:(${state.markers})")
                 map.clear()
                 val clusterManager = setupClusterManager(context, map)
                 map.setOnCameraIdleListener(clusterManager)
@@ -73,7 +73,7 @@ fun MapScreen(
                 val markerPositions = mutableListOf<LatLng>()
                 if (state.markers?.isNotEmpty() == true) {
                     state.markers?.forEach { (latitude, longitude) ->
-//                        polylineOptions.value = PolylineOptions()
+                        //  polylineOptions.value = PolylineOptions()
                         val markerOptions = MarkerOptions()
                         markerOptions.position(LatLng(latitude, longitude))
                         markerOptions.snippet("(${latitude}, ${longitude})")
@@ -84,7 +84,6 @@ fun MapScreen(
                         // Update polyline with each marker position
                         markerPositions.add(LatLng(latitude, longitude))
                     }
-                    println("********PolylineAdded:::::${polylineOptions.value}")
                     polylineOptions.value.addAll(markerPositions)
                     map.addPolyline(polylineOptions.value)
                 }else
@@ -92,15 +91,14 @@ fun MapScreen(
                     map.clear()
                 }
             }
+            // Listen on every changes happen on clusterItems such addcoordinates and then run the following code
             MapEffect(state.clusterItems) { map ->
-                 System.out.println("------Cluster Items Affected------Data:${state.clusterItems}")
                  if (state.clusterItems.isNotEmpty()) {
 
                     val clusterManager = setupClusterManager(context, map)
                     map.setOnCameraIdleListener(clusterManager)
-//                    map.setOnMarkerClickListener(clusterManager)
+                    // map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
-                        System.out.println("------map Polygon------Data:${clusterItem.polygonOptions.toString()}")
                         map.addPolygon(clusterItem.polygonOptions)
                     }
                     map.setOnMapLoadedCallback {

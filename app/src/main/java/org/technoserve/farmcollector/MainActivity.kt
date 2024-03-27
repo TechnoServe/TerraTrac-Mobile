@@ -50,12 +50,8 @@ class MainActivity : ComponentActivity() {
                         android.Manifest.permission.WRITE_EXTERNAL_STORAGE
                     )
                 )
-
                 LaunchedEffect(true) {
-
                     multiplePermissionsState.launchMultiplePermissionRequest()
-
-
                 }
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -68,7 +64,7 @@ class MainActivity : ComponentActivity() {
                     val listItems by farmViewModel.readData.observeAsState(listOf())
                     NavHost(
                         navController = navController,
-                        startDestination = "home"
+                        startDestination = "setPolygon"
                     ) {
                         composable("home") {
                             Home(navController)
