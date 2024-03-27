@@ -676,7 +676,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         purchases = floatValue,
         createdAt = 1L,
         updatedAt = 1L
-
     )
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
@@ -688,17 +687,26 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     var purchases by remember { mutableStateOf(item.purchases.toString()) }
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
+    var coordinates by remember {mutableStateOf(item.coordinates)}
     val mylocation = remember { mutableStateOf("") }
     val currentPhotoPath = remember { mutableStateOf("") }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
+    val showDialog = remember { mutableStateOf(false) }
     val file = context.createImageFile()
     val uri = FileProvider.getUriForFile(
         Objects.requireNonNull(context),
         context.packageName + ".provider", file
     )
+
+    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
+        coordinates =
+            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+                "coordinates"
+            )
+    }
 
     val permission_granted = stringResource(id = R.string.permission_granted)
     val permission_denied = stringResource(id = R.string.permission_denied)
@@ -743,6 +751,57 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         }
 
         return isValid
+    }
+    // Update Farm Polygon
+    if(showDialog.value)
+    {
+        AlertDialog(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(text = "Update Farm") },
+            text = {
+                Column {
+                    Text(text = stringResource(id = R.string.confirm_update_farm))
+                }
+            },
+
+            confirmButton = {
+                TextButton(onClick = {
+                    val isValid = validateForm()
+                    if (isValid) {
+                        item.farmerPhoto = ""
+                        item.farmerName = farmerName
+                        item.latitude = latitude
+                        item.village = village
+                        item.district = district
+                        item.longitude = longitude
+                        item.coordinates = coordinates
+                        item.size = size.toFloat()
+                        item.purchases = 0.toFloat()
+                        item.updatedAt = Instant.now().millis
+                        updateFarm(farmViewModel, item)
+                        val returnIntent = Intent()
+                        context.setResult(Activity.RESULT_OK, returnIntent)
+//                    context.finish()
+                        navController.navigate("farmList/${siteID}")
+
+                    } else {
+                        Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text(text = stringResource(id = R.string.update_farm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick =
+                {
+                    showDialog.value = false
+                    navController.navigate("setPolygon")
+                }) {
+                    Text(text = stringResource(id = R.string.set_polygon))
+                }
+            }
+        )
     }
 
     var capturedImageUri by remember {
@@ -814,12 +873,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
 
 
-
-
-
-
-
-
     Column(
         modifier = Modifier
 
@@ -833,7 +886,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
             showAdd = false
-
         )
         TextField(
             singleLine = true,
@@ -935,31 +987,35 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         }
         Button(
             onClick = {
-                // Simulate collecting latitude and longitude
+                if (size.toFloatOrNull() != null && size.toFloat()  <=4)
+                {
+                    // Simulate collecting latitude and longitude
+                    if (context.hasLocationPermission()) {
+                        val locationRequest = LocationRequest.create().apply {
+                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                            interval = 10000 // Update interval in milliseconds
+                            fastestInterval = 5000 // Fastest update interval in milliseconds
+                        }
 
-                if (context.hasLocationPermission()) {
-                    val locationRequest = LocationRequest.create().apply {
-                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                        interval = 10000 // Update interval in milliseconds
-                        fastestInterval = 5000 // Fastest update interval in milliseconds
-                    }
-
-                    fusedLocationClient.requestLocationUpdates(
-                        locationRequest,
-                        object : LocationCallback() {
-                            override fun onLocationResult(locationResult: LocationResult) {
-                                locationResult.lastLocation?.let { lastLocation ->
-                                    // Handle the new location
-                                    latitude = "${lastLocation.latitude}"
-                                    longitude = "${lastLocation.longitude}"
-                                    // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                        fusedLocationClient.requestLocationUpdates(
+                            locationRequest,
+                            object : LocationCallback() {
+                                override fun onLocationResult(locationResult: LocationResult) {
+                                    locationResult.lastLocation?.let { lastLocation ->
+                                        // Handle the new location
+                                        latitude = "${lastLocation.latitude}"
+                                        longitude = "${lastLocation.longitude}"
+                                        // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                    }
                                 }
-                            }
-                        },
-                        Looper.getMainLooper()
-                    )
+                            },
+                            Looper.getMainLooper()
+                        )
+                    }
+                }else
+                {
+                    navController.navigate("setPolygon")
                 }
-
             },
 
             modifier = Modifier
@@ -968,7 +1024,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 .padding(bottom = 5.dp)
                 .height(50.dp),
         ) {
-            Text(text = stringResource(id = R.string.get_coordinates))
+            Text(text = if (size.toFloatOrNull() != null && size.toFloat()  <=4 ) stringResource(id = R.string.get_coordinates) else "Set New Polygon")
         }
 
 //        if (!farmerPhoto.isBlank())
@@ -1025,26 +1081,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 //        }
         Button(
             onClick = {
-                val isValid = validateForm()
-                if (isValid) {
-                    item.farmerPhoto = ""
-                    item.farmerName = farmerName
-                    item.latitude = latitude
-                    item.village = village
-                    item.district = district
-                    item.longitude = longitude
-                    item.size = size.toFloat()
-                    item.purchases = 0.toFloat()
-                    item.updatedAt = Instant.now().millis
-                    updateFarm(farmViewModel, item)
-                    val returnIntent = Intent()
-                    context.setResult(Activity.RESULT_OK, returnIntent)
-//                    context.finish()
-                    navController.navigate("farmList/${siteID}")
-
-                } else {
-                    Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
-                }
+                showDialog.value = true
             },
             modifier = Modifier
                 .fillMaxWidth()

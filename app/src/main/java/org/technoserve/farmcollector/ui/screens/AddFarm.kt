@@ -86,7 +86,6 @@ import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
-import org.technoserve.farmcollector.map.MapScreen
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -548,28 +547,6 @@ fun FarmForm(
 //        ){
 //            Text(text = stringResource(id = R.string.take_picture))
 //        }
-        if (coordinatesData?.isNotEmpty() == true )
-        {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                val context = LocalContext.current
-                val scope = rememberCoroutineScope()
-                MapEffect(coordinatesData) { map ->
-                    if (coordinatesData.isNotEmpty()) {
-                        map.setOnMapLoadedCallback {
-                            if (coordinatesData.isNotEmpty()) {
-                                scope.launch {
-
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-
-        }
         Button(
             onClick = {
 //                Finding the center of the polygon captured

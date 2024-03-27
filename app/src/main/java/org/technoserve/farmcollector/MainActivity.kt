@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
                     val listItems by farmViewModel.readData.observeAsState(listOf())
                     NavHost(
                         navController = navController,
-                        startDestination = "setPolygon"
+                        startDestination = "home"
                     ) {
                         composable("home") {
                             Home(navController)

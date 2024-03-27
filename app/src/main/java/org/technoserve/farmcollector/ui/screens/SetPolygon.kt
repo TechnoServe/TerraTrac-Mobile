@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.graphics.fonts.FontStyle
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
@@ -23,9 +24,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import org.technoserve.farmcollector.R
@@ -75,6 +78,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val showConfirmDialog = remember { mutableStateOf(false) }
+    val showClearMapDialog = remember { mutableStateOf(false)}
     val arguments = navController.currentBackStackEntry?.arguments
     //  Getting farm details such as polygon or single pair of lat and long if shared from farm list
     var farmCoordinate =
@@ -110,6 +114,17 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             navController.navigateUp()
         })
     }
+    // Confirm clear map
+    if(showClearMapDialog.value)
+    {
+        ConfirmDialog(stringResource(id = R.string.set_polygon),
+            stringResource(id = R.string.clear_map),showClearMapDialog, fun(){
+                coordinates = listOf()// Clear coordinates array when starting
+                accuracy = ""
+                viewModel.clearCoordinates() // Clear google map
+                showClearMapDialog.value = false
+            })
+    }
     // Getting GPS signal strength
     if (isCapturingCoordinates)
     {
@@ -135,7 +150,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(if (viewSelectFarm) 0.8f else 0.6f),
+                .fillMaxHeight(if (viewSelectFarm) 0.8f else 0.7f),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -151,21 +166,35 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 .background(Color.DarkGray)
                 .fillMaxWidth()
                 .fillMaxHeight()
+
         ) {
-            Text(
-                text = "Coordinates of the farm polygon",
-                fontSize = 20.sp
-            )
-            if (!viewSelectFarm) Text(stringResource(id = R.string.accuracy) + ": ${accuracy}")
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = coordinates.joinToString(separator = ", "),
-                modifier = Modifier
-                    .fillMaxHeight(0.4f)
-                    .verticalScroll(state = ScrollState(1)),
-            )
+            Column(modifier = Modifier
+                .fillMaxHeight(0.80f)
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp)
+            ){
+                Text(
+                    modifier = Modifier.padding(top = 8.dp),
+                    color = Color(0xFFFAF6D9),
+                    text = "Coordinates of the farm polygon",
+                    fontSize = 20.sp,
+                )
+                if (!viewSelectFarm) Text(modifier = Modifier.padding(horizontal = 2.dp), color = Color(0xFFFAF6D9), text = stringResource(id = R.string.accuracy) + ": ${accuracy}")
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = coordinates.joinToString(separator = ", "),
+                    color = Color(0xFFFAF6D9),
+                    modifier = Modifier
+                        .fillMaxHeight(0.4f)
+                        .padding(horizontal = 2.dp)
+                        .verticalScroll(state = ScrollState(1)),
+                )
+            }
+
             FlowRow(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
                     .align(alignment = Alignment.End),
             ) {
                 // Hidding some buttons depending on page usage. Viewing verse setting farm polygon
@@ -180,8 +209,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                     }
                 } else {
                     ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.23f)
-                            .padding(PaddingValues(1.dp,1.dp)),
+                        modifier = Modifier
+                            .fillMaxWidth(0.23f)
+                            .padding(PaddingValues(1.dp, 1.dp)),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
@@ -197,12 +227,14 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         }
                     ) {
                         Text(
+                            fontSize = 12.sp,
                             color = Color.Black ,
                             text = if (isCapturingCoordinates) "Close" else "Start")
                     }
                     ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.30f)
-                            .padding(PaddingValues(1.dp,1.dp)),
+                        modifier = Modifier
+                            .fillMaxWidth(0.29f)
+                            .padding(PaddingValues(1.dp, 1.dp)),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
                         onClick = {
@@ -247,26 +279,24 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             }
                         }
                     ) {
-                        Text(text = "Add Point")
+                        Text(fontSize = 12.sp, color = Color.White, text = "Add Point")
                     }
                     ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.22f)
-                            .padding(PaddingValues(1.dp,1.dp)),
+                        modifier = Modifier
+                            .fillMaxWidth(0.22f)
+                            .padding(PaddingValues(1.dp, 1.dp)),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
-                            coordinates = listOf()// Clear coordinates array when starting
-                            accuracy = ""
-                            viewModel.clearCoordinates() // Clear google map
-
+                            showClearMapDialog.value = true
                         }
                     ) {
-                        Text(color = Color.Black ,
+                        Text(fontSize = 12.sp, color = Color.Black ,
                             text = "Clear")
                     }
                     ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.25f)
-                            .padding(PaddingValues(vertical = 1.dp, horizontal = 1.dp)),
+                        modifier = Modifier
+                            .fillMaxWidth(0.26f),
                         colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
@@ -274,7 +304,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             viewModel.removeLastCoordinate();
                         }
                     ) {
-                        Text(text = "Remove")
+                        Text( modifier = Modifier.fillMaxWidth(), fontSize = 12.sp, color = Color.White, text = "Remove")
                     }
                 }
             }
