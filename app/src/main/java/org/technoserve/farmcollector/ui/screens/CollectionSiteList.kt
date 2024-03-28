@@ -112,7 +112,7 @@ fun CollectionSiteList(navController: NavController) {
                     // When the delete icon is clicked, invoke the onDelete function
                     selectedIds.add(site.siteId)
                     showDeleteDialog.value = true
-                })
+                }, farmViewModel)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -162,13 +162,14 @@ fun CollectionSiteList(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SiteCard(site: CollectionSite, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
+fun SiteCard(site: CollectionSite, onCardClick: () -> Unit, onDeleteClick: () -> Unit, farmViewModel: FarmViewModel) {
     val showDialog = remember { mutableStateOf(false) }
     if(showDialog.value)
     {
         UpdateCollectionDialog(
             showDialog = showDialog,
-            name = site.name,
+            site= site,
+            farmViewModel= farmViewModel,
             onProceedFn = fun(){})
     }
     Column(

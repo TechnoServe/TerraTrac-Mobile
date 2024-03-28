@@ -19,14 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.CollectionSite
+import org.technoserve.farmcollector.database.FarmViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UpdateCollectionDialog(name: String, showDialog: MutableState<Boolean>,
+fun UpdateCollectionDialog(site: CollectionSite, showDialog: MutableState<Boolean>,
+                           farmViewModel: FarmViewModel,
                   onProceedFn: () -> Unit) {
-    var longitude by rememberSaveable { mutableStateOf("") }
-    longitude = name
+    var name by rememberSaveable { mutableStateOf("") }
+    name = site.name
     if(showDialog.value)
     {
         AlertDialog(
@@ -38,15 +41,19 @@ fun UpdateCollectionDialog(name: String, showDialog: MutableState<Boolean>,
                     Text(stringResource(id = R.string.confirm_update_site))
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
                     TextField(
-                        value = longitude,
-                        onValueChange = { longitude = it },
+                        value = name,
+                        onValueChange = { name = it },
                         label = { Text(stringResource(id = R.string.site_name)) },
                     )
                 }
             },
 
             confirmButton = {
-                TextButton(onClick = { onProceedFn() }) {
+                TextButton(onClick = {
+                    site.name = name
+                    farmViewModel.updateSite(site)
+                    showDialog.value = false
+                }) {
                     Text(text = stringResource(id = R.string.yes))
                 }
             },
