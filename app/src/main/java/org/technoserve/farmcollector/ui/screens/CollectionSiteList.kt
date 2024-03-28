@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
@@ -46,6 +48,7 @@ import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
+import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
 
 @Composable
 fun CollectionSiteList(navController: NavController) {
@@ -160,6 +163,14 @@ fun CollectionSiteList(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SiteCard(site: CollectionSite, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
+    val showDialog = remember { mutableStateOf(false) }
+    if(showDialog.value)
+    {
+        UpdateCollectionDialog(
+            showDialog = showDialog,
+            name = site.name,
+            onProceedFn = fun(){})
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -199,7 +210,23 @@ fun SiteCard(site: CollectionSite, onCardClick: () -> Unit, onDeleteClick: () ->
                             .weight(1.1f)
                             .padding(bottom = 4.dp)
                     )
-
+                    // Edit collection sites name
+                    IconButton(
+                        onClick = {
+                            showDialog.value = true
+                        },
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Update",
+                            tint = Color.Black
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(10.dp))
+                    // Delete collection sites name
                     IconButton(
                         onClick = {
                             onDeleteClick()

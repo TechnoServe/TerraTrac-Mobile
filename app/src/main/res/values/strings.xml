@@ -42,4 +42,6 @@
     <string name="accuracy">Accuracy</string>
     <string name="confirm_set_polygon">Have you finished setting the polygon? If so, proceed and save by selecting the \'Yes\' button.</string>
     <string name="clear_map">Do you want to clear the map?</string>
+    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site name.</string>
+    <string name="update_site">Update Collection Site</string>
 </resources>
