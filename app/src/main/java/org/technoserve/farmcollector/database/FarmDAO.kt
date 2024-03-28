@@ -24,6 +24,9 @@ interface FarmDAO {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertSite(site: CollectionSite)
 
+    @Update
+    fun updateSite(site: CollectionSite)
+
     @Transaction
     @Query("SELECT * FROM Farms WHERE id = :id ORDER BY id DESC")
     fun getFarmById(id: Long) : LiveData<List<Farm>>

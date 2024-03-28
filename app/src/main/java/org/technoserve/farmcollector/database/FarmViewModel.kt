@@ -47,6 +47,14 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateSite(site: CollectionSite)
+    {
+        viewModelScope.launch(Dispatchers.IO)  {
+            repository.updateSite(site)
+        }
+    }
+
+
     fun deleteFarm(farm: Farm) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteFarm(farm)

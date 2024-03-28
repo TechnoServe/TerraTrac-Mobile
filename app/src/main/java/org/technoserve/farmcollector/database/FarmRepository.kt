@@ -30,6 +30,12 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.update(farm)
     }
 
+    suspend fun updateSite(site: CollectionSite)
+    {
+        farmDAO.updateSite(site)
+    }
+
+
     suspend fun deleteFarm(farm: Farm) {
         farmDAO.delete(farm)
     }
