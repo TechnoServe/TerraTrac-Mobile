@@ -116,7 +116,6 @@ fun AddFarm(navController: NavController, siteId: Long) {
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
             showAdd = false
-
         )
         Spacer(modifier = Modifier.height(16.dp))
         FarmForm(navController, siteId, coordinatesData)
@@ -413,6 +412,32 @@ fun FarmForm(
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
+        // Size measure
+//        var isExpandable by remember{ mutableStateOf(false) }
+//        var areaUnit by remember{ mutableStateOf("") }
+//        ExposedDropdownMenuBox(expanded = isExpandable, onExpandedChange = {isExpandable = it} ) {
+//            TextField(value = areaUnit,
+//                onValueChange = {},
+//                readOnly = true,
+//                trailingIcon = {
+//                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpandable)
+//                },
+//                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+//                modifier = Modifier.menuAnchor(),
+//                )
+//            ExposedDropdownMenu(expanded = isExpandable, onDismissRequest = { isExpandable = false }) {
+//                DropdownMenuItem(text = { "Hectares" }, onClick = {
+//                    areaUnit = "Hectares"
+//                    isExpandable = false })
+//                DropdownMenuItem(text = { "Hectares" }, onClick = {
+//                    areaUnit = "Hectares"
+//                    isExpandable = false })
+//                DropdownMenuItem(text = { "Hectares" }, onClick = {
+//                    areaUnit = "Hectares"
+//                    isExpandable = false })
+//            }
+//        }
+
 //        TextField(
 //            value = purchases,
 //            keyboardOptions = KeyboardOptions.Default.copy(
