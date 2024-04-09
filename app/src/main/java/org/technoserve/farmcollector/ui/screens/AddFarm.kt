@@ -1,101 +1,85 @@
 package org.technoserve.farmcollector.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import org.technoserve.farmcollector.database.Farm
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import coil.compose.rememberImagePainter
-import androidx.compose.foundation.Image
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Environment
 import android.os.Looper
-import android.os.Parcel
-import android.provider.MediaStore
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.rememberAsyncImagePainter
-import com.tns.lab.composegooglemaps.clusters.getCenterOfPolygon
-import com.google.android.gms.location.FusedLocationProviderClient
+import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolylineOptions
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapEffect
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.tns.lab.composegooglemaps.MapViewModel
+import com.tns.lab.composegooglemaps.clusters.getCenterOfPolygon
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
 import javax.inject.Inject
-
 
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
@@ -143,6 +127,11 @@ fun FarmForm(
     var longitude by rememberSaveable { mutableStateOf("") }
     val mylocation = remember { mutableStateOf("") }
     val currentPhotoPath = remember { mutableStateOf("") }
+    val items = listOf("Ha", "Acres", "Sqm")
+    var expanded by remember { mutableStateOf(false) }
+    var selectedUnit by remember { mutableStateOf(items[0]) }
+    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -153,10 +142,29 @@ fun FarmForm(
         context.packageName + ".provider", file
     )
     val showDialog = remember { mutableStateOf(false) }
+
+    fun convertSize(size: Double, selectedUnit: String): Double {
+        return when (selectedUnit) {
+            "ha" -> size // If already in hectares, return as is
+            "Acres" -> size * 0.404686 // Convert Acres to hectares
+            "sqm" -> size * 0.0001 // Convert square meters to hectares
+            else -> throw IllegalArgumentException("Unsupported unit: $selectedUnit")
+        }
+    }
+
     fun saveFarm()
     {
+//        convert selectedUnit to hectares
+        val sizeInHa = convertSize(size.toDouble(), selectedUnit)
+
+//        save unit in sharedPreference
+        with(sharedPref.edit()) {
+            putString("unit", selectedUnit)
+            apply()
+        }
+
         // Add farm
-        val item = addFarm(
+        addFarm(
             farmViewModel,
             siteId,
             "",
@@ -164,11 +172,12 @@ fun FarmForm(
             village,
             district,
             0.toFloat(),
-            size.toFloat(),
+            sizeInHa.toFloat(),
             latitude,
             longitude,
             coordinatesData
         )
+
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()
@@ -207,7 +216,6 @@ fun FarmForm(
         )
     }
 
-
     fun validateForm(): Boolean {
         var isValid = true
 
@@ -227,6 +235,11 @@ fun FarmForm(
         }
 
         if (size.isBlank() || size.toFloatOrNull() == null) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if(selectedUnit.isBlank()) {
             isValid = false
             // You can display an error message for this field if needed
         }
@@ -252,10 +265,11 @@ fun FarmForm(
     var capturedImageUri by remember {
         mutableStateOf<Uri>(Uri.EMPTY)
     }
+
     val scrollState = rememberScrollState()
-    val permission_granted = stringResource(id = R.string.permission_granted)
-    val permission_denied = stringResource(id = R.string.permission_denied)
-    val fill_form = stringResource(id = R.string.fill_form)
+    val permissionGranted = stringResource(id = R.string.permission_granted)
+    val permissionDenied = stringResource(id = R.string.permission_denied)
+    val fillForm = stringResource(id = R.string.fill_form)
 //    val cameraLauncher =
 //        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){
 //            capturedImageUri = uri
@@ -321,21 +335,12 @@ fun FarmForm(
         ActivityResultContracts.RequestPermission()
     ) {
         if (it) {
-            Toast.makeText(context, permission_granted, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, permissionGranted, Toast.LENGTH_SHORT).show()
             cameraLauncher.launch(uri)
         } else {
-            Toast.makeText(context, permission_denied, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, permissionDenied, Toast.LENGTH_SHORT).show()
         }
     }
-
-
-
-
-
-
-
-
-
 
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
@@ -397,46 +402,65 @@ fun FarmForm(
                 .padding(bottom = 16.dp)
         )
 
-        TextField(
-            singleLine = true,
-            value = size,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-            ),
-            onValueChange = {
-                size = it
-            },
-            label = { Text(stringResource(id = R.string.size_in_hectares)) },
-            modifier = Modifier
-                .focusRequester(focusRequester3)
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-        // Size measure
-//        var isExpandable by remember{ mutableStateOf(false) }
-//        var areaUnit by remember{ mutableStateOf("") }
-//        ExposedDropdownMenuBox(expanded = isExpandable, onExpandedChange = {isExpandable = it} ) {
-//            TextField(value = areaUnit,
-//                onValueChange = {},
-//                readOnly = true,
-//                trailingIcon = {
-//                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpandable)
-//                },
-//                colors = ExposedDropdownMenuDefaults.textFieldColors(),
-//                modifier = Modifier.menuAnchor(),
-//                )
-//            ExposedDropdownMenu(expanded = isExpandable, onDismissRequest = { isExpandable = false }) {
-//                DropdownMenuItem(text = { "Hectares" }, onClick = {
-//                    areaUnit = "Hectares"
-//                    isExpandable = false })
-//                DropdownMenuItem(text = { "Hectares" }, onClick = {
-//                    areaUnit = "Hectares"
-//                    isExpandable = false })
-//                DropdownMenuItem(text = { "Hectares" }, onClick = {
-//                    areaUnit = "Hectares"
-//                    isExpandable = false })
-//            }
-//        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            TextField(
+                singleLine = true,
+                value = size,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number,
+                ),
+                onValueChange = {
+                    size = it
+                },
+                label = { Text(stringResource(id = R.string.size_in_hectares)) },
+                modifier = Modifier
+                    .focusRequester(focusRequester3)
+                    .weight(1f)
+                    .padding(bottom = 16.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            // Size measure
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = !expanded
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                TextField(
+                    readOnly = true,
+                    value = selectedUnit,
+                    onValueChange = { },
+                    label = { Text(stringResource(R.string.unit)) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expanded
+                        )
+                    },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    modifier = Modifier.menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = {
+                        expanded = false
+                    }
+                ) {
+                    items.forEach { selectionOption ->
+                        DropdownMenuItem(
+                            { Text(text = selectionOption) },
+                            onClick = {
+                                selectedUnit = selectionOption
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
 //        TextField(
 //            value = purchases,
@@ -450,7 +474,7 @@ fun FarmForm(
 //                .padding(bottom = 16.dp)
 //        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-        if (size.toFloatOrNull() ?: 0f <= 4f) {
+        if ((size.toFloatOrNull() ?: 0f) <= 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -480,7 +504,7 @@ fun FarmForm(
             onClick = {
                 // Simulate collecting latitude and longitude
 
-                if (context.hasLocationPermission() && (size.toFloatOrNull() ?: 0f <= 4f)) {
+                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) <= 4f)) {
                     val locationRequest = LocationRequest.create().apply {
                         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                         interval = 10000 // Update interval in milliseconds
@@ -512,7 +536,7 @@ fun FarmForm(
                 .height(50.dp),
         ) {
             Text(
-                text = if (size.toFloatOrNull() ?: 0f > 4f) {
+                text = if ((size.toFloatOrNull() ?: 0f) > 4f) {
                     stringResource(id = R.string.set_polygon)
                 } else {
                     stringResource(id = R.string.get_coordinates)
@@ -576,7 +600,7 @@ fun FarmForm(
             onClick = {
 //                Finding the center of the polygon captured
                 if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
-                    var center = coordinatesData.toLatLngList().getCenterOfPolygon();
+                    var center = coordinatesData.toLatLngList().getCenterOfPolygon()
                     var bounds: LatLngBounds = center
                     longitude = bounds.northeast.longitude.toString()
                     latitude = bounds.southwest.latitude.toString()
@@ -589,7 +613,7 @@ fun FarmForm(
                     if(coordinatesData?.isNotEmpty() == true) saveFarm()
                     else showDialog.value = true
                 } else {
-                    Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
@@ -613,7 +637,6 @@ fun addFarm(
     latitude: String,
     longitude: String,
     coordinates: List<Pair<Double, Double>>?
-
 ): Farm {
     val farm = Farm(
         siteId,

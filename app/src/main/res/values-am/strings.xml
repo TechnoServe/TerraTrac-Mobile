@@ -36,4 +36,5 @@
     <string name="site_name">Site name</string>
     <string name="confirm_add_farm">Want to set the farm\'s polygon? If not, add farm.</string>
     <string name="set_polygon">Set Polygon</string>
+    <string name="unit">Unit</string>
 </resources>

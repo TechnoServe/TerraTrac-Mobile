@@ -23,7 +23,7 @@
     <string name="download_csv">Télécharger le Csv</string>
     <string name="update_farm">Modifier cette ferme</string>
     <string name="farm_name">Nom du fermier</string>
-    <string name="size_in_hectares">Taille en hectares</string>
+    <string name="size_in_hectares">Taille de la ferme</string>
     <string name="harvested_this_year_in_kgs">Café récoltée cette année en Kgs</string>
     <string name="get_coordinates">Obtenir les coordonnées</string>
     <string name="take_picture">Prendre une photo</string>
@@ -34,4 +34,5 @@
     <string name="collection_site_list">Collection sites</string>
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
+    <string name="unit">Unit</string>
 </resources>

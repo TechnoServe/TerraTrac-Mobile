@@ -23,7 +23,7 @@
     <string name="download_csv">Descargar CSV</string>
     <string name="update_farm">Actualizar granja</string>
     <string name="farm_name">Nombre de la granja</string>
-    <string name="size_in_hectares">Tamaño en hectáreas</string>
+    <string name="size_in_hectares">Tamaño de la granja</string>
     <string name="harvested_this_year_in_kgs">Cereza cosechada este año en kilos</string>
     <string name="get_coordinates">Obtener coordenadas</string>
     <string name="take_picture">Tomar la foto</string>
@@ -34,4 +34,5 @@
     <string name="collection_site_list">Collection sites</string>
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
+    <string name="unit">Unidad</string>
 </resources>

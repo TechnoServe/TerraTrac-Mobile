@@ -23,7 +23,7 @@
     <string name="download_csv">Download Csv</string>
     <string name="update_farm">Update Farm</string>
     <string name="farm_name">Farmer Name</string>
-    <string name="size_in_hectares">Size in hectares</string>
+    <string name="size_in_hectares">Farm Size</string>
     <string name="harvested_this_year_in_kgs">Cherry harvested this year in Kgs</string>
     <string name="get_coordinates">Get Coordinates</string>
     <string name="take_picture">Take Picture</string>
@@ -44,4 +44,5 @@
     <string name="clear_map">Do you want to clear the map?</string>
     <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site name.</string>
     <string name="update_site">Update Collection Site</string>
+    <string name="unit">Unit</string>
 </resources>

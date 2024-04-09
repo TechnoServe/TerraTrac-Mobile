@@ -34,4 +34,5 @@
     <string name="collection_site_list">Collection sites</string>
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
+    <string name="unit">Unit</string>
 </resources>
