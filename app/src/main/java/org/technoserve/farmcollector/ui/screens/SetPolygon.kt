@@ -2,68 +2,55 @@ package org.technoserve.farmcollector.ui.screens
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.graphics.drawable.Icon
-import android.graphics.fonts.FontStyle
 import android.location.Location
-import android.os.Bundle
 import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import org.technoserve.farmcollector.R
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.navArgument
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
-import com.tns.lab.composegooglemaps.MapViewModel
-import com.tns.lab.composegooglemaps.clusters.ZoneClusterManager
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
-import com.google.maps.android.compose.GoogleMap
-import org.technoserve.farmcollector.map.MapScreen
+import com.tns.lab.composegooglemaps.MapViewModel
+import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.ui.composes.ConfirmDialog
 import java.util.concurrent.TimeUnit
-
 
 /**
  * This screen helps you to capture and visualize farm polygon.
@@ -78,7 +65,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val showConfirmDialog = remember { mutableStateOf(false) }
-    val showClearMapDialog = remember { mutableStateOf(false)}
+    val showClearMapDialog = remember { mutableStateOf(false) }
     val arguments = navController.currentBackStackEntry?.arguments
     //  Getting farm details such as polygon or single pair of lat and long if shared from farm list
     var farmCoordinate =
@@ -102,23 +89,22 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         viewSelectFarm = true
     }
     // Confirm farm polygon setting
-    if(showConfirmDialog.value){
+    if (showConfirmDialog.value) {
         ConfirmDialog(stringResource(id = R.string.set_polygon),
-            stringResource(id = R.string.confirm_set_polygon),showConfirmDialog, fun(){
-            viewModel.clearCoordinates()
-            viewModel.addCoordinates(coordinates)
-            navController.previousBackStackEntry
-                ?.savedStateHandle?.apply {
-                    set( "coordinates", coordinates)
-                }
-            navController.navigateUp()
-        })
+            stringResource(id = R.string.confirm_set_polygon), showConfirmDialog, fun() {
+                viewModel.clearCoordinates()
+                viewModel.addCoordinates(coordinates)
+                navController.previousBackStackEntry
+                    ?.savedStateHandle?.apply {
+                        set("coordinates", coordinates)
+                    }
+                navController.navigateUp()
+            })
     }
     // Confirm clear map
-    if(showClearMapDialog.value)
-    {
+    if (showClearMapDialog.value) {
         ConfirmDialog(stringResource(id = R.string.set_polygon),
-            stringResource(id = R.string.clear_map),showClearMapDialog, fun(){
+            stringResource(id = R.string.clear_map), showClearMapDialog, fun() {
                 coordinates = listOf()// Clear coordinates array when starting
                 accuracy = ""
                 viewModel.clearCoordinates() // Clear google map
@@ -126,8 +112,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             })
     }
     // Getting GPS signal strength
-    if (isCapturingCoordinates)
-    {
+    if (isCapturingCoordinates) {
         val locationRequest = LocationRequest.create().apply {
             interval = TimeUnit.SECONDS.toMillis(5)  // Update location every 5 seconds
             fastestInterval = TimeUnit.SECONDS.toMillis(2)  // Allow faster updates if possible
@@ -168,25 +153,30 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 .fillMaxHeight()
 
         ) {
-            Column(modifier = Modifier
-                .fillMaxHeight( if (!viewSelectFarm) 0.80f else 0.7f)
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp)
-            ){
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight(if (!viewSelectFarm) 0.80f else 0.7f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp)
+            ) {
                 Text(
                     modifier = Modifier.padding(top = 8.dp),
                     color = Color(0xFFFAF6D9),
                     text = "Coordinates of the farm polygon",
                     fontSize = 20.sp,
                 )
-                if (!viewSelectFarm) Text(modifier = Modifier.padding(horizontal = 2.dp), color = Color(0xFFFAF6D9), text = stringResource(id = R.string.accuracy) + ": ${accuracy}")
+                if (!viewSelectFarm) Text(
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    color = Color(0xFFFAF6D9),
+                    text = stringResource(id = R.string.accuracy) + ": ${accuracy}"
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = if (farmCoordinate?.isNotEmpty() == true) {
                         farmCoordinate.joinToString(separator = ", ")
                     } else if (latLong?.toList()?.isNotEmpty() == true) {
                         latLong.toString()
-                    }else {
+                    } else {
                         coordinates.joinToString(separator = ", ")
                     },
                     color = Color(0xFFFAF6D9),
@@ -198,18 +188,18 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             }
 
             FlowRow(
-
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .align(alignment = Alignment.End),
-                    horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start
+                horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start
             ) {
                 // Hidding some buttons depending on page usage. Viewing verse setting farm polygon
                 if (viewSelectFarm) {
                     Button(
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
                             .fillMaxHeight(1f),
                         onClick = {
                             viewModel.clearCoordinates()
@@ -227,21 +217,20 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
-                            if(!isCapturingCoordinates && !showConfirmDialog.value)
-                            {
+                            if (!isCapturingCoordinates && !showConfirmDialog.value) {
                                 coordinates = listOf() // Clear coordinates array when starting
                                 viewModel.clearCoordinates()
                                 isCapturingCoordinates = true
-                            }else if(isCapturingCoordinates && !showConfirmDialog.value)
-                            {
+                            } else if (isCapturingCoordinates && !showConfirmDialog.value) {
                                 showConfirmDialog.value = true
                             }
                         }
                     ) {
                         Text(
                             fontSize = 12.sp,
-                            color = Color.Black ,
-                            text = if (isCapturingCoordinates) "Close" else "Start")
+                            color = Color.Black,
+                            text = if (isCapturingCoordinates) "Close" else "Start"
+                        )
                     }
                     ElevatedButton(
                         modifier = Modifier
@@ -254,7 +243,8 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 val locationRequest = LocationRequest.create().apply {
                                     priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                                     interval = 10000 // Update interval in milliseconds
-                                    fastestInterval = 5000 // Fastest update interval in milliseconds
+                                    fastestInterval =
+                                        5000 // Fastest update interval in milliseconds
                                 }
                                 fusedLocationClient.getCurrentLocation(
                                     LocationRequest.PRIORITY_HIGH_ACCURACY,
@@ -272,8 +262,24 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         else {
-                                            val coordinate = Pair(location.latitude, location.longitude)
-                                            if (coordinates.isNotEmpty() && coordinates.get(coordinates.lastIndex) == coordinate
+                                            if (location.latitude.toString()
+                                                    .split(".")[1].length < 6 || location.longitude.toString()
+                                                    .split(".")[1].length < 6
+                                            ) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Can't get location, Try again",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+
+                                                return@addOnSuccessListener
+                                            }
+
+                                            val coordinate =
+                                                Pair(location.latitude, location.longitude)
+                                            if (coordinates.isNotEmpty() && coordinates.get(
+                                                    coordinates.lastIndex
+                                                ) == coordinate
                                             ) {
                                                 Toast.makeText(
                                                     context,
@@ -303,8 +309,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             showClearMapDialog.value = true
                         }
                     ) {
-                        Text(fontSize = 12.sp, color = Color.Black ,
-                            text = "Clear")
+                        Text(
+                            fontSize = 12.sp, color = Color.Black,
+                            text = "Clear"
+                        )
                     }
                     ElevatedButton(
                         modifier = Modifier
@@ -316,7 +324,12 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             viewModel.removeLastCoordinate();
                         }
                     ) {
-                        Text( modifier = Modifier.fillMaxWidth(), fontSize = 12.sp, color = Color.White, text = "Remove")
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            fontSize = 12.sp,
+                            color = Color.White,
+                            text = "Remove"
+                        )
                     }
                 }
             }

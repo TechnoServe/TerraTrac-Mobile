@@ -73,6 +73,7 @@ import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -142,15 +143,6 @@ fun FarmForm(
         context.packageName + ".provider", file
     )
     val showDialog = remember { mutableStateOf(false) }
-
-    fun convertSize(size: Double, selectedUnit: String): Double {
-        return when (selectedUnit) {
-            "ha" -> size // If already in hectares, return as is
-            "Acres" -> size * 0.404686 // Convert Acres to hectares
-            "sqm" -> size * 0.0001 // Convert square meters to hectares
-            else -> throw IllegalArgumentException("Unsupported unit: $selectedUnit")
-        }
-    }
 
     fun saveFarm()
     {
@@ -321,7 +313,7 @@ fun FarmForm(
         }
 
     val cameraLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
             uri?.let { it1 ->
                 imageInputStream = context.contentResolver.openInputStream(it1)
 
@@ -368,7 +360,6 @@ fun FarmForm(
                 .onKeyEvent {
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
-                        true
                     }
                     false
                 }
@@ -482,7 +473,10 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = latitude,
-                    onValueChange = { latitude = it },
+                    onValueChange = {
+                        if(it.split(".").last().length >= 6) latitude = it
+                        else Toast.makeText(context, "Latitude must have at least 6 decimal places", Toast.LENGTH_SHORT).show()
+                    },
                     label = { Text(stringResource(id = R.string.latitude)) },
                     modifier = Modifier
                         .weight(1f)
@@ -492,7 +486,10 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = longitude,
-                    onValueChange = { longitude = it },
+                    onValueChange = {
+                        if(it.split(".").last().length >= 6) longitude = it
+                        else Toast.makeText(context, "Longitude must have at least 6 decimal places", Toast.LENGTH_SHORT).show()
+                    },
                     label = { Text(stringResource(id = R.string.longitude)) },
                     modifier = Modifier
                         .weight(1f)
@@ -503,7 +500,6 @@ fun FarmForm(
         Button(
             onClick = {
                 // Simulate collecting latitude and longitude
-
                 if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) <= 4f)) {
                     val locationRequest = LocationRequest.create().apply {
                         priority = LocationRequest.PRIORITY_HIGH_ACCURACY

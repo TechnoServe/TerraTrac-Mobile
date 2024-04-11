@@ -3,7 +3,6 @@ package org.technoserve.farmcollector.map
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
-import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -14,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
@@ -24,15 +22,14 @@ import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.ktx.infoWindowClickEvents
 import com.tns.lab.composegooglemaps.MapState
 import com.tns.lab.composegooglemaps.clusters.ZoneClusterManager
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(MapsComposeExperimentalApi::class)
 @SuppressLint("PotentialBehaviorOverride")
 @Composable
 fun MapScreen(
@@ -43,7 +40,7 @@ fun MapScreen(
     // Set properties using MapProperties which you can use to recompose the map
     val mapProperties = MapProperties(
         // Only enable if user has accepted location permissions.
-        isMyLocationEnabled = state.lastKnownLocation != null,
+        isMyLocationEnabled = state.lastKnownLocation != null
     )
     val cameraPositionState = rememberCameraPositionState()
     val polylineOptions = remember { // MutableState for polyline
@@ -61,7 +58,6 @@ fun MapScreen(
             val scope = rememberCoroutineScope()
             // Listen every changes made on state.markers and then run beneath code
             MapEffect(state.markers) { map ->
-
                 if (state.clearMap) {
                     map.clear()
                     state.clearMap = false
@@ -86,17 +82,16 @@ fun MapScreen(
                     }
                     polylineOptions.value.addAll(markerPositions)
                     map.addPolyline(polylineOptions.value)
-                }else
-                {
+                } else {
                     map.clear()
                 }
             }
             // Listen on every changes happen on clusterItems such addcoordinates and then run the following code
             MapEffect(state.clusterItems) { map ->
-                 if (state.clusterItems.isNotEmpty()) {
-
+                if (state.clusterItems.isNotEmpty()) {
                     val clusterManager = setupClusterManager(context, map)
                     map.setOnCameraIdleListener(clusterManager)
+                    map.setMinZoomPreference(4f)
                     // map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
                         map.addPolygon(clusterItem.polygonOptions)

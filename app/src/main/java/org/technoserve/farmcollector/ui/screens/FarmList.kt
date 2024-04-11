@@ -90,6 +90,7 @@ import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.utils.convertSize
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -203,8 +204,6 @@ fun FarmList(navController: NavController, siteId: Long) {
             )
         }
     } else {
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -396,7 +395,13 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
 
 @Composable
 fun FarmDialog(navController: NavController, farm: Farm?, onDismiss: () -> Unit) {
+    val sharedPref = LocalContext.current.getSharedPreferences(
+        "FarmCollector",
+        Context.MODE_PRIVATE
+    )
+
     if (farm != null) {
+        sharedPref.getString("unit", "ha")?.let { Log.i("spUnit", it) }
         AlertDialog(
             onDismissRequest = { onDismiss() },
             title = { Text(text = farm.farmerName) },
@@ -461,21 +466,26 @@ fun FarmDialog(navController: NavController, farm: Farm?, onDismiss: () -> Unit)
                             )
                         }"
                     )
-                    Text(
-                        text = "${stringResource(id = R.string.coordinates)}: ${
-                            if (farm.coordinates?.isNotEmpty() == true) farm.coordinates!!.joinToString(separator = ", ") else " - "}",
-                        modifier = Modifier
-                            .fillMaxHeight(0.5f)
-                            .verticalScroll(state = ScrollState(1)),
-                    )
+                    if (farm.coordinates?.isNotEmpty() == true) {
+                        Text(
+                            text = "${stringResource(id = R.string.coordinates)}: ${
+                                farm.coordinates!!.joinToString(separator = ", ")
+                            }",
+                            modifier = Modifier
+                                .fillMaxHeight(0.5f)
+                                .verticalScroll(state = ScrollState(1)),
+                        )
+                    }
                     Button(
                         shape = RoundedCornerShape(10.dp), onClick = {
-                            val bundle = Bundle().apply {
-                                putSerializable("coordinates", ArrayList(farm.coordinates))
+                            Bundle().apply {
+                                putSerializable("coordinates",
+                                    farm.coordinates?.let { ArrayList(it) })
                             }
 
                             navController.currentBackStackEntry?.arguments?.apply {
-                                putSerializable("coordinates", ArrayList(farm.coordinates))
+                                putSerializable("coordinates",
+                                    farm.coordinates?.let { ArrayList(it) })
                                 putSerializable(
                                     "latLong",
                                     Pair(farm.latitude.toDouble(), farm.longitude.toDouble())
@@ -588,7 +598,7 @@ fun DownloadCsvButton(farms: List<Farm>) {
 //            val content = getContentFromUri(csvURI, context)
 //            Log.d("FileContent", "Content of $csvURI:\n$content")
             val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
             intent.type = "text/csv"
             intent.putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
             intent.putExtra(Intent.EXTRA_STREAM, csvURI)
@@ -631,7 +641,7 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
 
         fileOutputStream
             .write(""""Farmer Name", "Village", "District", "Size in Ha", "Cherry harvested this year in Kgs", "latitude", "longitude" , "createdAt", "updatedAt" """.toByteArray())
-        fileOutputStream.write(10);
+        fileOutputStream.write(10)
         farms.forEach {
             fileOutputStream.write(
                 "${it.farmerName}, ${it.village},${it.district},${it.size},${it.purchases},${it.latitude},${it.longitude},${
@@ -640,7 +650,7 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
                     )
                 }, \"${Date(it.updatedAt)}\"".toByteArray()
             )
-            fileOutputStream.write(10);
+            fileOutputStream.write(10)
         }
 
     } catch (e: Exception) {
