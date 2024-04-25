@@ -1,5 +1,5 @@
-<resources>>
-    <string name="app_name">EGNSS4COFFEE</string>
+<resources>
+    <string name="app_name">TerraTrac</string>
     <string name="farm_list">Farm List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
     <string name="developed_by">Developed By TechnoServe</string>
@@ -45,4 +45,8 @@
     <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site name.</string>
     <string name="update_site">Update Collection Site</string>
     <string name="unit">Unit</string>
+    <string name="agent_name">Agent Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="email">Email</string>
+    <string name="member_id">Member ID</string>
 </resources>

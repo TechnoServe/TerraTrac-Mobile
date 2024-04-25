@@ -1,9 +1,10 @@
-package com.tns.lab.composegooglemaps.clusters
+package org.technoserve.farmcollector.map
 
 import android.content.Context
 import com.google.android.gms.maps.GoogleMap
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.collections.MarkerManager
+import org.technoserve.farmcollector.map.ZoneClusterItem
 
 class ZoneClusterManager(
     context: Context,

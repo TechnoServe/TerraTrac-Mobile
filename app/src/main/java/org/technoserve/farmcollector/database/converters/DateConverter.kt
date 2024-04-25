@@ -1,7 +1,7 @@
 package org.technoserve.farmcollector.database.converters
 
 import androidx.room.TypeConverter
-import java.util.*
+import java.util.Date
 
 class DateConverter {
     @TypeConverter

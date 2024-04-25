@@ -35,4 +35,8 @@
     <string name="add_site">Add site</string>
     <string name="site_name">Site name</string>
     <string name="unit">Unidad</string>
+    <string name="agent_name">Agent Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="email">Email</string>
+    <string name="member_id">member id</string>
 </resources>

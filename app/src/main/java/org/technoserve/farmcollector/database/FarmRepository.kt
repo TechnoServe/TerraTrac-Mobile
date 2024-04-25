@@ -30,8 +30,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.update(farm)
     }
 
-    suspend fun updateSite(site: CollectionSite)
-    {
+    suspend fun updateSite(site: CollectionSite) {
         farmDAO.updateSite(site)
     }
 
@@ -44,18 +43,19 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteAll()
     }
 
-    suspend fun updateSyncStatus(id: Long){
+    suspend fun updateSyncStatus(id: Long) {
         farmDAO.updateSyncStatus(id)
     }
 
-    suspend fun updateSyncListStatus(ids: List<Long>){
+    suspend fun updateSyncListStatus(ids: List<Long>) {
         farmDAO.updateSyncListStatus(ids)
     }
 
-    suspend fun deleteList(ids: List<Long>){
+    suspend fun deleteList(ids: List<Long>) {
         farmDAO.deleteList(ids)
     }
-    suspend fun deleteListSite(ids: List<Long>){
+
+    suspend fun deleteListSite(ids: List<Long>) {
         farmDAO.deleteListSite(ids)
     }
 

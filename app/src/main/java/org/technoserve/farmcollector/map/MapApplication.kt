@@ -1,4 +1,4 @@
-package com.tns.lab.composegooglemaps
+package org.technoserve.farmcollector.map
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

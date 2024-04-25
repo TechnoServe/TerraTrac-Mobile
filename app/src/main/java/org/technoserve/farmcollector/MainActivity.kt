@@ -15,15 +15,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import com.tns.lab.composegooglemaps.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
+import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.screens.AddFarm
 import org.technoserve.farmcollector.ui.screens.AddSite
 import org.technoserve.farmcollector.ui.screens.CollectionSiteList
@@ -35,6 +35,7 @@ import org.technoserve.farmcollector.ui.theme.FarmCollectorTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MapViewModel by viewModels()
+
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +101,10 @@ class MainActivity : ComponentActivity() {
                         }
                         // Screen for displaying and setting farm polygon coordinates
                         composable("setPolygon",
-                            arguments = listOf(navArgument("coordinates") { type = NavType.StringType }))
+                            arguments = listOf(navArgument("coordinates") {
+                                type = NavType.StringType
+                            })
+                        )
                         {
                             SetPolygon(navController, viewModel)
                         }

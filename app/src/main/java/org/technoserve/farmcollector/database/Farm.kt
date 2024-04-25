@@ -1,16 +1,10 @@
 package org.technoserve.farmcollector.database
 
-import android.graphics.Bitmap
-import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import org.technoserve.farmcollector.database.converters.BitmapConverter
 import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
 
@@ -36,6 +30,9 @@ data class Farm(
     @ColumnInfo(name = "farmerName")
     var farmerName: String,
 
+    @ColumnInfo(name = "memberId")
+    var memberId: String,
+
     @ColumnInfo(name = "village")
     var village: String,
 
@@ -55,7 +52,7 @@ data class Farm(
     var longitude: String,
 
     @ColumnInfo(name = "coordinates")
-    var coordinates: List<Pair<Double,Double>>?,
+    var coordinates: List<Pair<Double, Double>>?,
 
     @ColumnInfo(name = "synced")
     val synced: Boolean = false,
@@ -72,7 +69,6 @@ data class Farm(
     var updatedAt: Long
 ) {
     @PrimaryKey(autoGenerate = true)
-    @NonNull
     var id: Long = 0L
 
     override fun equals(other: Any?): Boolean {
@@ -81,9 +77,7 @@ data class Farm(
 
         other as Farm
 
-        if (id != other.id) return false
-
-        return true
+        return id == other.id
     }
 
     override fun hashCode(): Int {
@@ -96,6 +90,21 @@ data class CollectionSite(
     @ColumnInfo(name = "name")
     var name: String,
 
+    @ColumnInfo(name = "agentName")
+    var agentName: String,
+
+    @ColumnInfo(name = "phoneNumber")
+    var phoneNumber: String,
+
+    @ColumnInfo(name = "email")
+    var email: String,
+
+    @ColumnInfo(name = "village")
+    var village: String,
+
+    @ColumnInfo(name = "district")
+    var district: String,
+
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
     val createdAt: Long,
@@ -105,6 +114,5 @@ data class CollectionSite(
     var updatedAt: Long
 ) {
     @PrimaryKey(autoGenerate = true)
-    @NonNull
     var siteId: Long = 0L
 }

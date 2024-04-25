@@ -1,12 +1,13 @@
-package com.tns.lab.composegooglemaps
+package org.technoserve.farmcollector.map
 
 import android.location.Location
-import com.tns.lab.composegooglemaps.clusters.ZoneClusterItem
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.compose.MapType
 
 data class MapState(
     val lastKnownLocation: Location?,
     val clusterItems: List<ZoneClusterItem>,
     var markers : List<Pair<Double, Double>>?,
-    var clearMap : Boolean
+    var clearMap : Boolean,
+    var mapType: MapType,
+    val onMapTypeChange: (MapType) -> Unit,
 )

@@ -1,9 +1,8 @@
-package com.tns.lab.composegooglemaps.clusters
+package org.technoserve.farmcollector.map
 
-import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolygonOptions
 import com.google.maps.android.clustering.ClusterItem
-import com.google.maps.android.compose.rememberMarkerState
+import org.technoserve.farmcollector.map.getCenterOfPolygon
 
 data class ZoneClusterItem(
     val id: String,

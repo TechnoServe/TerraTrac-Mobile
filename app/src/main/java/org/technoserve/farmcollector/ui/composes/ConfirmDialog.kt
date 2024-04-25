@@ -16,10 +16,11 @@ import org.technoserve.farmcollector.R
  * This popup dialog allows you to confirm and deny moving forward.
  */
 @Composable
-fun ConfirmDialog(title: String, message: String, showDialog: MutableState<Boolean>,
-                  onProceedFn: () -> Unit) {
-    if(showDialog.value)
-    {
+fun ConfirmDialog(
+    title: String, message: String, showDialog: MutableState<Boolean>,
+    onProceedFn: () -> Unit
+) {
+    if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },

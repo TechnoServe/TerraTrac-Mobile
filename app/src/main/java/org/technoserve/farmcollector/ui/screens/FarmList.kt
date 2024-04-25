@@ -6,9 +6,6 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -19,14 +16,20 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
-import org.technoserve.farmcollector.database.Farm
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -36,70 +39,59 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavDeepLinkBuilder
-import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
-import org.technoserve.farmcollector.utils.convertSize
-import java.io.BufferedReader
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.FileReader
 import java.io.IOException
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.PrintWriter
 import java.util.Date
@@ -117,19 +109,6 @@ fun FarmList(navController: NavController, siteId: Long) {
     )
     val selectedIds = remember { mutableStateListOf<Long>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
-    var isDialogVisible by remember { mutableStateOf(false) }
-    var selectedFarm: Farm? by remember { mutableStateOf(null) }
-//    val farmList = listOf(
-//        Farm(farmerName = "Farm A", village = "Village 1", district = "District X"),
-//        Farm(farmerName = "Farm B", village = "Village 2", district = "District Y"),
-//        Farm(farmerName = "Farm C", village = "Village 3", district = "District Z"),
-//        Farm(farmerName = "Farm D", village = "Village 4", district = "District X"),
-//        Farm(farmerName = "Farm E", village = "Village 5", district = "District Y"),
-//        Farm(farmerName = "Farm F", village = "Village 6", district = "District Z"),
-//        Farm(farmerName = "Farm G", village = "Village 7", district = "District X"),
-//        Farm(farmerName = "Farm H", village = "Village 8", district = "District Y"),
-//        Farm(farmerName = "Farm I", village = "Village 9", district = "District Z"),
-//    )
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
 
     fun onDelete() {
@@ -139,7 +118,6 @@ fun FarmList(navController: NavController, siteId: Long) {
         selectedIds.removeAll(selectedIds)
         showDeleteDialog.value = false
     }
-
 
     fun refreshListItems() {
         // TODO: update saved predictions list when db gets updated
@@ -155,7 +133,7 @@ fun FarmList(navController: NavController, siteId: Long) {
             restoreState = true
         }
     }
-    if (listItems.size > 0) {
+    if (listItems.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -176,9 +154,15 @@ fun FarmList(navController: NavController, siteId: Long) {
             }
             items(listItems) { farm ->
                 FarmCard(farm = farm, onCardClick = {
-                    // When a FarmCard is clicked, show the dialog
-                    selectedFarm = farm
-                    isDialogVisible = true
+                    Bundle().apply {
+                        putSerializable("coordinates",
+                            farm.coordinates?.let { ArrayList(it) })
+                    }
+
+                    navController.currentBackStackEntry?.arguments?.apply {
+                        putSerializable("farmData", Pair(farm, "view"))
+                    }
+                    navController.navigate(route = "setPolygon")
                 }, onDeleteClick = {
                     // When the delete icon is clicked, invoke the onDelete function
                     selectedIds.add(farm.id)
@@ -186,22 +170,9 @@ fun FarmList(navController: NavController, siteId: Long) {
                 })
                 Spacer(modifier = Modifier.height(16.dp))
             }
-
-
         }
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-        }
-        if (isDialogVisible) {
-            FarmDialog(
-                navController = navController,
-                farm = selectedFarm,
-                onDismiss = {
-                    // Dismiss the dialog when needed
-                    isDialogVisible = false
-                    selectedFarm = null
-                }
-            )
         }
     } else {
         Column(
@@ -225,7 +196,6 @@ fun FarmList(navController: NavController, siteId: Long) {
             )
         }
     }
-
 }
 
 @Composable
@@ -233,7 +203,6 @@ fun DeleteAllDialogPresenter(
     showDeleteDialog: MutableState<Boolean>,
     onProceedFn: () -> Unit
 ) {
-
     if (showDeleteDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -245,7 +214,6 @@ fun DeleteAllDialogPresenter(
                     Text(stringResource(id = R.string.item_will_be_deleted))
                 }
             },
-
             confirmButton = {
                 TextButton(onClick = { onProceedFn() }) {
                     Text(text = stringResource(id = R.string.yes))
@@ -392,118 +360,6 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
     }
 }
 
-
-@Composable
-fun FarmDialog(navController: NavController, farm: Farm?, onDismiss: () -> Unit) {
-    val sharedPref = LocalContext.current.getSharedPreferences(
-        "FarmCollector",
-        Context.MODE_PRIVATE
-    )
-
-    if (farm != null) {
-        sharedPref.getString("unit", "ha")?.let { Log.i("spUnit", it) }
-        AlertDialog(
-            onDismissRequest = { onDismiss() },
-            title = { Text(text = farm.farmerName) },
-            dismissButton = {
-                Button(
-                    onClick = { onDismiss() },
-//                    colors = ButtonDefaults.buttonColors(
-//                        backgroundColor = Color.Blue,
-//                        contentColor = Color.White
-//                    )
-                ) {
-                    Text(text = stringResource(id = R.string.close))
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        navController.navigate("updateFarm/${farm.id}")
-                    },
-                ) {
-                    Text(text = stringResource(id = R.string.update))
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(300.dp)
-//                    ) {
-//                        val imgFile = File(farm.farmerPhoto)
-//
-//                        // on below line we are checking if the image file exist or not.
-//                        var imgBitmap: Bitmap? = null
-//                        if (imgFile.exists()) {
-//                            // on below line we are creating an image bitmap variable
-//                            // and adding a bitmap to it from image file.
-//                            imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-//                        }
-//                        Image(
-//                            painter = rememberAsyncImagePainter(farm.farmerPhoto),
-//                            contentDescription = stringResource(id = R.string.farmer_photo),
-//                            contentScale = ContentScale.Fit,
-//                            modifier = Modifier
-//                                .fillMaxSize()
-//                                .padding(start = 10.dp, end = 10.dp)
-//                        )
-//                    }
-                    Text(
-                        text = "${stringResource(id = R.string.village)}: ${farm.village}",
-                        modifier = Modifier.padding(top = 10.dp)
-                    )
-                    Text(text = "${stringResource(id = R.string.district)}: ${farm.district}")
-                    Text(text = "${stringResource(id = R.string.latitude)}: ${farm.latitude}")
-                    Text(text = "${stringResource(id = R.string.longitude)}: ${farm.longitude}")
-                    Text(
-                        text = "${stringResource(id = R.string.size)}: ${farm.size} ${
-                            stringResource(
-                                id = R.string.ha
-                            )
-                        }"
-                    )
-                    if (farm.coordinates?.isNotEmpty() == true) {
-                        Text(
-                            text = "${stringResource(id = R.string.coordinates)}: ${
-                                farm.coordinates!!.joinToString(separator = ", ")
-                            }",
-                            modifier = Modifier
-                                .fillMaxHeight(0.5f)
-                                .verticalScroll(state = ScrollState(1)),
-                        )
-                    }
-                    Button(
-                        shape = RoundedCornerShape(10.dp), onClick = {
-                            Bundle().apply {
-                                putSerializable("coordinates",
-                                    farm.coordinates?.let { ArrayList(it) })
-                            }
-
-                            navController.currentBackStackEntry?.arguments?.apply {
-                                putSerializable("coordinates",
-                                    farm.coordinates?.let { ArrayList(it) })
-                                putSerializable(
-                                    "latLong",
-                                    Pair(farm.latitude.toDouble(), farm.longitude.toDouble())
-                                )
-                            }
-                            navController.navigate("setPolygon")
-
-                        }) {
-                        Text(text = "View location")
-                    }
-//                    Text(text = "${stringResource(id = R.string.harvested_this_year)}: ${farm.purchases} ${stringResource(id = R.string.kgs)}")
-                    // Add more fields as needed
-                }
-            }
-        )
-    }
-}
-
 fun OutputStream.writeCsv(farms: List<Farm>) {
     val writer = bufferedWriter()
     writer.write(""""Farmer Name", "Village", "District"""")
@@ -533,12 +389,12 @@ fun DownloadCsvButton(farms: List<Farm>) {
                         if (outputStream != null) {
                             PrintWriter(outputStream.bufferedWriter()).use { writer ->
                                 // Write the header row
-                                writer.println("Farmer Name, Village, District, Size in Ha, Cherry harvested this year in Kgs, latitude, longitude , createdAt, updatedAt ")
+                                writer.println("Farmer Name, Village, District, Size in Ha, Cherry harvested this year in Kgs, latitude, longitude, polygon , createdAt, updatedAt ")
 
                                 // Write each farm's data
                                 for (farm in farms) {
                                     val line =
-                                        "${farm.farmerName}, ${farm.village},${farm.district},${farm.size},${farm.purchases},${farm.latitude},${farm.longitude},${
+                                        "${farm.farmerName}, ${farm.village},${farm.district},${farm.size},${farm.purchases},${farm.latitude},${farm.longitude},${farm.coordinates},${
                                             Date(farm.createdAt)
                                         }, ${Date(farm.updatedAt)}"
                                     writer.println(line)
@@ -666,16 +522,16 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
     }
 }
 
-
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<Farm>) {
-    val floatValue: Float = 123.45f
+    val floatValue = 123.45f
     val item = listItems.find { it.id == farmId } ?: Farm(
 //        id = 0,
         siteId = 0L,
         farmerName = "Default Farmer",
+        memberId = "",
         farmerPhoto = "Default photo",
         village = "Default Village",
         district = "Default District",
@@ -690,6 +546,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
     var farmerName by remember { mutableStateOf(item.farmerName) }
+    var memberId by remember { mutableStateOf(item.memberId) }
     var farmerPhoto by remember { mutableStateOf(item.farmerPhoto) }
     var village by remember { mutableStateOf(item.village) }
     var district by remember { mutableStateOf(item.district) }
@@ -697,7 +554,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     var purchases by remember { mutableStateOf(item.purchases.toString()) }
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
-    var coordinates by remember {mutableStateOf(item.coordinates)}
+    var coordinates by remember { mutableStateOf(item.coordinates) }
     val mylocation = remember { mutableStateOf("") }
     val currentPhotoPath = remember { mutableStateOf("") }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -718,9 +575,9 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             )
     }
 
-    val permission_granted = stringResource(id = R.string.permission_granted)
-    val permission_denied = stringResource(id = R.string.permission_denied)
-    val fill_form = stringResource(id = R.string.fill_form)
+    val permissionGranted = stringResource(id = R.string.permission_granted)
+    val permissionDenied = stringResource(id = R.string.permission_denied)
+    val fillForm = stringResource(id = R.string.fill_form)
 
     fun validateForm(): Boolean {
         var isValid = true
@@ -762,16 +619,17 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
         return isValid
     }
+
     /**
      * Updating Farm details
      * Before sending to the database
      */
-    fun updateFarmIntance()
-    {
+    fun updateFarmInstance() {
         val isValid = validateForm()
         if (isValid) {
             item.farmerPhoto = ""
             item.farmerName = farmerName
+            item.memberId = memberId
             item.latitude = latitude
             item.village = village
             item.district = district
@@ -787,12 +645,11 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             navController.navigate("farmList/${siteID}")
 
         } else {
-            Toast.makeText(context, fill_form, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
         }
     }
     // Confirm farm update and ask if they wish to capture new polygon
-    if(showDialog.value)
-    {
+    if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
@@ -804,7 +661,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             },
             confirmButton = {
                 TextButton(onClick = {
-                    updateFarmIntance()
+                    updateFarmInstance()
                 }) {
                     Text(text = stringResource(id = R.string.update_farm))
                 }
@@ -855,7 +712,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
                             // Update the database with the file path
                             farmerPhoto = fileUri.toString()
-                            Log.d("farmerphoto", "$farmerPhoto")
+                            Log.d("farmerphoto", farmerPhoto)
                             // Update other fields in the Farm object
                             // Then, insert or update the farm object in your database
                         } catch (e: IOException) {
@@ -881,14 +738,12 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         ActivityResultContracts.RequestPermission()
     ) {
         if (it) {
-            Toast.makeText(context, permission_granted, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, permissionGranted, Toast.LENGTH_SHORT).show()
             cameraLauncher.launch(uri)
         } else {
-            Toast.makeText(context, permission_denied, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, permissionDenied, Toast.LENGTH_SHORT).show()
         }
     }
-
-
 
     Column(
         modifier = Modifier
@@ -920,6 +775,25 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester1.requestFocus()
                         true
+                    }
+                    false
+                }
+        )
+        TextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester1.requestFocus() }
+            ),
+            value = memberId,
+            onValueChange = { memberId = it },
+            label = { Text(stringResource(id = R.string.member_id)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+                .onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester1.requestFocus()
                     }
                     false
                 }
@@ -1004,8 +878,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         }
         Button(
             onClick = {
-                if (size.toFloatOrNull() != null && size.toFloat()  <=4)
-                {
+                if (size.toFloatOrNull() != null && size.toFloat() <= 4) {
                     // Simulate collecting latitude and longitude
                     if (context.hasLocationPermission()) {
                         val locationRequest = LocationRequest.create().apply {
@@ -1029,8 +902,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                             Looper.getMainLooper()
                         )
                     }
-                }else
-                {
+                } else {
                     navController.navigate("setPolygon")
                 }
             },
@@ -1041,7 +913,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 .padding(bottom = 5.dp)
                 .height(50.dp),
         ) {
-            Text(text = if (size.toFloatOrNull() != null && size.toFloat()  <=4 ) stringResource(id = R.string.get_coordinates) else "Set New Polygon")
+            Text(text = if (size.toFloatOrNull() != null && size.toFloat() <= 4) stringResource(id = R.string.get_coordinates) else "Set New Polygon")
         }
 
 //        if (!farmerPhoto.isBlank())
@@ -1110,10 +982,8 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 }
 
 fun updateFarm(
-
     farmViewModel: FarmViewModel,
     item: Farm
-
 ) {
     farmViewModel.updateFarm(item)
 }

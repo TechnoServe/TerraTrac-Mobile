@@ -1,7 +1,13 @@
 package org.technoserve.farmcollector.database
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 
 @Dao
 interface FarmDAO {
@@ -29,15 +35,15 @@ interface FarmDAO {
 
     @Transaction
     @Query("SELECT * FROM Farms WHERE id = :id ORDER BY id DESC")
-    fun getFarmById(id: Long) : LiveData<List<Farm>>
+    fun getFarmById(id: Long): LiveData<List<Farm>>
 
     @Transaction
     @Query("SELECT * FROM Farms WHERE id = :id ORDER BY id DESC")
-    fun getRawFarmById(id: Long) : List<Farm>
+    fun getRawFarmById(id: Long): List<Farm>
 
     @Transaction
     @Query("SELECT * FROM Farms ORDER BY id DESC LIMIT 1")
-    fun getLastFarm() : LiveData<List<Farm>>
+    fun getLastFarm(): LiveData<List<Farm>>
 
     @Update
     fun update(farm: Farm)

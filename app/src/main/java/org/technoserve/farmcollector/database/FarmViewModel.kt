@@ -1,7 +1,11 @@
 package org.technoserve.farmcollector.database
 
 import android.app.Application
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -10,18 +14,19 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: FarmRepository
     val readAllSites: RefreshableLiveData<List<CollectionSite>>
     val readData: RefreshableLiveData<List<Farm>>
+
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
         repository = FarmRepository(farmDAO)
-        readAllSites = RefreshableLiveData{repository.readAllSites}
-        readData = RefreshableLiveData{repository.readData}
+        readAllSites = RefreshableLiveData { repository.readAllSites }
+        readData = RefreshableLiveData { repository.readData }
     }
 
-    fun readAllData(siteId: Long): LiveData<List<Farm>>{
+    fun readAllData(siteId: Long): LiveData<List<Farm>> {
         return repository.readAllFarms(siteId)
     }
 
-    fun getSingleFarm(farmId: Long): LiveData<List<Farm>>{
+    fun getSingleFarm(farmId: Long): LiveData<List<Farm>> {
         return repository.readFarm(farmId)
     }
 
@@ -38,7 +43,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getLastFarm(): LiveData<List<Farm>> {
-        return  repository.getLastFarm()
+        return repository.getLastFarm()
     }
 
     fun updateFarm(farm: Farm) {
@@ -47,9 +52,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateSite(site: CollectionSite)
-    {
-        viewModelScope.launch(Dispatchers.IO)  {
+    fun updateSite(site: CollectionSite) {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.updateSite(site)
         }
     }

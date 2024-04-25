@@ -65,7 +65,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.tns.lab.composegooglemaps.clusters.getCenterOfPolygon
+import org.technoserve.farmcollector.map.getCenterOfPolygon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -119,6 +119,7 @@ fun FarmForm(
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
     var farmerName by rememberSaveable { mutableStateOf("") }
+    var memberId by rememberSaveable { mutableStateOf("") }
     var farmerPhoto by rememberSaveable { mutableStateOf("") }
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
@@ -126,7 +127,7 @@ fun FarmForm(
     var purchases by remember { mutableStateOf("") }
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
-    val mylocation = remember { mutableStateOf("") }
+    val myLocation = remember { mutableStateOf("") }
     val currentPhotoPath = remember { mutableStateOf("") }
     val items = listOf("Ha", "Acres", "Sqm")
     var expanded by remember { mutableStateOf(false) }
@@ -144,8 +145,7 @@ fun FarmForm(
     )
     val showDialog = remember { mutableStateOf(false) }
 
-    fun saveFarm()
-    {
+    fun saveFarm() {
 //        convert selectedUnit to hectares
         val sizeInHa = convertSize(size.toDouble(), selectedUnit)
 
@@ -161,6 +161,7 @@ fun FarmForm(
             siteId,
             "",
             farmerName,
+            memberId,
             village,
             district,
             0.toFloat(),
@@ -177,8 +178,7 @@ fun FarmForm(
     }
 
 
-    if(showDialog.value)
-    {
+    if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
@@ -231,7 +231,7 @@ fun FarmForm(
             // You can display an error message for this field if needed
         }
 
-        if(selectedUnit.isBlank()) {
+        if (selectedUnit.isBlank()) {
             isValid = false
             // You can display an error message for this field if needed
         }
@@ -339,7 +339,6 @@ fun FarmForm(
     val (focusRequester3) = FocusRequester.createRefs()
     Column(
         modifier = Modifier
-
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
@@ -354,6 +353,25 @@ fun FarmForm(
             value = farmerName,
             onValueChange = { farmerName = it },
             label = { Text(stringResource(id = R.string.farm_name)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+                .onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester1.requestFocus()
+                    }
+                    false
+                }
+        )
+        TextField(
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester1.requestFocus() }
+            ),
+            value = memberId,
+            onValueChange = { memberId = it },
+            label = { Text(stringResource(id = R.string.member_id)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -474,8 +492,12 @@ fun FarmForm(
                     readOnly = true,
                     value = latitude,
                     onValueChange = {
-                        if(it.split(".").last().length >= 6) latitude = it
-                        else Toast.makeText(context, "Latitude must have at least 6 decimal places", Toast.LENGTH_SHORT).show()
+                        if (it.split(".").last().length >= 6) latitude = it
+                        else Toast.makeText(
+                            context,
+                            "Latitude must have at least 6 decimal places",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     },
                     label = { Text(stringResource(id = R.string.latitude)) },
                     modifier = Modifier
@@ -487,8 +509,12 @@ fun FarmForm(
                     readOnly = true,
                     value = longitude,
                     onValueChange = {
-                        if(it.split(".").last().length >= 6) longitude = it
-                        else Toast.makeText(context, "Longitude must have at least 6 decimal places", Toast.LENGTH_SHORT).show()
+                        if (it.split(".").last().length >= 6) longitude = it
+                        else Toast.makeText(
+                            context,
+                            "Longitude must have at least 6 decimal places",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     },
                     label = { Text(stringResource(id = R.string.longitude)) },
                     modifier = Modifier
@@ -500,7 +526,7 @@ fun FarmForm(
         Button(
             onClick = {
                 // Simulate collecting latitude and longitude
-                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) <= 4f)) {
+                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
                     val locationRequest = LocationRequest.create().apply {
                         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                         interval = 10000 // Update interval in milliseconds
@@ -532,7 +558,7 @@ fun FarmForm(
                 .height(50.dp),
         ) {
             Text(
-                text = if ((size.toFloatOrNull() ?: 0f) > 4f) {
+                text = if ((size.toFloatOrNull() ?: 0f) >= 4f) {
                     stringResource(id = R.string.set_polygon)
                 } else {
                     stringResource(id = R.string.get_coordinates)
@@ -596,17 +622,16 @@ fun FarmForm(
             onClick = {
 //                Finding the center of the polygon captured
                 if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
-                    var center = coordinatesData.toLatLngList().getCenterOfPolygon()
-                    var bounds: LatLngBounds = center
+                    val center = coordinatesData.toLatLngList().getCenterOfPolygon()
+                    val bounds: LatLngBounds = center
                     longitude = bounds.northeast.longitude.toString()
                     latitude = bounds.southwest.latitude.toString()
                     //Show the overview of polygon taken
-
                 }
                 val isValid = validateForm()
                 if (isValid) {
-                    // Ask user to confirm before addding farm
-                    if(coordinatesData?.isNotEmpty() == true) saveFarm()
+                    // Ask user to confirm before adding farm
+                    if (coordinatesData?.isNotEmpty() == true) saveFarm()
                     else showDialog.value = true
                 } else {
                     Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
@@ -626,6 +651,7 @@ fun addFarm(
     siteId: Long,
     farmerPhoto: String,
     farmerName: String,
+    memberId: String,
     village: String,
     district: String,
     purchases: Float,
@@ -638,6 +664,7 @@ fun addFarm(
         siteId,
         farmerPhoto,
         farmerName,
+        memberId,
         village,
         district,
         purchases,
@@ -670,7 +697,8 @@ fun createDefaultBitmap(width: Int, height: Int): Bitmap {
 
 @HiltViewModel
 class FarmFormViewModel @Inject constructor() : ViewModel() {
-    val farmerName = mutableStateOf("")
+    private val farmerName = mutableStateOf("")
+    val memberId = mutableStateOf("")
     val village = mutableStateOf("")
     val district = mutableStateOf("")
     val size = mutableStateOf("")

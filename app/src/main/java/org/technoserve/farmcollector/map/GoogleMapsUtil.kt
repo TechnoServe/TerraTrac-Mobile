@@ -1,4 +1,4 @@
-package com.tns.lab.composegooglemaps.clusters
+package org.technoserve.farmcollector.map
 
 /**
  * A set of utility functions for centering the camera given some [LatLng] points.
@@ -37,7 +37,7 @@ fun List<LatLng>.calculateCameraViewPoints(pctView: Double = .25): List<LatLng> 
 }
 
 private fun List<LatLng>.findMaxMins(): CameraViewCoord {
-    check(size > 0) { "Cannot calculate the view coordinates of nothing." }
+    check(isNotEmpty()) { "Cannot calculate the view coordinates of nothing." }
     var viewCoord: CameraViewCoord? = null
     for(point in this) {
         viewCoord = CameraViewCoord(
