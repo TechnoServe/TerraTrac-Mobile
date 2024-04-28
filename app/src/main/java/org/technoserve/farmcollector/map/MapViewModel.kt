@@ -123,7 +123,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         val newClusterItem = ZoneClusterItem(
             id = "zone-${lastItemId + 1}",
             title = "Central Point",
-            snippet = "",
+            snippet = "(Lat: ${coordinates[0].first}, Long: ${coordinates[0].second})",
             polygonOptions = polygonOptions
         )
 

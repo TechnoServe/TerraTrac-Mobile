@@ -65,7 +65,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import org.technoserve.farmcollector.map.getCenterOfPolygon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -73,6 +72,7 @@ import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.map.getCenterOfPolygon
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
@@ -548,6 +548,7 @@ fun FarmForm(
                         Looper.getMainLooper()
                     )
                 } else {
+                    navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
                     navController.navigate("setPolygon")
                 }
             },

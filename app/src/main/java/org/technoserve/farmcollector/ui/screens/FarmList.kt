@@ -84,6 +84,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
@@ -110,6 +111,7 @@ fun FarmList(navController: NavController, siteId: Long) {
     val selectedIds = remember { mutableStateListOf<Long>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
+    val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
 
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
@@ -150,7 +152,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
             item {
-                DownloadCsvButton(listItems)
+                DownloadCsvButton(listItems, cwsListItems)
             }
             items(listItems) { farm ->
                 FarmCard(farm = farm, onCardClick = {
@@ -372,7 +374,7 @@ fun OutputStream.writeCsv(farms: List<Farm>) {
 }
 
 @Composable
-fun DownloadCsvButton(farms: List<Farm>) {
+fun DownloadCsvButton(farms: List<Farm>, cwsListItems: List<CollectionSite>) {
     val context = LocalContext.current
     val activity = context as Activity
     val createDocumentLauncher =
@@ -385,16 +387,17 @@ fun DownloadCsvButton(farms: List<Farm>) {
                     uri?.let {
                         val contentResolver = context.contentResolver
                         val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
+                        val getSiteById = cwsListItems.find { it.siteId == siteID }
 
                         if (outputStream != null) {
                             PrintWriter(outputStream.bufferedWriter()).use { writer ->
                                 // Write the header row
-                                writer.println("Farmer Name, Village, District, Size in Ha, Cherry harvested this year in Kgs, latitude, longitude, polygon , createdAt, updatedAt ")
+                                writer.println("farmer_name, collection_site, agent_name, farm_village, farm_district, farm_size, latitude, longitude, polygon, created_at, updated_at")
 
                                 // Write each farm's data
                                 for (farm in farms) {
                                     val line =
-                                        "${farm.farmerName}, ${farm.village},${farm.district},${farm.size},${farm.purchases},${farm.latitude},${farm.longitude},${farm.coordinates},${
+                                        "${farm.farmerName}, ${getSiteById?.name}, ${getSiteById?.agentName}, ${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${farm.coordinates}\",${
                                             Date(farm.createdAt)
                                         }, ${Date(farm.updatedAt)}"
                                     writer.println(line)

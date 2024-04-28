@@ -3,7 +3,6 @@ package org.technoserve.farmcollector.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.location.Location
-import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -76,21 +73,34 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 
     val locationRequest = LocationRequest.create().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        interval = 1000000 // Update interval in milliseconds
-        fastestInterval = 1000000 // Fastest update interval in milliseconds
+        interval = 1000 // Update interval in milliseconds
+        fastestInterval = 500 // Fastest update interval in milliseconds
+    }
+
+    if (!isCapturingCoordinates && farmInfo == null) {
+        fusedLocationClient.getCurrentLocation(locationRequest.priority,
+            object : CancellationToken() {
+                override fun onCanceledRequested(p0: OnTokenCanceledListener) =
+                    CancellationTokenSource().token
+
+                override fun isCancellationRequested() = false
+            }).addOnSuccessListener { location: Location? ->
+            // update map camera position
+            if (location != null) {
+                viewModel.addCoordinate(location.latitude, location.longitude)
+            }
+        }
     }
 
     // Display coordinates of a farm on map
-    if (farmInfo != null) {
+    if (farmInfo != null && !isCapturingCoordinates && !viewSelectFarm) {
         viewModel.clearCoordinates()
-        if (farmInfo.coordinates != null) {
+        if (farmInfo.coordinates?.isNotEmpty() == true) {
             viewModel.addCoordinates(farmInfo.coordinates!!)
         } else if (farmInfo.latitude.isNotEmpty() && farmInfo.longitude.isNotEmpty()) {
             viewModel.addMarker(Pair(farmInfo.latitude.toDouble(), farmInfo.longitude.toDouble()))
         }
 
-        navController.previousBackStackEntry?.arguments?.remove("coordinates")
-        navController.previousBackStackEntry?.arguments?.remove("latLong")
         viewSelectFarm = true
     }
 
@@ -199,8 +209,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                     text = "${stringResource(id = R.string.village)}: ${farmInfo.village}",
                                 )
                                 Text(text = "${stringResource(id = R.string.district)}: ${farmInfo.district}")
-                                Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
-                                Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
+                                if (farmInfo.coordinates?.isEmpty() == true) {
+                                    Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
+                                    Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
+                                }
                                 Text(
                                     text = "${stringResource(id = R.string.size)}: ${farmInfo.size} ${
                                         stringResource(
@@ -246,21 +258,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 coordinates = listOf() // Clear coordinates array when starting
                                 viewModel.clearCoordinates()
                                 isCapturingCoordinates = true
-
-                                // Getting GPS signal strength
-                                fusedLocationClient.requestLocationUpdates(
-                                    locationRequest, object : LocationCallback() {
-                                        override fun onLocationResult(locationResult: LocationResult) {
-                                            val location = locationResult.lastLocation ?: return
-                                            accuracy = location.accuracy.toString()
-
-                                            viewModel.clearCoordinates()
-                                            viewModel.addCoordinate(
-                                                location.latitude, location.longitude
-                                            )
-                                        }
-                                    }, Looper.getMainLooper()
-                                )
                             } else if (isCapturingCoordinates && !showConfirmDialog.value) {
                                 showConfirmDialog.value = true
                             }
