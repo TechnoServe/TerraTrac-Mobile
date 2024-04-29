@@ -239,10 +239,8 @@ fun FarmListHeader(
     showAdd: Boolean
 ) {
     TopAppBar(
-//        elevation = 4.dp,
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
-            .padding(start = 16.dp, end = 16.dp)
             .fillMaxWidth(),
         navigationIcon = {
             IconButton(onClick = onBackClicked) {

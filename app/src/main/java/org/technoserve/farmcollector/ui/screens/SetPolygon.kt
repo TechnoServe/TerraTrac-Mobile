@@ -3,13 +3,13 @@ package org.technoserve.farmcollector.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.location.Location
+import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +37,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -87,10 +89,24 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             }).addOnSuccessListener { location: Location? ->
             // update map camera position
             if (location != null) {
-                viewModel.addCoordinate(location.latitude, location.longitude)
+                accuracy = location.accuracy.toString()
+                if (viewModel.state.value.clusterItems.isEmpty()) {
+                    viewModel.addCoordinate(location.latitude, location.longitude)
+                }
             }
         }
     }
+
+    fusedLocationClient.requestLocationUpdates(
+        locationRequest,
+        object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val location = locationResult.lastLocation ?: return
+                accuracy = location.accuracy.toString()
+            }
+        },
+        Looper.getMainLooper()
+    )
 
     // Display coordinates of a farm on map
     if (farmInfo != null && !isCapturingCoordinates && !viewSelectFarm) {
@@ -249,8 +265,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                     }
                 } else {
                     ElevatedButton(modifier = Modifier
-                        .fillMaxWidth(0.23f)
-                        .padding(PaddingValues(1.dp, 1.dp)),
+                        .fillMaxWidth(0.22f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
@@ -265,12 +280,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         Text(
                             fontSize = 12.sp,
                             color = Color.Black,
-                            text = if (isCapturingCoordinates) "Close" else "Start"
+                            text = if (isCapturingCoordinates) "Finish" else "Start"
                         )
                     }
                     ElevatedButton(modifier = Modifier
-                        .fillMaxWidth(0.29f)
-                        .padding(PaddingValues(1.dp, 1.dp)),
+                        .fillMaxWidth(0.28f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
                         onClick = {
@@ -282,12 +296,13 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 
                                         override fun isCancellationRequested() = false
                                     }).addOnSuccessListener { location: Location? ->
-                                    if (location == null) Toast.makeText(
-                                        context,
-                                        "Can't get location, Try again",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    else {
+                                    if (location == null) {
+                                        Toast.makeText(
+                                            context,
+                                            "Can't get location, Try again",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
                                         if (location.latitude.toString()
                                                 .split(".")[1].length < 6 || location.longitude.toString()
                                                 .split(".")[1].length < 6
@@ -304,23 +319,15 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 //                                            update map camera position
                                         val coordinate =
                                             Pair(location.latitude, location.longitude)
-                                        if (coordinates.isNotEmpty() && coordinates[coordinates.lastIndex] == coordinate) {
-                                            Toast.makeText(
-                                                context,
-                                                "Can't get location, Try again",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        } else {
-                                            accuracy = location.accuracy.toString()
+                                        accuracy = location.accuracy.toString()
 
-                                            coordinates = coordinates + coordinate
-                                            viewModel.addMarker(coordinate)
+                                        coordinates = coordinates + coordinate
+                                        viewModel.addMarker(coordinate)
 
 //                                                add camera position
-                                            viewModel.addCoordinate(
-                                                location.latitude, location.longitude
-                                            )
-                                        }
+                                        viewModel.addCoordinate(
+                                            location.latitude, location.longitude
+                                        )
                                     }
                                 }
                             }
@@ -328,18 +335,17 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         Text(fontSize = 12.sp, color = Color.White, text = "Add Point")
                     }
                     ElevatedButton(modifier = Modifier
-                        .fillMaxWidth(0.22f)
-                        .padding(PaddingValues(1.dp, 1.dp)),
+                        .fillMaxWidth(0.22f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
                             showClearMapDialog.value = true
                         }) {
                         Text(
-                            fontSize = 12.sp, color = Color.Black, text = "Clear"
+                            fontSize = 12.sp, color = Color.Black, text = "Reset"
                         )
                     }
-                    ElevatedButton(modifier = Modifier.fillMaxWidth(0.26f),
+                    ElevatedButton(modifier = Modifier.fillMaxWidth(0.28f),
                         colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
@@ -350,7 +356,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             fontSize = 12.sp,
                             color = Color.White,
-                            text = "Remove"
+                            text = "Drop Point"
                         )
                     }
                 }
