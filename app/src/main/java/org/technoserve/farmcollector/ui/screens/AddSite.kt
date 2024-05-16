@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +69,7 @@ fun AddSite(navController: NavController) {
 @Composable
 fun SiteForm(navController: NavController) {
     val context = LocalContext.current as Activity
+    var isValid by remember { mutableStateOf(true) }
     var name by remember { mutableStateOf("") }
     var agentName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
@@ -78,13 +81,14 @@ fun SiteForm(navController: NavController) {
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
 
-    fun validateForm(): Boolean {
-        var isValid = true
+    fun isValidPhoneNumber(phoneNumber: String): Boolean {
+        val regex = Regex("^\\+?(?:[0-9] ?){6,14}[0-9]\$")
+        return regex.matches(phoneNumber)
+    }
 
-        if (name.isBlank()) {
-            isValid = false
-            // You can display an error message for this field if needed
-        }
+    fun validateForm(): Boolean {
+        isValid = // You can display an error message for this field if needed
+            !(name.isBlank() || agentName.isBlank() || village.isBlank() || district.isBlank())
 
         return isValid
     }
@@ -106,25 +110,32 @@ fun SiteForm(navController: NavController) {
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
-        TextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester1.requestFocus() }
-            ),
-            value = name,
-            onValueChange = { name = it },
-            label = { Text(stringResource(id = R.string.site_name)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester1.requestFocus()
+        Row {
+            TextField(
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusRequester1.requestFocus() }
+                ),
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(id = R.string.site_name) + " (*)") },
+                supportingText = { if (!isValid && name.isBlank()) Text("Site Name should not be empty") },
+                isError = !isValid && name.isBlank(),
+                colors = TextFieldDefaults.textFieldColors(
+                    errorLeadingIconColor = Color.Red,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .onKeyEvent {
+                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                            focusRequester1.requestFocus()
+                        }
+                        false
                     }
-                    false
-                }
-        )
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,
@@ -134,7 +145,12 @@ fun SiteForm(navController: NavController) {
             ),
             value = agentName,
             onValueChange = { agentName = it },
-            label = { Text(stringResource(id = R.string.agent_name)) },
+            label = { Text(stringResource(id = R.string.agent_name) + " (*)") },
+            supportingText = { if (!isValid && agentName.isBlank()) Text("Agent Name should not be empty") },
+            isError = !isValid && agentName.isBlank(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -158,6 +174,13 @@ fun SiteForm(navController: NavController) {
             value = phoneNumber,
             onValueChange = { phoneNumber = it },
             label = { Text(stringResource(id = R.string.phone_number)) },
+            supportingText = {
+                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text("Invalid Phone Number")
+            },
+            isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -181,6 +204,19 @@ fun SiteForm(navController: NavController) {
             value = email,
             onValueChange = { email = it },
             label = { Text(stringResource(id = R.string.email)) },
+            supportingText = {
+                if (!isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                        email
+                    ).matches()
+                )
+                    Text("Invalid Email Address")
+            },
+            isError = !isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                email
+            ).matches(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -200,7 +236,12 @@ fun SiteForm(navController: NavController) {
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village)) },
+            label = { Text(stringResource(id = R.string.village) + " (*)") },
+            supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
+            isError = !isValid && village.isBlank(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -216,7 +257,12 @@ fun SiteForm(navController: NavController) {
             singleLine = true,
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district)) },
+            label = { Text(stringResource(id = R.string.district) + " (*)") },
+            supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
+            isError = !isValid && district.isBlank(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -224,8 +270,7 @@ fun SiteForm(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                val isValid = validateForm()
-                if (isValid) {
+                if (validateForm()) {
                     addSite(
                         farmViewModel,
                         name,

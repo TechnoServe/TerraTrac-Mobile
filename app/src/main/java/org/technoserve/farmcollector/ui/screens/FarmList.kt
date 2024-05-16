@@ -390,14 +390,14 @@ fun DownloadCsvButton(farms: List<Farm>, cwsListItems: List<CollectionSite>) {
                         if (outputStream != null) {
                             PrintWriter(outputStream.bufferedWriter()).use { writer ->
                                 // Write the header row
-                                writer.println("farmer_name, collection_site, agent_name, farm_village, farm_district, farm_size, latitude, longitude, polygon, created_at, updated_at")
+                                writer.println("farmer_name,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at")
 
                                 // Write each farm's data
                                 for (farm in farms) {
                                     val line =
-                                        "${farm.farmerName}, ${getSiteById?.name}, ${getSiteById?.agentName}, ${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${farm.coordinates}\",${
+                                        "${farm.farmerName},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${farm.coordinates}\",${
                                             Date(farm.createdAt)
-                                        }, ${Date(farm.updatedAt)}"
+                                        },${Date(farm.updatedAt)}"
                                     writer.println(line)
                                 }
                             }
@@ -635,16 +635,15 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             item.village = village
             item.district = district
             item.longitude = longitude
-            item.coordinates = coordinates
+            item.coordinates =
+                (coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>?)!!
             item.size = size.toFloat()
             item.purchases = 0.toFloat()
             item.updatedAt = Instant.now().millis
             updateFarm(farmViewModel, item)
             val returnIntent = Intent()
             context.setResult(Activity.RESULT_OK, returnIntent)
-//                    context.finish()
             navController.navigate("farmList/${siteID}")
-
         } else {
             Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
         }

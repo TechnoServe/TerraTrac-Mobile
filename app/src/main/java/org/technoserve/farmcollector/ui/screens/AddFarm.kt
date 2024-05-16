@@ -36,6 +36,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -114,10 +115,10 @@ fun FarmForm(
     navController: NavController,
     siteId: Long,
     coordinatesData: List<Pair<Double, Double>>?
-
 ) {
     val context = LocalContext.current as Activity
     var isImageUploaded by remember { mutableStateOf(false) }
+    var isValid by remember { mutableStateOf(true) }
     var farmerName by rememberSaveable { mutableStateOf("") }
     var memberId by rememberSaveable { mutableStateOf("") }
     var farmerPhoto by rememberSaveable { mutableStateOf("") }
@@ -168,7 +169,7 @@ fun FarmForm(
             sizeInHa.toFloat(),
             latitude,
             longitude,
-            coordinatesData
+            coordinates = coordinatesData?.plus(coordinatesData.first())
         )
 
         val returnIntent = Intent()
@@ -209,8 +210,6 @@ fun FarmForm(
     }
 
     fun validateForm(): Boolean {
-        var isValid = true
-
         if (farmerName.isBlank()) {
             isValid = false
             // You can display an error message for this field if needed
@@ -322,7 +321,6 @@ fun FarmForm(
             }
         }
 
-
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
@@ -352,7 +350,12 @@ fun FarmForm(
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name)) },
+            label = { Text(stringResource(id = R.string.farm_name) + " (*)") },
+            supportingText = { if (!isValid && farmerName.isBlank()) Text("Farmer Name should not be empty") },
+            isError = !isValid && farmerName.isBlank(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -390,7 +393,12 @@ fun FarmForm(
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village)) },
+            label = { Text(stringResource(id = R.string.village) + " (*)") },
+            supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
+            isError = !isValid && village.isBlank(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .focusRequester(focusRequester1)
                 .fillMaxWidth()
@@ -404,7 +412,12 @@ fun FarmForm(
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district)) },
+            label = { Text(stringResource(id = R.string.district) + " (*)") },
+            supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
+            isError = !isValid && district.isBlank(),
+            colors = TextFieldDefaults.textFieldColors(
+                errorLeadingIconColor = Color.Red,
+            ),
             modifier = Modifier
                 .focusRequester(focusRequester2)
                 .fillMaxWidth()
@@ -424,7 +437,12 @@ fun FarmForm(
                 onValueChange = {
                     size = it
                 },
-                label = { Text(stringResource(id = R.string.size_in_hectares)) },
+                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
+                supportingText = { if (!isValid && size.isBlank()) Text("Farm Size should not be empty") },
+                isError = !isValid && size.isBlank(),
+                colors = TextFieldDefaults.textFieldColors(
+                    errorLeadingIconColor = Color.Red,
+                ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
                     .weight(1f)
@@ -483,7 +501,7 @@ fun FarmForm(
 //                .padding(bottom = 16.dp)
 //        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-        if ((size.toFloatOrNull() ?: 0f) <= 4f) {
+        if ((size.toFloatOrNull() ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -499,7 +517,16 @@ fun FarmForm(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    label = { Text(stringResource(id = R.string.latitude)) },
+                    label = { Text(stringResource(id = R.string.latitude) + " (*)") },
+                    supportingText = {
+                        if (!isValid && latitude.split(".").last().length < 6) Text(
+                            "Latitude must have at least 6 decimal places"
+                        )
+                    },
+                    isError = !isValid && latitude.split(".").last().length < 6,
+                    colors = TextFieldDefaults.textFieldColors(
+                        errorLeadingIconColor = Color.Red,
+                    ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(bottom = 16.dp)
@@ -516,7 +543,16 @@ fun FarmForm(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    label = { Text(stringResource(id = R.string.longitude)) },
+                    label = { Text(stringResource(id = R.string.longitude) + " (*)") },
+                    supportingText = {
+                        if (!isValid && longitude.split(".").last().length < 6) Text(
+                            "Longitude must have at least 6 decimal places"
+                        )
+                    },
+                    isError = !isValid && longitude.split(".").last().length < 6,
+                    colors = TextFieldDefaults.textFieldColors(
+                        errorLeadingIconColor = Color.Red,
+                    ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(bottom = 16.dp)
@@ -629,8 +665,7 @@ fun FarmForm(
                     latitude = bounds.southwest.latitude.toString()
                     //Show the overview of polygon taken
                 }
-                val isValid = validateForm()
-                if (isValid) {
+                if (validateForm()) {
                     // Ask user to confirm before adding farm
                     if (coordinatesData?.isNotEmpty() == true) saveFarm()
                     else showDialog.value = true
@@ -680,6 +715,7 @@ fun addFarm(
     return farm
 }
 
+@SuppressLint("SimpleDateFormat")
 fun Context.createImageFile(): File {
     val timeStamp = SimpleDateFormat("yyyy_MM_dd_HH:mm:ss").format(Date())
     val imageFileName = "JPEG_" + timeStamp + "_"

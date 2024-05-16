@@ -203,10 +203,12 @@ fun SiteCard(
                             modifier = Modifier
                                 .padding(bottom = 1.dp)
                         )
-                        Text(
-                            text = "${stringResource(id = R.string.phone_number)}: ${site.phoneNumber}",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        if (site.phoneNumber.isNotEmpty()) {
+                            Text(
+                                text = "${stringResource(id = R.string.phone_number)}: ${site.phoneNumber}",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                     // Edit collection sites name
                     IconButton(

@@ -2,7 +2,7 @@
     <string name="app_name">TerraTrac</string>
     <string name="farm_list">Farm List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
-    <string name="developed_by">Developed By TechnoServe</string>
+    <string name="developed_by">Developed By</string>
     <string name="delete_this_item">Delete this item</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="item_will_be_deleted">This item will be deleted.</string>
@@ -49,4 +49,6 @@
     <string name="phone_number">Phone Number</string>
     <string name="email">Email</string>
     <string name="member_id">Member ID</string>
+    <string name="get_started">Get Started</string>
+    <string name="invalid_phone_number">Invalid Phone Number</string>
 </resources>
