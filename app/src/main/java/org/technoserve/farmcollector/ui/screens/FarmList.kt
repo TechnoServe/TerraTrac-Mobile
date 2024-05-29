@@ -394,8 +394,16 @@ fun DownloadCsvButton(farms: List<Farm>, cwsListItems: List<CollectionSite>) {
 
                                 // Write each farm's data
                                 for (farm in farms) {
+                                    val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                    val matches = regex.findAll(farm.coordinates.toString())
+
+                                    // Reverse the coordinates and format with brackets
+                                    val reversedCoordinates = matches.map { match ->
+                                        val (lat, lon) = match.destructured
+                                        "[$lon, $lat]"
+                                    }.joinToString(", ", prefix = "[", postfix = "]")
                                     val line =
-                                        "${farm.farmerName},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${farm.coordinates}\",${
+                                        "${farm.farmerName},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
                                             Date(farm.createdAt)
                                         },${Date(farm.updatedAt)}"
                                     writer.println(line)

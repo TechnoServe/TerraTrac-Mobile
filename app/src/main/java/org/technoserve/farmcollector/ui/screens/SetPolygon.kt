@@ -203,7 +203,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 modifier = Modifier.padding(5.dp)
                             ) {
                                 Text(
-                                    text = R.string.farm_info.toString(),
+                                    text = stringResource(id = R.string.farm_info),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 18.sp, fontWeight = FontWeight.Bold
                                     ),
@@ -248,7 +248,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 viewModel.clearCoordinates()
                                 navController.navigateUp()
                             }) {
-                            Text(text = R.string.close.toString())
+                            Text(text = stringResource(id = R.string.close))
                         }
                         Button(
                             shape = RoundedCornerShape(10.dp),
@@ -260,7 +260,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 navController.navigate("updateFarm/${farmInfo?.id}")
                             },
                         ) {
-                            Text(text = R.string.update.toString())
+                            Text(text = stringResource(id = R.string.update))
                         }
                     }
                 } else {
@@ -280,7 +280,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         Text(
                             fontSize = 12.sp,
                             color = Color.Black,
-                            text = if (isCapturingCoordinates) R.string.finish.toString() else R.string.start.toString()
+                            text = if (isCapturingCoordinates) stringResource(id = R.string.finish) else stringResource(
+                                id = R.string.start
+                            )
                         )
                     }
                     ElevatedButton(modifier = Modifier
@@ -299,7 +301,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                     if (location == null) {
                                         Toast.makeText(
                                             context,
-                                            R.string.can_not_get_location.toString(),
+                                            context.getString(R.string.can_not_get_location),
                                             Toast.LENGTH_LONG
                                         ).show()
                                     } else {
@@ -309,7 +311,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                         ) {
                                             Toast.makeText(
                                                 context,
-                                                R.string.can_not_get_location.toString(),
+                                                context.getString(R.string.can_not_get_location),
                                                 Toast.LENGTH_LONG
                                             ).show()
 
@@ -332,7 +334,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 }
                             }
                         }) {
-                        Text(fontSize = 12.sp, color = Color.White, text = R.string.add_point.toString())
+                        Text(
+                            fontSize = 12.sp,
+                            color = Color.White,
+                            text = stringResource(id = R.string.add_point)
+                        )
                     }
                     ElevatedButton(modifier = Modifier
                         .fillMaxWidth(0.22f),
@@ -342,7 +348,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             showClearMapDialog.value = true
                         }) {
                         Text(
-                            fontSize = 12.sp, color = Color.Black, text = R.string.reset.toString()
+                            fontSize = 12.sp,
+                            color = Color.Black,
+                            text = stringResource(id = R.string.reset)
                         )
                     }
                     ElevatedButton(modifier = Modifier.fillMaxWidth(0.28f),
@@ -356,7 +364,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             fontSize = 12.sp,
                             color = Color.White,
-                            text = R.string.drop_point.toString()
+                            text = stringResource(id = R.string.drop_point)
                         )
                     }
                 }
