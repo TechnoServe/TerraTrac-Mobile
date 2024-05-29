@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">EGNSS4COFFEE</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">TerraTrac</string>
     <string name="farm_list">Lista de granjas</string>
     <string name="app_intro">Aplicación móvil básica para la trazabilidad del café para el cumplimiento de la regulación de deforestación de la UE</string>
     <string name="developed_by">Desarrollado por</string>
@@ -31,14 +31,32 @@
     <string name="permission_granted">Permiso concedido</string>
     <string name="permission_denied">Permiso denegado</string>
     <string name="fill_form">Por favor completa todos los campos y toma una foto.</string>
-    <string name="collection_site_list">Collection sites</string>
-    <string name="add_site">Add site</string>
-    <string name="site_name">Site name</string>
+    <string name="collection_site_list">Sitios de recolección</string>
+    <string name="add_site">Agregar sitio</string>
+    <string name="site_name">Nombre del sitio</string>
     <string name="unit">Unidad</string>
-    <string name="agent_name">Agent Name</string>
-    <string name="phone_number">Phone Number</string>
+    <string name="agent_name">Nombre del agente</string>
+    <string name="phone_number">Número de teléfono</string>
     <string name="email">Email</string>
-    <string name="member_id">member id</string>
-    <string name="get_started">Get Started</string>
-    <string name="invalid_phone_number">Invalid Phone Number</string>
+    <string name="member_id">ID de miembro</string>
+    <string name="get_started">Comenzar</string>
+    <string name="invalid_phone_number">Número de teléfono no válido</string>
+    <string name="coordinates">Coordenadas</string>
+    <string name="set_polygon">Establecer polígono</string>
+    <string name="dummy_button">Botón ficticio</string>
+    <string name="dummy_content">CONTENIDO TONTO</string>
+    <string name="confirm_add_farm">Desea establecer el polígono de la granja? Si no es así, agregue la granja.</string>
+    <string name="confirm_update_farm">Desea actualizar el polígono de la granja? Si no es así, actualice la granja.</string>
+    <string name="accuracy">Exactitud</string>
+    <string name="confirm_set_polygon">Has terminado de configurar el polígono? Si es así, proceda y guarde seleccionando el botón \'Sí\'.</string>
+    <string name="clear_map">Quieres borrar el mapa?</string>
+    <string name="confirm_update_site">Continúe con yes si desea actualizar el nombre del sitio de la colección.</string>
+    <string name="update_site">Actualizar el sitio de recopilación</string>
+    <string name="farm_info">Información de la granja</string>
+    <string name="finish">Terminar</string>
+    <string name="start">Empezar</string>
+    <string name="can_not_get_location">No puedo obtener la ubicación, inténtalo de nuevo</string>
+    <string name="add_point">Agregar punto</string>
+    <string name="reset">Restablecimiento</string>
+    <string name="drop_point">Punto de caída</string>
 </resources>

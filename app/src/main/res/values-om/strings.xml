@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EGNSS4COFFEE</string>
+    <string name="app_name">TerraTrac</string>
     <string name="farm_list">Tarree Qonnaa</string>
     <string name="app_intro">Dambii bosona ciruu Gamtaa Awurooppaa eeguuf appii mobaayilaa bu\'uuraa hordoffii bunaa</string>
     <string name="developed_by">Kan qopheesse</string>
@@ -31,14 +31,32 @@
     <string name="permission_granted">Hayyamni Kenname</string>
     <string name="permission_denied">Hayyamni Dhorkame</string>
     <string name="fill_form">Dirree hunda guutaa suuraa ka\'aa</string>
-    <string name="collection_site_list">Collection sites</string>
-    <string name="add_site">Add site</string>
-    <string name="site_name">Site name</string>
-    <string name="unit">Unit</string>
-    <string name="agent_name">Agent Name</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="email">Email</string>
-    <string name="member_id">member id</string>
-    <string name="get_started">Get Started</string>
-    <string name="invalid_phone_number">Invalid Phone Number</string>
+    <string name="collection_site_list">Iddoowwan walitti qabama</string>
+    <string name="add_site">Saayitii itti dabali</string>
+    <string name="site_name">Maqaa marsariitii</string>
+    <string name="unit">Safartuu</string>
+    <string name="agent_name">Maqaa Bakka Bu\'aa</string>
+    <string name="phone_number">Lakkoofsa Bilbilaa</string>
+    <string name="email">Imeelii</string>
+    <string name="member_id">miseensa id</string>
+    <string name="get_started">Jalqabaa</string>
+    <string name="invalid_phone_number">Lakkoofsa Bilbilaa Sirrii Hin Taane</string>
+    <string name="coordinates">Qindeessa</string>
+    <string name="set_polygon">Pooligoonii saagi</string>
+    <string name="dummy_button">Button Dummy</string>
+    <string name="dummy_content">QABIYYEE DUMMY</string>
+    <string name="confirm_add_farm">Pooligoonii qonnaa saaguu barbaadduu? Yoo hin taane qonna itti dabali.</string>
+    <string name="confirm_update_farm">Pooligoonii qonnaa haaromsuu barbaadduu? Yoo lakki ta\'e, qonna haaromsi.</string>
+    <string name="accuracy">Dogoggoraala</string>
+    <string name="confirm_set_polygon">Pooligoonii saaguu xumurteettaa? Yoo akkas ta\'e, itti fufii qaree \'Eeyyee\' filachuudhaan saagi.</string>
+    <string name="clear_map">Kaartaa qulqulleessuu barbaadduu?</string>
+    <string name="confirm_update_site">Yoo maqaa saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
+    <string name="update_site">Saayitii Walitti Qabuu Fooyyessi</string>
+    <string name="farm_info">Odeeffannoo Qonnaa</string>
+    <string name="finish">Xumuruu</string>
+    <string name="start">Eegaluu</string>
+    <string name="can_not_get_location">Bakka argachuu hin dandeenye, Irra deebi\'ii yaalaa</string>
+    <string name="add_point">Qabxii Dabaluu</string>
+    <string name="reset">Reset gochuu</string>
+    <string name="drop_point">Qabxii Kufaatii</string>
 </resources>

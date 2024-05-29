@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">EGNSS4COFFEE</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">TerraTrac</string>
     <string name="farm_list">የእርሻ ዝርዝር</string>
     <string name="app_intro">የአውሮፓ ህብረት የደን ጭፍጨፋ ደንብን ለማክበር የቡና መከታተያ መሰረታዊ የሞባይል መተግበሪያ</string>
     <string name="developed_by">የተገነባው በ</string>
@@ -31,16 +31,32 @@
     <string name="permission_granted">ፍቃድ ተሰጥቷል።</string>
     <string name="permission_denied">የተሰረዘ ፈቃድ</string>
     <string name="fill_form">እባክዎን ሁሉንም መስኮች ይሙሉ እና ፎቶ ያንሱ</string>
-    <string name="collection_site_list">Collection sites</string>
-    <string name="add_site">Add site</string>
-    <string name="site_name">Site name</string>
-    <string name="confirm_add_farm">Want to set the farm\'s polygon? If not, add farm.</string>
-    <string name="set_polygon">Set Polygon</string>
-    <string name="unit">Unit</string>
-    <string name="agent_name">Agent Name</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="email">Email</string>
-    <string name="member_id">member id</string>
-    <string name="get_started">Get Started</string>
-    <string name="invalid_phone_number">Invalid Phone Number</string>
+    <string name="collection_site_list">የመሰብሰቢያ ቦታዎች</string>
+    <string name="add_site">ድረ-ገጽ ጨምር</string>
+    <string name="site_name">የሳይት ስም</string>
+    <string name="confirm_add_farm">እርሻውን\'ን ብዙ ማህደር ማዘጋጀት ትፈልጋለህ? ካልሆነ እርሻ ጨምር ።</string>
+    <string name="set_polygon">ብዙ ማጣቀሻ</string>
+    <string name="unit">ዩኒት</string>
+    <string name="agent_name">የወኪል ስም</string>
+    <string name="phone_number">ስልክ ቁጥር</string>
+    <string name="email">ኢሜይል</string>
+    <string name="member_id">አባል id</string>
+    <string name="get_started">ጀምር</string>
+    <string name="invalid_phone_number">የማይረባ የስልክ ቁጥር</string>
+    <string name="coordinates">ቅንጅት</string>
+    <string name="dummy_button">ዳሚ ቁልፍ</string>
+    <string name="dummy_content">የዱሚ ይዘት</string>
+    <string name="confirm_update_farm">የእርሻውን ፖሊጎን ማሻሻል ትፈልጋለህ? ካልሆነ ግን እርሻውን ማሻሻል።</string>
+    <string name="accuracy">ትክክለኝነት</string>
+    <string name="confirm_set_polygon">ብዙ ጊዜ ማመቻቸትህን ጨርሰሃል? ከሆነ የ አዎ የሚለውን ቁልፍ በመምረጥ አስቀምጥና አስቀምጥ።</string>
+    <string name="clear_map">ካርታውን ማጽዳት ትፈልጋለህ?</string>
+    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ስም ማሻሻል ከፈለጋችሁ አዎ ጋር ይቀጥሉ።</string>
+    <string name="update_site">የውሂብ ማሰባሰቢያ ስሪት</string>
+    <string name="farm_info">የእርሻ ኢንፎ</string>
+    <string name="finish">ጨርስ</string>
+    <string name="start">ጀምር</string>
+    <string name="can_not_get_location">ቦታ ማግኘት አይቻልም, እንደገና ይሞክሩ</string>
+    <string name="add_point">ነጥብ ጨምር</string>
+    <string name="reset">መልሶ ማቋቋም</string>
+    <string name="drop_point">ነጥብ አወረደ</string>
 </resources>
