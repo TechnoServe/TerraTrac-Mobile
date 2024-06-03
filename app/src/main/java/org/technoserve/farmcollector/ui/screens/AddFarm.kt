@@ -117,7 +117,6 @@ fun FarmForm(
     coordinatesData: List<Pair<Double, Double>>?
 ) {
     val context = LocalContext.current as Activity
-    var isImageUploaded by remember { mutableStateOf(false) }
     var isValid by remember { mutableStateOf(true) }
     var farmerName by rememberSaveable { mutableStateOf("") }
     var memberId by rememberSaveable { mutableStateOf("") }
@@ -125,12 +124,9 @@ fun FarmForm(
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
     var size by rememberSaveable { mutableStateOf("") }
-    var purchases by remember { mutableStateOf("") }
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
-    val myLocation = remember { mutableStateOf("") }
-    val currentPhotoPath = remember { mutableStateOf("") }
-    val items = listOf("Ha", "Acres", "Sqm")
+    val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
     var selectedUnit by remember { mutableStateOf(items[0]) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
@@ -235,16 +231,6 @@ fun FarmForm(
             // You can display an error message for this field if needed
         }
 
-//        if (purchases.isBlank()) {
-//            isValid = false
-//            // You can display an error message for this field if needed
-//        }
-
-//        if (!isImageUploaded) {
-//            isValid = false
-//            // You can display an error message for this field if needed
-//        }
-
         if (latitude.isBlank() || longitude.isBlank()) {
             isValid = false
             // You can display an error message for these fields if needed
@@ -253,25 +239,10 @@ fun FarmForm(
         return isValid
     }
 
-    var capturedImageUri by remember {
-        mutableStateOf<Uri>(Uri.EMPTY)
-    }
-
     val scrollState = rememberScrollState()
     val permissionGranted = stringResource(id = R.string.permission_granted)
     val permissionDenied = stringResource(id = R.string.permission_denied)
     val fillForm = stringResource(id = R.string.fill_form)
-//    val cameraLauncher =
-//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){
-//            capturedImageUri = uri
-//            farmerPhoto.value = BitmapFactory.decodeStream(
-//                uri?.let { it1 -> context.contentResolver?.openInputStream(it1) }
-//            )
-//            val stream = ByteArrayOutputStream()
-//            farmerPhoto.value?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-//            val imgAsByteArray: ByteArray = stream.toByteArray()
-//            farmerPhoto.value = BitmapFactory.decodeByteArray(imgAsByteArray, 0, imgAsByteArray.size)
-//        }
 
     var imageInputStream: InputStream? = null
     val resultLauncher =
@@ -300,7 +271,6 @@ fun FarmForm(
 
                             // Update the database with the file path
                             farmerPhoto = fileUri.toString()
-                            Log.d("farmerphoto", "$farmerPhoto")
                             // Update other fields in the Farm object
                             // Then, insert or update the farm object in your database
                         } catch (e: IOException) {
