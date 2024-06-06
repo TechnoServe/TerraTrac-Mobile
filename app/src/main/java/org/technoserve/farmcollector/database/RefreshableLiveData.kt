@@ -16,10 +16,4 @@ class RefreshableLiveData<T>(
     private fun observer(data: T) {
         value = data
     }
-
-    fun refresh() {
-        this.removeSource(liveData)
-        liveData = source()
-        this.addSource(liveData, ::observer)
-    }
 }

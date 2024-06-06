@@ -59,4 +59,12 @@
     <string name="add_point">Qabxii Dabaluu</string>
     <string name="reset">Reset gochuu</string>
     <string name="drop_point">Qabxii Kufaatii</string>
+    <string name="light_dark_theme">Mata duree Ifa/Dukkana</string>
+    <string name="select_language">Afaan Filadhu:</string>
+    <string name="settings">Sajoo</string>
+    <string name="english">Afaan Ingilizii</string>
+    <string name="french">Afaan Faransaayii</string>
+    <string name="spanish">Ispaanishii</string>
+    <string name="amharic">Afaan Amaaraa</string>
+    <string name="oromo">Afaan Oromoo</string>
 </resources>

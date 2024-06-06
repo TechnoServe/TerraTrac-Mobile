@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">TerraTrac</string>
     <string name="farm_list">Lista de granjas</string>
     <string name="app_intro">Aplicación móvil básica para la trazabilidad del café para el cumplimiento de la regulación de deforestación de la UE</string>
@@ -59,4 +59,12 @@
     <string name="add_point">Agregar punto</string>
     <string name="reset">Restablecimiento</string>
     <string name="drop_point">Punto de caída</string>
+    <string name="light_dark_theme">Tema claro/oscuro</string>
+    <string name="select_language">Seleccionar idioma:</string>
+    <string name="settings">Configuración</string>
+    <string name="english">Inglés</string>
+    <string name="french">Francés</string>
+    <string name="spanish">Español</string>
+    <string name="amharic">amárico</string>
+    <string name="oromo">Oromo</string>
 </resources>

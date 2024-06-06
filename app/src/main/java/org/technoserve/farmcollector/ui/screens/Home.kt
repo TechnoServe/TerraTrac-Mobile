@@ -1,6 +1,8 @@
 package org.technoserve.farmcollector.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,9 +30,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.utils.Language
+import org.technoserve.farmcollector.utils.LanguageSelector
+import org.technoserve.farmcollector.utils.LanguageViewModel
 
 @Composable
-fun Home(navController: NavController) {
+fun Home(
+    navController: NavController,
+    languageViewModel: LanguageViewModel,
+    languages: List<Language>
+) {
     Column(
         Modifier
             .padding(top = 20.dp)
@@ -39,6 +47,13 @@ fun Home(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+//        add language selector here and align on right
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            LanguageSelector(viewModel = languageViewModel, languages = languages)
+        }
         Column(
             Modifier
                 .fillMaxWidth()
@@ -64,22 +79,28 @@ fun Home(navController: NavController) {
                 style = TextStyle(fontSize = 24.sp)
             )
         }
-        Button(
-            onClick = {
-                navController.navigate("siteList")
-            },
+        Box(
             modifier = Modifier
-                .padding(30.dp),
-            shape = RoundedCornerShape(10.dp),
-            enabled = true,
+                .padding(30.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .clickable {
+                    navController.navigate("siteList")
+                }
+                .padding(16.dp) // Additional padding to make the clickable area similar to a button
         ) {
             Text(
                 text = stringResource(id = R.string.get_started),
-                modifier = Modifier.padding(12.dp, 4.dp, 12.dp, 4.dp),
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary // Ensure text color contrasts with background
+                ),
+                modifier = Modifier.align(Alignment.Center)
             )
         }
+
         Spacer(modifier = Modifier.fillMaxHeight(0.2f))
         Box(
             modifier = Modifier

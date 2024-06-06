@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">TerraTrac</string>
     <string name="farm_list">የእርሻ ዝርዝር</string>
     <string name="app_intro">የአውሮፓ ህብረት የደን ጭፍጨፋ ደንብን ለማክበር የቡና መከታተያ መሰረታዊ የሞባይል መተግበሪያ</string>
@@ -59,4 +59,12 @@
     <string name="add_point">ነጥብ ጨምር</string>
     <string name="reset">መልሶ ማቋቋም</string>
     <string name="drop_point">ነጥብ አወረደ</string>
+    <string name="light_dark_theme">ብርሃን/ጨለማ ጭብጥ</string>
+    <string name="select_language">ቋንቋ ይምረጡ፦</string>
+    <string name="settings">ምርጫዎች</string>
+    <string name="english">እንግሊዝኛ</string>
+    <string name="french">ፈረንሳይኛ</string>
+    <string name="spanish">ስፓንኛ</string>
+    <string name="amharic">አማርኛ</string>
+    <string name="oromo">ኦሮሞ</string>
 </resources>
