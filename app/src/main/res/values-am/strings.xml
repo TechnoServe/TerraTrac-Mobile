@@ -67,4 +67,6 @@
     <string name="spanish">ስፓንኛ</string>
     <string name="amharic">አማርኛ</string>
     <string name="oromo">ኦሮሞ</string>
+    <string name="enable_location">ቦታን አዙሩ</string>
+    <string name="enable_location_msg">ቅንጅቶችን ለማግኘት በሁኔታዎች ውስጥ የቦታ አገልግሎቶችን ማስቻል።</string>
 </resources>

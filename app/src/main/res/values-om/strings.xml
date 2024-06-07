@@ -67,4 +67,6 @@
     <string name="spanish">Ispaanishii</string>
     <string name="amharic">Afaan Amaaraa</string>
     <string name="oromo">Afaan Oromoo</string>
+    <string name="enable_location">Bakka Ibsituu</string>
+    <string name="enable_location_msg">Tajaajiloota Bakka qindaa\'inoota keessatti dandeessisi qindaa\'inoota argachuuf.</string>
 </resources>

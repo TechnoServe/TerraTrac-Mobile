@@ -253,7 +253,7 @@ fun FarmListHeader(
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.secondary
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

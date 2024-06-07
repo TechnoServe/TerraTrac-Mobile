@@ -22,4 +22,6 @@
     <string name="spanish">Spanish</string>
     <string name="amharic">Amharic</string>
     <string name="oromo">Oromo</string>
+    <string name="enable_location">Turn On Location</string>
+    <string name="enable_location_msg">Enable Location services in settings to get coordinates.</string>
 </resources>

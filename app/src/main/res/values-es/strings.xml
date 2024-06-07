@@ -67,4 +67,6 @@
     <string name="spanish">Español</string>
     <string name="amharic">amárico</string>
     <string name="oromo">Oromo</string>
+    <string name="enable_location">Activar ubicación</string>
+    <string name="enable_location_msg">Habilite los servicios de ubicación en la configuración para obtener coordenadas.</string>
 </resources>

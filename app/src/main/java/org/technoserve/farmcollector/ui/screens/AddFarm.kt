@@ -6,9 +6,9 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
+import android.location.LocationManager
 import android.os.Looper
-import android.util.Log
+import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -141,6 +141,28 @@ fun FarmForm(
         context.packageName + ".provider", file
     )
     val showDialog = remember { mutableStateOf(false) }
+    val showLocationDialog = remember { mutableStateOf(false) }
+
+    if (showLocationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialog.value = false },
+            title = { Text(stringResource(id = R.string.enable_location)) },
+            text = { Text(stringResource(id = R.string.enable_location_msg)) },
+            confirmButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    promptEnableLocation(context)
+                }) {
+                    Text(stringResource(id = R.string.yes))
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showLocationDialog.value = false }) {
+                    Text(stringResource(id = R.string.no))
+                }
+            }
+        )
+    }
 
     fun saveFarm() {
 //        convert selectedUnit to hectares
@@ -533,26 +555,29 @@ fun FarmForm(
             onClick = {
                 // Simulate collecting latitude and longitude
                 if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
-                    val locationRequest = LocationRequest.create().apply {
-                        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                        interval = 10000 // Update interval in milliseconds
-                        fastestInterval = 5000 // Fastest update interval in milliseconds
-                    }
+                    if (isLocationEnabled(context)) {
+                        val locationRequest = LocationRequest.create().apply {
+                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                            interval = 10000 // Update interval in milliseconds
+                            fastestInterval = 5000 // Fastest update interval in milliseconds
+                        }
 
-                    fusedLocationClient.requestLocationUpdates(
-                        locationRequest,
-                        object : LocationCallback() {
-                            override fun onLocationResult(locationResult: LocationResult) {
-                                locationResult.lastLocation?.let { lastLocation ->
-                                    // Handle the new location
-                                    latitude = "${lastLocation.latitude}"
-                                    longitude = "${lastLocation.longitude}"
-                                    //Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                        fusedLocationClient.requestLocationUpdates(
+                            locationRequest,
+                            object : LocationCallback() {
+                                override fun onLocationResult(locationResult: LocationResult) {
+                                    locationResult.lastLocation?.let { lastLocation ->
+                                        // Handle the new location
+                                        latitude = "${lastLocation.latitude}"
+                                        longitude = "${lastLocation.longitude}"
+                                    }
                                 }
-                            }
-                        },
-                        Looper.getMainLooper()
-                    )
+                            },
+                            Looper.getMainLooper()
+                        )
+                    } else {
+                        showLocationDialog.value = true
+                    }
                 } else {
                     navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
                     navController.navigate("setPolygon")
@@ -683,6 +708,17 @@ fun addFarm(
     )
     farmViewModel.addFarm(farm)
     return farm
+}
+
+fun isLocationEnabled(context: Context): Boolean {
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+}
+
+fun promptEnableLocation(context: Context) {
+    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+    context.startActivity(intent)
 }
 
 @SuppressLint("SimpleDateFormat")

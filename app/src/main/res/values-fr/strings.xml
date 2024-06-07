@@ -67,4 +67,6 @@
     <string name="spanish">Espagnol</string>
     <string name="amharic">Amharique</string>
     <string name="oromo">Oromo</string>
+    <string name="enable_location">Activer la localisation</string>
+    <string name="enable_location_msg">Activez les services de localisation dans les paramètres pour obtenir des coordonnées.</string>
 </resources>

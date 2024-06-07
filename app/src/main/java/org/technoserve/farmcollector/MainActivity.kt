@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -61,6 +62,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val darkMode = mutableStateOf(sharedPreferences.getBoolean("dark_mode", false))
+
+        // Apply the selected theme
+        if (darkMode.value) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
 
         GlobalScope.launch {
             val adInfo = AdvertisingIdClient.getAdvertisingIdInfo(applicationContext)
