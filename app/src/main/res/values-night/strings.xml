@@ -24,4 +24,11 @@
     <string name="oromo">Oromo</string>
     <string name="enable_location">Turn On Location</string>
     <string name="enable_location_msg">Enable Location services in settings to get coordinates.</string>
+    <string name="success_export_msg">Data exported successfully</string>
+    <string name="set_new_polygon">Set New Polygon</string>
+    <string name="export_data">Export Data</string>
+    <string name="export_data_desc">Choose the format to export the data:</string>
+    <string name="error_export_msg">Error while exporting data, please try again.</string>
+    <string name="export">Export</string>
+    <string name="cancel">Cancel</string>
 </resources>

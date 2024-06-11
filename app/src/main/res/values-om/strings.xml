@@ -69,4 +69,11 @@
     <string name="oromo">Afaan Oromoo</string>
     <string name="enable_location">Bakka Ibsituu</string>
     <string name="enable_location_msg">Tajaajiloota Bakka qindaa\'inoota keessatti dandeessisi qindaa\'inoota argachuuf.</string>
+    <string name="success_export_msg">Deetaan milkaa\'inaan ergame</string>
+    <string name="set_new_polygon">Pooligoonii Haaraa Saagi</string>
+    <string name="export_data">Daataa Al-ergii</string>
+    <string name="export_data_desc">Akkaataa deetaa erguuf filadhu:</string>
+    <string name="error_export_msg">Dogoggorri yeroo deetaa ergitu, maaloo irra deebi\'ii yaali.</string>
+    <string name="export">Alergii</string>
+    <string name="cancel">Haquu</string>
 </resources>

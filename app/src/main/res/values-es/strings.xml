@@ -69,4 +69,11 @@
     <string name="oromo">Oromo</string>
     <string name="enable_location">Activar ubicación</string>
     <string name="enable_location_msg">Habilite los servicios de ubicación en la configuración para obtener coordenadas.</string>
+    <string name="success_export_msg">Datos exportados correctamente</string>
+    <string name="set_new_polygon">Establecer nuevo polígono</string>
+    <string name="export_data">Exportar datos</string>
+    <string name="export_data_desc">Elija el formato para exportar los datos:</string>
+    <string name="error_export_msg">Error al exportar datos, inténtalo de nuevo.</string>
+    <string name="export">Exportar</string>
+    <string name="cancel">Cancelar</string>
 </resources>

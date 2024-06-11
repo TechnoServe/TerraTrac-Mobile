@@ -69,4 +69,11 @@
     <string name="oromo">ኦሮሞ</string>
     <string name="enable_location">ቦታን አዙሩ</string>
     <string name="enable_location_msg">ቅንጅቶችን ለማግኘት በሁኔታዎች ውስጥ የቦታ አገልግሎቶችን ማስቻል።</string>
+    <string name="success_export_msg">ዳታ በተሳካ ሁኔታ ወደ ውጭ ይላካል</string>
+    <string name="set_new_polygon">አዲስ ብዙ ማህደር አስቀምጥ</string>
+    <string name="export_data">ውሂብ ወደ ውጪ ላክ</string>
+    <string name="export_data_desc">ውሂቡን ወደ ውጭ ለመላክ ቅርጸቱን ይምረጡ፡-</string>
+    <string name="error_export_msg">ውሂብ ወደ ውጭ በመላክ ላይ ስህተት፣ እባክዎ እንደገና ይሞክሩ።</string>
+    <string name="export">ወደ ውጪ ላክ</string>
+    <string name="cancel">ሰርዝ</string>
 </resources>

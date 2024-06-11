@@ -1,6 +1,5 @@
 package org.technoserve.farmcollector
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,10 +23,6 @@ import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.map.MapViewModel
@@ -56,8 +51,7 @@ class MainActivity : ComponentActivity() {
         getSharedPreferences("theme_mode", MODE_PRIVATE)
     }
 
-    @SuppressLint("HardwareIds")
-    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
+    @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -68,11 +62,6 @@ class MainActivity : ComponentActivity() {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
-
-        GlobalScope.launch {
-            val adInfo = AdvertisingIdClient.getAdvertisingIdInfo(applicationContext)
-            println(adInfo.id ?: "unknown")
         }
 
         setContent {
