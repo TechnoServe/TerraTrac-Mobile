@@ -4,13 +4,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
-import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -75,7 +74,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
@@ -92,7 +90,6 @@ import org.technoserve.farmcollector.hasLocationPermission
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStream
 import java.io.OutputStream
 import java.io.PrintWriter
 import java.util.Date
@@ -112,6 +109,7 @@ fun FarmList(navController: NavController, siteId: Long) {
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
     val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
+    var showExportDialog by remember { mutableStateOf(false) }
 
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
@@ -121,20 +119,6 @@ fun FarmList(navController: NavController, siteId: Long) {
         showDeleteDialog.value = false
     }
 
-    fun refreshListItems() {
-        // TODO: update saved predictions list when db gets updated
-        //  currently using a terrible makeshift solution
-        navController.navigate("home")
-        navController.navigate("farmList") {
-            navController.graph.startDestinationRoute?.let { route ->
-                popUpTo(route) {
-                    saveState = true
-                }
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
-    }
     if (listItems.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier
@@ -152,7 +136,18 @@ fun FarmList(navController: NavController, siteId: Long) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
             item {
-                DownloadCsvButton(listItems, cwsListItems)
+
+                Button(onClick = { showExportDialog = true }) {
+                    Text("Export Data")
+                }
+
+                if (showExportDialog) {
+                    ExportDataDialog(
+                        onDismiss = { showExportDialog = false },
+                        listItems,
+                        cwsListItems
+                    )
+                }
             }
             items(listItems) { farm ->
                 FarmCard(farm = farm, onCardClick = {
@@ -199,6 +194,199 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 }
+
+@Composable
+fun ExportDataDialog(
+    onDismiss: () -> Unit,
+    farms: List<Farm>,
+    cwsListItems: List<CollectionSite>
+) {
+    var exportFormat by remember { mutableStateOf("CSV") }
+    // Handle export logic here
+    val context = LocalContext.current
+    val activity = context as Activity
+    val createDocumentLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data = result.data
+                // Handle the result as needed
+                if (data != null) {
+                    val uri = data.data
+                    uri?.let {
+                        val contentResolver = context.contentResolver
+                        val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
+                        val getSiteById = cwsListItems.find { it.siteId == siteID }
+
+                        if (outputStream != null) {
+                            PrintWriter(outputStream.bufferedWriter()).use { writer ->
+                                if (exportFormat == "CSV") {
+                                    // Write the header row
+                                    writer.println("farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at")
+
+                                    // Write each farm's data
+                                    for (farm in farms) {
+                                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                        val matches = regex.findAll(farm.coordinates.toString())
+
+                                        // Reverse the coordinates and format with brackets
+                                        val reversedCoordinates = matches.map { match ->
+                                            val (lat, lon) = match.destructured
+                                            "[$lon, $lat]"
+                                        }.joinToString(", ", prefix = "[", postfix = "]")
+                                        val line =
+                                            "${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                                Date(farm.createdAt)
+                                            },${Date(farm.updatedAt)}"
+                                        writer.println(line)
+                                    }
+                                } else {
+                                    // GeoJSON format
+                                    val geoJson = buildString {
+                                        append("{\"type\": \"FeatureCollection\", \"features\": [")
+                                        for (farm in farms) {
+                                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                            val matches = regex.findAll(farm.coordinates.toString())
+
+                                            // Reverse the coordinates and format as GeoJSON coordinates
+                                            val geoJsonCoordinates = matches.map { match ->
+                                                val (lat, lon) = match.destructured
+                                                "[$lon, $lat]"
+                                            }.joinToString(", ", prefix = "[", postfix = "]")
+
+                                            append(
+                                                """
+                                                {
+                                                    "type": "Feature",
+                                                    "properties": {
+                                                        "farmer_name": "${farm.farmerName}",
+                                                        "member_id": "${farm.memberId}",
+                                                        "collection_site": "${getSiteById?.name}",
+                                                        "agent_name": "${getSiteById?.agentName}",
+                                                        "farm_village": "${farm.village}",
+                                                        "farm_district": "${farm.district}",
+                                                        "farm_size": ${farm.size},
+                                                        "latitude": ${farm.latitude},
+                                                        "longitude": ${farm.longitude},
+                                                        "created_at": "${Date(farm.createdAt)}",
+                                                        "updated_at": "${Date(farm.updatedAt)}"
+                                                    },
+                                                    "geometry": {
+                                                        "type": "${
+                                                    if (farm.coordinates!!.size > 1) "Polygon" else "Point"
+                                                }",
+                                                        "coordinates": [
+                                                            ${
+                                                    if (farm.coordinates?.isEmpty() == true) {
+                                                        "[${farm.longitude}, ${farm.latitude}]"
+                                                    } else {
+                                                        geoJsonCoordinates
+                                                    }
+                                                }
+                                                        ]
+                                                    }
+                                                }${
+                                                    if (farms.indexOf(farm) == farms.size - 1) "" else ","
+                                                }
+                                                """.trimIndent()
+                                            )
+                                        }
+                                        append("]}")
+                                    }
+                                    writer.println(geoJson)
+                                }
+
+                                onDismiss()
+
+                                Toast.makeText(
+                                    context,
+                                    R.string.success_export_msg,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = stringResource(id = R.string.export_data)) },
+        text = {
+            Column {
+                Text(stringResource(id = R.string.export_data_desc))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = exportFormat == "CSV",
+                        onClick = { exportFormat = "CSV" }
+                    )
+                    Text("CSV")
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = exportFormat == "GeoJSON",
+                        onClick = { exportFormat = "GeoJSON" }
+                    )
+                    Text("GeoJSON")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    ActivityCompat.requestPermissions(
+                        activity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 23
+                    )
+                    val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
+                    val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+                    val file =
+                        File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
+
+                    try {
+                        writeTextData(file, farms, onDismiss, exportFormat)
+                    } catch (e: IOException) {
+                        // Handle file writing errors here
+                        Toast.makeText(
+                            context,
+                            R.string.error_export_msg,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        onDismiss()
+                    }
+                    val fileURI: Uri = context.let {
+                        FileProvider.getUriForFile(
+                            it,
+                            context.applicationContext.packageName.toString() + ".provider",
+                            file
+                        )
+                    }
+                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = mimeType
+                        putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
+                        putExtra(Intent.EXTRA_STREAM, fileURI)
+                        putExtra(Intent.EXTRA_TITLE, "farms${Instant.now().millis}")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    createDocumentLauncher.launch(intent)
+                }
+            ) {
+                Text(stringResource(id = R.string.export))
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { onDismiss() }
+            ) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        }
+    )
+}
+
 
 @Composable
 fun DeleteAllDialogPresenter(
@@ -253,7 +441,7 @@ fun FarmListHeader(
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.secondary
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -371,135 +559,8 @@ fun OutputStream.writeCsv(farms: List<Farm>) {
     writer.flush()
 }
 
-@Composable
-fun DownloadCsvButton(farms: List<Farm>, cwsListItems: List<CollectionSite>) {
-    val context = LocalContext.current
-    val activity = context as Activity
-    val createDocumentLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                // Handle the result as needed
-                if (data != null) {
-                    val uri = data.data
-                    uri?.let {
-                        val contentResolver = context.contentResolver
-                        val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
-                        val getSiteById = cwsListItems.find { it.siteId == siteID }
-
-                        if (outputStream != null) {
-                            PrintWriter(outputStream.bufferedWriter()).use { writer ->
-                                // Write the header row
-                                writer.println("farmer_name,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at")
-
-                                // Write each farm's data
-                                for (farm in farms) {
-                                    val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                    val matches = regex.findAll(farm.coordinates.toString())
-
-                                    // Reverse the coordinates and format with brackets
-                                    val reversedCoordinates = matches.map { match ->
-                                        val (lat, lon) = match.destructured
-                                        "[$lon, $lat]"
-                                    }.joinToString(", ", prefix = "[", postfix = "]")
-                                    val line =
-                                        "${farm.farmerName},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-                                            Date(farm.createdAt)
-                                        },${Date(farm.updatedAt)}"
-                                    writer.println(line)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-    Button(
-//        onClick = {
-//
-//            // Requesting Permission to access External Storage
-//            // Requesting Permission to access External Storage
-//            ActivityCompat.requestPermissions(
-//                activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE), 23
-//            )
-//
-//            // getExternalStoragePublicDirectory() represents root of external storage, we are using DOWNLOADS
-//            // We can use following directories: MUSIC, PODCASTS, ALARMS, RINGTONES, NOTIFICATIONS, PICTURES, MOVIES
-//            val folder: File =
-//                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-//
-//            // Storing the data in file with name as geeksData.txt
-//            val file = File(folder, "farms${Instant.now().millis}.csv")
-//            writeTextData(file, farms, context)
-//            // displaying a toast message
-//            Toast.makeText(context, "Data saved ...", Toast.LENGTH_SHORT).show()
-//
-//        },
-        onClick = {
-            ActivityCompat.requestPermissions(
-                activity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 23
-            )
-            // Create a CSV file and write data to it
-            val filename = "farms.csv"
-            val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
-
-            try {
-                writeTextData(file, farms, context)
-                // File was successfully written
-            } catch (e: IOException) {
-                // Handle file writing errors here
-                Log.d("saving", e.message.toString())
-            }
-            // Create an intent to send the file
-
-            val csvURI: Uri = context.let {
-                FileProvider.getUriForFile(
-                    it,
-                    context.applicationContext.packageName.toString() + ".provider",
-                    file
-                )
-            }
-//            val content = getContentFromUri(csvURI, context)
-//            Log.d("FileContent", "Content of $csvURI:\n$content")
-            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
-            intent.type = "text/csv"
-            intent.putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
-            intent.putExtra(Intent.EXTRA_STREAM, csvURI)
-            intent.putExtra(Intent.EXTRA_TITLE, "farms${Instant.now().millis}")
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            createDocumentLauncher.launch(intent)
-
-        },
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Text(text = stringResource(id = R.string.download_csv))
-    }
-}
-
-//fun getContentFromUri(uri: Uri, context: Context): String {
-//    val inputStream = context.contentResolver.openInputStream(uri)
-//    val reader = BufferedReader(InputStreamReader(inputStream))
-//    val stringBuilder = StringBuilder()
-//    var line: String?
-//
-//    try {
-//        while (reader.readLine().also { line = it } != null) {
-//            stringBuilder.append(line).append("\n")
-//        }
-//    } catch (e: IOException) {
-//        e.printStackTrace()
-//    } finally {
-//        inputStream?.close()
-//    }
-//
-//    return stringBuilder.toString()
-//}
-
-
 // on below line creating a method to write data to txt file.
-private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
+private fun writeTextData(file: File, farms: List<Farm>, onDismiss: () -> Unit, format: String) {
     var fileOutputStream: FileOutputStream? = null
     try {
         fileOutputStream = FileOutputStream(file)
@@ -517,7 +578,6 @@ private fun writeTextData(file: File, farms: List<Farm>, context: Context) {
             )
             fileOutputStream.write(10)
         }
-
     } catch (e: Exception) {
         e.printStackTrace()
     } finally {
@@ -553,19 +613,15 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         updatedAt = 1L
     )
     val context = LocalContext.current as Activity
-    var isImageUploaded by remember { mutableStateOf(false) }
     var farmerName by remember { mutableStateOf(item.farmerName) }
     var memberId by remember { mutableStateOf(item.memberId) }
     var farmerPhoto by remember { mutableStateOf(item.farmerPhoto) }
     var village by remember { mutableStateOf(item.village) }
     var district by remember { mutableStateOf(item.district) }
     var size by remember { mutableStateOf(item.size.toString()) }
-    var purchases by remember { mutableStateOf(item.purchases.toString()) }
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
     var coordinates by remember { mutableStateOf(item.coordinates) }
-    val mylocation = remember { mutableStateOf("") }
-    val currentPhotoPath = remember { mutableStateOf("") }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -584,8 +640,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             )
     }
 
-    val permissionGranted = stringResource(id = R.string.permission_granted)
-    val permissionDenied = stringResource(id = R.string.permission_denied)
     val fillForm = stringResource(id = R.string.fill_form)
 
     fun validateForm(): Boolean {
@@ -593,37 +647,22 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
         if (farmerName.isBlank()) {
             isValid = false
-            // You can display an error message for this field if needed
         }
 
         if (village.isBlank()) {
             isValid = false
-            // You can display an error message for this field if needed
         }
 
         if (district.isBlank()) {
             isValid = false
-            // You can display an error message for this field if needed
         }
 
         if (size.isBlank()) {
             isValid = false
-            // You can display an error message for this field if needed
         }
-
-//        if (purchases.isBlank()) {
-//            isValid = false
-//            // You can display an error message for this field if needed
-//        }
-
-//        if (!isImageUploaded) {
-//            isValid = false
-//            // You can display an error message for this field if needed
-//        }
 
         if (latitude.isBlank() || longitude.isBlank()) {
             isValid = false
-            // You can display an error message for these fields if needed
         }
 
         return isValid
@@ -686,76 +725,13 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         )
     }
 
-    var capturedImageUri by remember {
-        mutableStateOf<Uri>(Uri.EMPTY)
-    }
     val scrollState = rememberScrollState()
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
-    var imageInputStream: InputStream? = null
-    val resultLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val treeUri = result.data?.data
-
-                if (treeUri != null) {
-                    val takeFlags =
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
-
-                    // Now, you have permission to write to the selected directory
-                    val imageFileName = "image${Instant.now().millis}.jpg"
-
-                    val selectedDir = DocumentFile.fromTreeUri(context, treeUri)
-                    val imageFile = selectedDir?.createFile("image/jpeg", imageFileName)
-
-                    imageFile?.uri?.let { fileUri ->
-                        try {
-                            imageInputStream?.use { input ->
-                                context.contentResolver.openOutputStream(fileUri)?.use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-
-                            // Update the database with the file path
-                            farmerPhoto = fileUri.toString()
-                            Log.d("farmerphoto", farmerPhoto)
-                            // Update other fields in the Farm object
-                            // Then, insert or update the farm object in your database
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-        }
-
-    val cameraLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { it ->
-            uri?.let { it1 ->
-                imageInputStream = context.contentResolver.openInputStream(it1)
-
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                resultLauncher.launch(intent)
-            }
-        }
-
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) {
-        if (it) {
-            Toast.makeText(context, permissionGranted, Toast.LENGTH_SHORT).show()
-            cameraLauncher.launch(uri)
-        } else {
-            Toast.makeText(context, permissionDenied, Toast.LENGTH_SHORT).show()
-        }
-    }
 
     Column(
         modifier = Modifier
-
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
@@ -848,17 +824,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
-//        TextField(
-//            value = purchases,
-//            onValueChange = { purchases = it },
-//            keyboardOptions = KeyboardOptions.Default.copy(
-//                keyboardType = KeyboardType.Number,
-//            ),
-//            label = { Text(stringResource(id = R.string.harvested_this_year_in_kgs)) },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(bottom = 16.dp)
-//        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -921,61 +886,12 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 .padding(bottom = 5.dp)
                 .height(50.dp),
         ) {
-            Text(text = if (size.toFloatOrNull() != null && size.toFloat() <= 4) stringResource(id = R.string.get_coordinates) else "Set New Polygon")
+            Text(
+                text = if (size.toFloatOrNull() != null && size.toFloat() <= 4) stringResource(id = R.string.get_coordinates) else stringResource(
+                    id = R.string.set_new_polygon
+                )
+            )
         }
-
-//        if (!farmerPhoto.isBlank())
-//        {
-//            val imgFile = File(farmerPhoto)
-//
-//            // on below line we are checking if the image file exist or not.
-//            var imgBitmap: Bitmap? = null
-//            if (imgFile.exists()) {
-//                // on below line we are creating an image bitmap variable
-//                // and adding a bitmap to it from image file.
-//                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-//            }
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                ,
-//                painter = rememberAsyncImagePainter(farmerPhoto),
-//                contentDescription = null
-//            )
-//        }
-//        else
-//        {
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                ,
-//                painter = painterResource(id = R.drawable.image_placeholder),
-//                contentDescription = null
-//            )
-//        }
-
-//        Button(
-//            onClick = {
-//                val permissionCheckResult =
-//                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-//
-//                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-//                {
-//                    cameraLauncher.launch(uri)
-//                    isImageUploaded = true
-//                }
-//                else
-//                {
-//                    permissionLauncher.launch(Manifest.permission.CAMERA)
-//                }
-//            }
-//        ){
-//            Text(text = stringResource(id = R.string.take_picture))
-//        }
         Button(
             onClick = {
                 showDialog.value = true

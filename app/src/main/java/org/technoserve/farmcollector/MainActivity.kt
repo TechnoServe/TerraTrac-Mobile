@@ -5,14 +5,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -29,20 +31,48 @@ import org.technoserve.farmcollector.ui.screens.AddSite
 import org.technoserve.farmcollector.ui.screens.CollectionSiteList
 import org.technoserve.farmcollector.ui.screens.FarmList
 import org.technoserve.farmcollector.ui.screens.Home
+import org.technoserve.farmcollector.ui.screens.ScreenWithSidebar
 import org.technoserve.farmcollector.ui.screens.SetPolygon
+import org.technoserve.farmcollector.ui.screens.SettingsScreen
 import org.technoserve.farmcollector.ui.screens.UpdateFarmForm
 import org.technoserve.farmcollector.ui.theme.FarmCollectorTheme
+import org.technoserve.farmcollector.utils.LanguageViewModel
+import org.technoserve.farmcollector.utils.LanguageViewModelFactory
+import org.technoserve.farmcollector.utils.getLocalizedLanguages
+import org.technoserve.farmcollector.utils.updateLocale
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MapViewModel by viewModels()
+    private val languageViewModel: LanguageViewModel by viewModels {
+        LanguageViewModelFactory(application)
+    }
+    private val sharedPreferences by lazy {
+        getSharedPreferences("theme_mode", MODE_PRIVATE)
+    }
 
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val darkMode = mutableStateOf(sharedPreferences.getBoolean("dark_mode", false))
+
+        // Apply the selected theme
+        if (darkMode.value) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         setContent {
             val navController = rememberNavController()
+            val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
-            FarmCollectorTheme {
+            LaunchedEffect(currentLanguage) {
+                updateLocale(context = applicationContext, Locale(currentLanguage.code))
+            }
+
+            FarmCollectorTheme(darkTheme = darkMode.value) {
                 val multiplePermissionsState = rememberMultiplePermissionsState(
                     listOf(
                         android.Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -55,28 +85,32 @@ class MainActivity : ComponentActivity() {
                     multiplePermissionsState.launchMultiplePermissionRequest()
                 }
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    val context = LocalContext.current
+                    val languages = getLocalizedLanguages(applicationContext)
                     val farmViewModel: FarmViewModel = viewModel(
-                        factory = FarmViewModelFactory(context.applicationContext as Application)
+                        factory = FarmViewModelFactory(applicationContext as Application)
                     )
                     val listItems by farmViewModel.readData.observeAsState(listOf())
                     NavHost(
-                        navController = navController,
-                        startDestination = "home"
+                        navController = navController, startDestination = "home"
                     ) {
                         composable("home") {
-                            Home(navController)
+                            Home(navController, languageViewModel, languages)
                         }
                         composable("siteList") {
-                            CollectionSiteList(navController)
+                            ScreenWithSidebar(navController) {
+                                CollectionSiteList(navController)
+                            }
                         }
                         composable("farmList/{siteId}") { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
                             if (siteId != null) {
-                                FarmList(navController = navController, siteId = siteId.toLong())
+                                ScreenWithSidebar(navController) {
+                                    FarmList(
+                                        navController = navController, siteId = siteId.toLong()
+                                    )
+                                }
                             }
                         }
                         composable("addFarm/{siteId}") { backStackEntry ->
@@ -100,13 +134,20 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         // Screen for displaying and setting farm polygon coordinates
-                        composable("setPolygon",
-                            arguments = listOf(navArgument("coordinates") {
+                        composable(
+                            "setPolygon", arguments = listOf(navArgument("coordinates") {
                                 type = NavType.StringType
                             })
-                        )
-                        {
+                        ) {
                             SetPolygon(navController, viewModel)
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                navController,
+                                darkMode,
+                                languageViewModel,
+                                languages
+                            )
                         }
                     }
                 }
