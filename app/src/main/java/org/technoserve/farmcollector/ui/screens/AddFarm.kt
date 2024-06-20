@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
@@ -66,6 +68,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.SphericalUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -73,7 +76,9 @@ import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.map.getCenterOfPolygon
+import org.technoserve.farmcollector.utils.GeoCalculator
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
@@ -82,6 +87,25 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
 import javax.inject.Inject
+
+//// The function to calculate the Area using the captured Polygons
+//@SuppressLint("DefaultLocale")
+//fun calculateArea(polygon: List<Pair<Double, Double>>?): Double {
+//    if (polygon == null || polygon.size <= 4) {
+//        return 0.0
+//    }
+//    // Convert the polygon vertices to LatLng objects expected by SphericalUtil
+//    val latLngList = polygon.map { Pair(it.first, it.second) }.map { LatLng(it.first, it.second) }
+//
+//    // Calculate the area in square meters
+//    val areaInSquareMeters = SphericalUtil.computeArea(latLngList)
+//
+//    // Convert area to hectares (1 hectare = 10,000 square meters)
+//    val areaInHectares = areaInSquareMeters / 10000
+//    // Format the result to 6 decimal places
+//    return String.format("%.6f", areaInHectares).toDouble()
+//
+//}
 
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
@@ -123,7 +147,12 @@ fun FarmForm(
     var farmerPhoto by rememberSaveable { mutableStateOf("") }
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
-    var size by rememberSaveable { mutableStateOf("") }
+//    var size by rememberSaveable { mutableStateOf("") }
+
+
+    //var size by remember { mutableStateOf("") }
+    var area by remember { mutableStateOf(0.0) }
+
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
@@ -135,6 +164,11 @@ fun FarmForm(
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
+
+    val mapViewModel: MapViewModel = viewModel()
+    val size by mapViewModel.size.collectAsState()
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(size.toString())) }
+
     val file = context.createImageFile()
     val uri = FileProvider.getUriForFile(
         Objects.requireNonNull(context),
@@ -165,10 +199,17 @@ fun FarmForm(
     }
 
     fun saveFarm() {
-//        convert selectedUnit to hectares
-        val sizeInHa = convertSize(size.toDouble(), selectedUnit)
+        // convert selectedUnit to hectares
+        //val sizeInHa = convertSize(size.toDouble(), selectedUnit)
 
-//        save unit in sharedPreference
+        // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
+        val sizeInHa = if ((size.toFloatOrNull() ?: 0f) < 4f) {
+            convertSize(size.toDouble(), selectedUnit)
+        } else {
+            mapViewModel.calculateArea(coordinatesData)?:0.0f
+        }
+
+        //save unit in sharedPreference
         with(sharedPref.edit()) {
             putString("unit", selectedUnit)
             apply()
@@ -423,12 +464,16 @@ fun FarmForm(
             TextField(
                 singleLine = true,
                 value = size,
+                onValueChange = {
+                    mapViewModel.updateSize(it)
+                    val newSize = it.toDoubleOrNull() ?: 0.0
+                    mapViewModel.updateSize(newSize.toString()) // Update ViewModel size based on TextField input
+                },
+
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
                 ),
-                onValueChange = {
-                    size = it
-                },
+
                 label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
                 supportingText = { if (!isValid && size.isBlank()) Text("Farm Size should not be empty") },
                 isError = !isValid && size.isBlank(),

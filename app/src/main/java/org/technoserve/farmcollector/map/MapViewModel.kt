@@ -6,6 +6,8 @@ import android.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
@@ -16,6 +18,10 @@ import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.ktx.model.polygonOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.technoserve.farmcollector.utils.GeoCalculator
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,6 +36,72 @@ class MapViewModel @Inject constructor() : ViewModel() {
             onMapTypeChange = {}
         )
     )
+
+    // Properties for coordinates and areas
+    private val _coordinates = MutableLiveData<List<Pair<Double, Double>>>()
+    val coordinates: LiveData<List<Pair<Double, Double>>>
+        get() = _coordinates
+
+    private val _calculatedArea = MutableLiveData<Double>()
+    val calculatedArea: LiveData<Double>
+        get() = _calculatedArea
+
+    private val _size = MutableStateFlow("")
+    val size: StateFlow<String> = _size.asStateFlow()
+
+    private val _showDialog = MutableStateFlow(false)
+    val showDialog: StateFlow<Boolean> = _showDialog.asStateFlow()
+
+    // Property to store user's choice (0 for calculated, 1 for entered)
+    private val _userChoice = MutableLiveData<Int>()
+    val userChoice: LiveData<Int>
+        get() = _userChoice
+
+    // Method to set coordinates and calculated area
+    fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double? {
+        _coordinates.value = coordinates
+        val area = GeoCalculator.calculateArea(coordinates)
+        _calculatedArea.value = area
+        return area
+    }
+
+    // Method to set entered area
+    fun setSize(size: String) {
+        _size.value = size
+    }
+
+    // Method to update the size
+    fun updateSize(newSize: String) {
+        _size.value = newSize
+    }
+
+    // Method to handle user's choice
+    fun setUserChoice(choice: Int) {
+        _userChoice.value = choice
+    }
+
+    // Method to show dialog for choosing area
+    fun showAreaDialog(calculatedArea: String, enteredArea: String) {
+        val areaNum = enteredArea.toDoubleOrNull()
+        if (areaNum != null) {
+            _calculatedArea.value = calculatedArea.toDoubleOrNull()
+            _size.value = enteredArea
+            _showDialog.value = true
+        } else {
+            _size.value = "Invalid input."
+        }
+    }
+
+    fun dismissDialog() {
+        _showDialog.value = false
+    }
+
+    fun updateRadiusWithChoice(choice: String) {
+        _size.value = choice
+        _showDialog.value = false
+    }
+
+
 
     @SuppressLint("MissingPermission")
     fun getDeviceLocation(

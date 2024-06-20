@@ -24,6 +24,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,8 +35,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -49,7 +52,10 @@ import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.map.MapViewModel
+import org.technoserve.farmcollector.ui.composes.AreaDialog
 import org.technoserve.farmcollector.ui.composes.ConfirmDialog
+import org.technoserve.farmcollector.utils.GeoCalculator
+
 
 /**
  * This screen helps you to capture and visualize farm polygon.
@@ -78,6 +84,12 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         interval = 1000 // Update interval in milliseconds
         fastestInterval = 500 // Fastest update interval in milliseconds
     }
+
+    val mapViewModel: MapViewModel = viewModel()
+    val size by mapViewModel.size.collectAsState()
+
+    // State to handle TextField value
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(size.toString())) }
 
     if (!isCapturingCoordinates && farmInfo == null) {
         fusedLocationClient.getCurrentLocation(locationRequest.priority,
@@ -120,20 +132,61 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         viewSelectFarm = true
     }
 
+//    // Confirm farm polygon setting
+//    if (showConfirmDialog.value) {
+//        ConfirmDialog(stringResource(id = R.string.set_polygon),
+//            stringResource(id = R.string.confirm_set_polygon),
+//            showConfirmDialog,
+//            fun() {
+//                viewModel.clearCoordinates()
+//                viewModel.addCoordinates(coordinates)
+//                navController.previousBackStackEntry?.savedStateHandle?.apply {
+//                    set("coordinates", coordinates)
+//                }
+//                navController.navigateUp()
+//            })
+//    }
+
+
+
+    val enteredArea = size.toDoubleOrNull() ?: 0.0
+    val calculatedArea = GeoCalculator.calculateArea(coordinates) ?: 0.0f
+
     // Confirm farm polygon setting
     if (showConfirmDialog.value) {
-        ConfirmDialog(stringResource(id = R.string.set_polygon),
-            stringResource(id = R.string.confirm_set_polygon),
+
+
+        ConfirmDialog(
+            title = stringResource(id = R.string.set_polygon),
+            message = stringResource(id = R.string.confirm_set_polygon),
             showConfirmDialog,
-            fun() {
-                viewModel.clearCoordinates()
-                viewModel.addCoordinates(coordinates)
+            fun(){
+                mapViewModel.clearCoordinates()
+                mapViewModel.addCoordinates(coordinates)
                 navController.previousBackStackEntry?.savedStateHandle?.apply {
                     set("coordinates", coordinates)
                 }
-                navController.navigateUp()
-            })
+
+                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+            }
+        )
     }
+    // Display AreaDialog if needed
+    AreaDialog(
+        showDialog = mapViewModel.showDialog.collectAsState().value,
+        onDismiss = { mapViewModel.dismissDialog() },
+        onConfirm = { chosenArea ->
+            val chosenSize = if (chosenArea.contains("Calculated")) mapViewModel.calculatedArea.toString() else mapViewModel.size.toString()
+            mapViewModel.updateSize(chosenSize.toString())
+            textFieldValue = TextFieldValue(chosenSize.toString()) // Update TextFieldValue
+            navController.navigateUp()
+        },
+        calculatedArea = calculatedArea.toDouble(),
+        enteredArea = enteredArea
+
+
+    )
+
     // Confirm clear map
     if (showClearMapDialog.value) {
         ConfirmDialog(stringResource(id = R.string.set_polygon),
