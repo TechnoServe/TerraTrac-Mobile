@@ -57,6 +57,9 @@ interface FarmDAO {
     @Query("UPDATE Farms SET synced=1 WHERE id = :id")
     fun updateSyncStatus(id: Long)
 
+    @Update
+    suspend fun updateFarmSyncStatus(farm: Farm)
+
     @Query("UPDATE Farms SET scheduledForSync=1 WHERE id IN (:ids)")
     fun updateSyncListStatus(ids: List<Long>)
 
@@ -65,5 +68,8 @@ interface FarmDAO {
 
     @Query("DELETE FROM CollectionSites WHERE siteId IN (:ids)")
     fun deleteListSite(ids: List<Long>)
+
+    @Query("SELECT * FROM Farms WHERE synced = 0")
+    suspend fun getUnsyncedFarms(): List<Farm>
 
 }
