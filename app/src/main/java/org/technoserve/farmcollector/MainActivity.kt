@@ -81,7 +81,6 @@ class MainActivity : ComponentActivity() {
             // Permission is denied. Handle the case where the user denies the permission.
         }
     }
-
     private val viewModel: MapViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels {
         LanguageViewModelFactory(application)
@@ -201,7 +200,6 @@ class MainActivity : ComponentActivity() {
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     // Permission is already granted
-//                    showSyncNotification()
                     // Start the service
                     val serviceIntent = Intent(this, SyncService::class.java)
                     startService(serviceIntent)
@@ -220,123 +218,6 @@ class MainActivity : ComponentActivity() {
             // For Android versions below 13, no need to request permission
 //            showSyncNotification()
         }
-
-
-        // Simulate sync completion after 10 seconds for demo purposes
-//        handler.postDelayed({
-//            createNotificationChannelAndShowCompleteNotification()
-//        },1000)
     }
-
-
-
-//    override fun onStart() {
-//        super.onStart()
-//        startSyncWork()
-//        // Simulate sync completion after 10 seconds for demo purposes
-//        handler.postDelayed({
-//            createNotificationChannelAndShowCompleteNotification()
-//        },1000)
-//    }
-
-
-
-//    private val syncWorkTag = "sync_work_tag"
-//    private fun startSyncWork() {
-//        val constraints = Constraints.Builder()
-//            .setRequiredNetworkType(NetworkType.CONNECTED)
-//            .build()
-//
-//        // Create a periodic work request to sync data every 5 minutes
-//        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(5, TimeUnit.MINUTES)
-//            .setConstraints(constraints)
-//            .addTag(syncWorkTag)
-//            .build()
-//
-//        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-//            syncWorkTag,
-//            ExistingPeriodicWorkPolicy.REPLACE,  // Keep existing work and do not replace
-//            syncRequest
-//        )
-//    }
-
-    // Adding Elapsed time in notification
-
-    private lateinit var handler: Handler
-    private lateinit var updateRunnable: Runnable
-    private var startTime: Long = 0
-
-    private fun showSyncNotification() {
-        val builder = NotificationCompat.Builder(this, "SYNC_CHANNEL_ID")
-            .setSmallIcon(R.drawable.ic_launcher_sync)
-            .setContentTitle("Sync Data in Progress")
-            .setContentText("Synchronizing Farms Data with the server.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-
-        with(NotificationManagerCompat.from(this)) {
-            notify(1, builder.build())
-        }
-
-        // Initialize the start time and handler
-        startTime = System.currentTimeMillis()
-        handler = Handler(mainLooper)
-
-        // Define the updateRunnable
-        updateRunnable = object : Runnable {
-            override fun run() {
-                // Calculate elapsed time
-                val elapsedTime = System.currentTimeMillis() - startTime
-                val seconds = (elapsedTime / 1000) % 60
-                val minutes = (elapsedTime / (1000 * 60)) % 60
-                val hours = (elapsedTime / (1000 * 60 * 60)) % 24
-
-                // Update the notification content
-                val timeText = String.format("Elapsed time: %02d:%02d:%02d", hours, minutes, seconds)
-                builder.setContentText(timeText)
-
-                // Notify the updated notification
-                with(NotificationManagerCompat.from(this@MainActivity)) {
-                    notify(1, builder.build())
-                }
-
-                // Re-run the handler every second
-                handler.postDelayed(this, 1000)
-            }
-        }
-
-        // Start the handler to update the notification
-        handler.post(updateRunnable)
-    }
-
-    private fun createNotificationChannelAndShowCompleteNotification() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Sync Channel"
-            val descriptionText = "Channel for sync notifications"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("SYNC_CHANNEL_ID", name, importance).apply {
-                description = descriptionText
-            }
-
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val builder = NotificationCompat.Builder(this, "SYNC_CHANNEL_ID")
-            .setSmallIcon(R.drawable.ic_launcher_sync_complete)
-            .setContentTitle("Sync Complete")
-            .setContentText("Farms have been successfully synchronized with the server.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-
-        with(NotificationManagerCompat.from(this)) {
-            notify(2, builder.build())
-        }
-
-        // Stop the handler when sync is complete
-        if (::handler.isInitialized && ::updateRunnable.isInitialized) {
-            handler.removeCallbacks(updateRunnable)
-        }
-    }
-
 }
 

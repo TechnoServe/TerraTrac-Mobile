@@ -26,8 +26,8 @@ class SyncService : Service() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        // Create a periodic work request to sync data every 5 minutes
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(5, TimeUnit.MINUTES)
+        // Create a periodic work request to sync data every 2 hours
+        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.HOURS)
             .setConstraints(constraints)
             .addTag(syncWorkTag)
             .build()
@@ -38,7 +38,6 @@ class SyncService : Service() {
             syncRequest
         )
     }
-
     override fun onBind(intent: Intent?): IBinder? {
         // Return null as this service doesn't need to bind with an activity
         return null

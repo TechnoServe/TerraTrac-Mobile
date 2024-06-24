@@ -20,8 +20,8 @@ class SyncRepositoryImpl @Inject constructor(
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        // Create a periodic work request to sync data every 5 minutes
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(5, TimeUnit.MINUTES)
+        // Create a periodic work request to sync data every 2 Hours
+        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.HOURS)
             .setConstraints(constraints)
             .addTag(syncWorkTag)
             .build()
