@@ -284,6 +284,8 @@ fun SiteForm(navController: NavController) {
                     context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()
                     navController.navigate("siteList")
+                    // Show toast indicating success
+                    Toast.makeText(context, "Site added successfully", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
                 }

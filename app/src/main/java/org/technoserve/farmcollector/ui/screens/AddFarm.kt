@@ -68,7 +68,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.SphericalUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -78,7 +77,6 @@ import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.map.getCenterOfPolygon
-import org.technoserve.farmcollector.utils.GeoCalculator
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
@@ -86,6 +84,7 @@ import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
+import java.util.UUID
 import javax.inject.Inject
 
 //// The function to calculate the Area using the captured Polygons
@@ -216,10 +215,15 @@ fun FarmForm(
         }
 
         // Add farm
+
+        // Example of generating a UUID
+        val newUUID = UUID.randomUUID()
+
         addFarm(
             farmViewModel,
             siteId,
-            "",
+            remote_id = newUUID,
+            farmerPhoto,
             farmerName,
             memberId,
             village,
@@ -725,6 +729,7 @@ fun FarmForm(
 fun addFarm(
     farmViewModel: FarmViewModel,
     siteId: Long,
+    remote_id: UUID,
     farmerPhoto: String,
     farmerName: String,
     memberId: String,
@@ -738,6 +743,7 @@ fun addFarm(
 ): Farm {
     val farm = Farm(
         siteId,
+        remote_id,
         farmerPhoto,
         farmerName,
         memberId,

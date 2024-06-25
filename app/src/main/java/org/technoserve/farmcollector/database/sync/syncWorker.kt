@@ -2,6 +2,7 @@ package org.technoserve.farmcollector.database.sync
 
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -10,21 +11,33 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.AppDatabase
+import org.technoserve.farmcollector.database.FarmViewModel
+import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.database.remote.ApiService
+import org.technoserve.farmcollector.database.toDtoList
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+
+
 
 class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
     private val TAG = "SyncWorker"
-
     private lateinit var handler: Handler
     private lateinit var updateRunnable: Runnable
     private var startTime: Long = 0
@@ -33,6 +46,8 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
     private var totalItems: Int = 0
     private var syncedItems: Int = 0
 
+    @OptIn(DelicateCoroutinesApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
 
         if (checkNotificationPermission()) {
@@ -52,28 +67,31 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
         Log.d(TAG, "Found ${unsyncedFarms.size} unsynced farms.")
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:5000")
+            .baseUrl("https://8e00-154-72-7-234.ngrok-free.app")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
         val api = retrofit.create(ApiService::class.java)
 
-        unsyncedFarms.forEach { farm ->
-            try {
-                Log.d(TAG, "Syncing Farm: ${farm.id}")
+        try {
+            val deviceId = DeviceIdUtil.getDeviceId(applicationContext)
+            val farmDtos = unsyncedFarms.toDtoList(deviceId,farmDao)
+            Log.d("YourTag", "Device ID: $deviceId")
 
-                val response = api.syncFarm(farm)
-                if (response.isSuccessful) {
+            Log.d(TAG, "Syncing Farms: $farmDtos")
+
+            val response = api.syncFarms(farmDtos)
+            if (response.isSuccessful) {
+                unsyncedFarms.forEach { farm ->
                     farmDao.updateFarmSyncStatus(farm.copy(synced = true))
-                    syncedItems++
-                    Log.d(TAG, "Farm ${farm.id} synced successfully.")
-                } else {
-                    Log.d(TAG, "Failed to sync farm ${farm.id}: ${response.message()}")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error syncing farm ${farm.id}: ${e.message}", e)
-                return Result.retry()
+                Log.d(TAG, "Farms synced successfully.")
+            } else {
+                Log.d(TAG, "Failed to sync farms: ${response.message()}")
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error syncing farms: ${e.message}", e)
+            return Result.retry()
         }
 
         Log.d(TAG, "SyncWorker completed successfully.")
@@ -117,7 +135,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Sync Channel"
             val descriptionText = "Channel for sync notifications"
-            val importance = NotificationManager.IMPORTANCE_HIGH
+            val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel("SYNC_CHANNEL_ID", name, importance).apply {
                 description = descriptionText
             }
@@ -185,7 +203,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Sync Channel"
             val descriptionText = "Channel for sync notifications"
-            val importance = NotificationManager.IMPORTANCE_HIGH
+            val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel("SYNC_CHANNEL_ID", name, importance).apply {
                 description = descriptionText
             }

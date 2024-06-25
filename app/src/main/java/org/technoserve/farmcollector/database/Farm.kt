@@ -1,5 +1,6 @@
 package org.technoserve.farmcollector.database
 
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -7,6 +8,9 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
+import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import org.technoserve.farmcollector.ui.screens.siteID
+import  java.util.UUID
 
 @Entity(
     tableName = "Farms",
@@ -23,6 +27,9 @@ import org.technoserve.farmcollector.database.converters.DateConverter
 data class Farm(
     @ColumnInfo(name = "siteId")
     var siteId: Long,
+
+    @ColumnInfo(name = "remote_id")
+    var remoteId: UUID = UUID.randomUUID(),
 
     @ColumnInfo(name = "farmerPhoto")
     var farmerPhoto: String,
@@ -82,6 +89,42 @@ data class Farm(
 
     override fun hashCode(): Int {
         return id.hashCode()
+    }
+}
+
+
+data class FarmDto(
+    val remote_id: UUID,
+    val farmer_name: String,
+    val farm_village: String,
+    val farm_district: String,
+    val farm_size: Float,
+    val latitude: String,
+    val longitude: String,
+    val polygon: List<Pair<Double, Double>>,
+    val device_id: String,
+    val collection_site: Long,
+    val agent_name: String
+)
+
+fun List<Farm>.toDtoList(deviceId: String, farmDao: FarmDAO): List<FarmDto> {
+    return this.map { farm ->
+        val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
+        val agentName = collectionSite?.agentName ?: "Unknown"
+
+        FarmDto(
+            remote_id = farm.remoteId,
+            farmer_name = farm.farmerName,
+            farm_village = farm.village,
+            farm_district = farm.district,
+            farm_size = farm.size,
+            latitude = farm.latitude,
+            longitude = farm.longitude,
+            polygon = farm.coordinates ?: emptyList(),
+            device_id = deviceId,
+            collection_site = farm.siteId,
+            agent_name = agentName
+        )
     }
 }
 

@@ -57,6 +57,9 @@ interface FarmDAO {
     @Query("UPDATE Farms SET synced=1 WHERE id = :id")
     fun updateSyncStatus(id: Long)
 
+    @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId LIMIT 1")
+    fun getCollectionSiteById(siteId: Long): CollectionSite?
+
     @Update
     suspend fun updateFarmSyncStatus(farm: Farm)
 

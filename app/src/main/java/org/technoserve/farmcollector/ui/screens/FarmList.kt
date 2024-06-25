@@ -258,6 +258,7 @@ fun ExportDataDialog(
                                                 {
                                                     "type": "Feature",
                                                     "properties": {
+                                                        "remote_id": "${farm.remoteId}",
                                                         "farmer_name": "${farm.farmerName}",
                                                         "member_id": "${farm.memberId}",
                                                         "collection_site": "${getSiteById?.name}",
@@ -682,8 +683,18 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             item.village = village
             item.district = district
             item.longitude = longitude
-            item.coordinates =
-                (coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>?)!!
+//            item.coordinates =
+//                (coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>?)!!
+
+            // fixing updating farms with size less than 4 ha
+
+            item.coordinates = if (!coordinates.isNullOrEmpty()) {
+                coordinates!!.plus(coordinates!!.first()) as List<Pair<Double, Double>>
+            } else {
+                // Default value or an appropriate handling mechanism
+                listOf(Pair(0.0, 0.0)) // Example default value
+            }
+
             item.size = size.toFloat()
             item.purchases = 0.toFloat()
             item.updatedAt = Instant.now().millis
