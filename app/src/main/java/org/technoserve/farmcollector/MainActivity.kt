@@ -66,6 +66,7 @@ import java.util.concurrent.TimeUnit
 //@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    /*
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -81,6 +82,19 @@ class MainActivity : ComponentActivity() {
             // Permission is denied. Handle the case where the user denies the permission.
         }
     }
+     */
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted. Continue with the action that requires permission.
+            startSyncService()
+        } else {
+            // Permission is denied. Handle the case where the user denies the permission.
+        }
+    }
+
     private val viewModel: MapViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels {
         LanguageViewModelFactory(application)
@@ -101,6 +115,14 @@ class MainActivity : ComponentActivity() {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
+
+        // Start the service when the activity is created
+        startSyncService()
+
+        // Optionally, request permission if needed
+        requestSyncPermission()
+
+
 
         setContent {
             val navController = rememberNavController()
@@ -192,6 +214,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        /*
         // Request notification permission if needed and show notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
@@ -218,6 +241,34 @@ class MainActivity : ComponentActivity() {
             // For Android versions below 13, no need to request permission
 //            showSyncNotification()
         }
+
+         */
     }
+
+    private fun requestSyncPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permission already granted, continue with the action
+                startSyncService()
+            }
+            else -> {
+                // Permission has not been granted, request it
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+
+    private fun startSyncService() {
+        val serviceIntent = Intent(this, SyncService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
+    }
+
+
+
+
 }
 

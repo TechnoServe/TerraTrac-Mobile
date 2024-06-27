@@ -2,8 +2,10 @@ package org.technoserve.farmcollector.ui.screens
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentValues.TAG
 import android.location.Location
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -148,7 +150,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 //    }
 
 
-
     val enteredArea = size.toDoubleOrNull() ?: 0.0
     val calculatedArea = GeoCalculator.calculateArea(coordinates) ?: 0.0f
 
@@ -177,8 +178,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         onDismiss = { mapViewModel.dismissDialog() },
         onConfirm = { chosenArea ->
             val chosenSize = if (chosenArea.contains("Calculated")) mapViewModel.calculatedArea.toString() else mapViewModel.size.toString()
-            mapViewModel.updateSize(chosenSize.toString())
-            textFieldValue = TextFieldValue(chosenSize.toString()) // Update TextFieldValue
+            Log.d(TAG, "Choosen Size ${chosenSize}")
+            mapViewModel.updateSize(chosenSize)
+            textFieldValue = TextFieldValue(chosenSize) // Update TextFieldValue
             navController.navigateUp()
         },
         calculatedArea = calculatedArea.toDouble(),

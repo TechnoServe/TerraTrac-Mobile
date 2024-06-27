@@ -2,7 +2,6 @@ package org.technoserve.farmcollector.database.sync
 
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -12,22 +11,14 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.AppDatabase
-import org.technoserve.farmcollector.database.FarmViewModel
-import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.database.remote.ApiService
 import org.technoserve.farmcollector.database.toDtoList
 import retrofit2.Retrofit
@@ -52,7 +43,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         if (checkNotificationPermission()) {
             sendSyncNotification()
-            showSyncNotification()
+            //showSyncNotification()
         } else {
             Log.d(TAG, "Notification permission not granted.")
             // Handle the case where notification permission is not granted
@@ -75,32 +66,49 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         try {
             val deviceId = DeviceIdUtil.getDeviceId(applicationContext)
-            val farmDtos = unsyncedFarms.toDtoList(deviceId,farmDao)
+            val farmDtos = unsyncedFarms.toDtoList(deviceId, farmDao)
             Log.d("YourTag", "Device ID: $deviceId")
 
             Log.d(TAG, "Syncing Farms: $farmDtos")
 
             val response = api.syncFarms(farmDtos)
             if (response.isSuccessful) {
+                showSyncNotification()
                 unsyncedFarms.forEach { farm ->
                     farmDao.updateFarmSyncStatus(farm.copy(synced = true))
                 }
                 Log.d(TAG, "Farms synced successfully.")
+                createNotificationChannelAndShowCompleteNotification() // Notify sync success
             } else {
                 Log.d(TAG, "Failed to sync farms: ${response.message()}")
+                createSyncFailedNotification() // Notify sync failure
+                return Result.failure() // Return failure result
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error syncing farms: ${e.message}", e)
-            return Result.retry()
+            createSyncFailedNotification() // Notify sync failure
+            return Result.retry() // Retry if an exception occurred
         }
 
         Log.d(TAG, "SyncWorker completed successfully.")
-        if (checkNotificationPermission()) {
-            createNotificationChannelAndShowCompleteNotification()
-        } else {
-            Log.d(TAG, "Notification permission not granted.")
-        }
         return Result.success()
+    }
+
+    private fun createSyncFailedNotification() {
+        if (!checkNotificationPermission()) {
+            Log.d(TAG, "Notification permission not granted.")
+            return
+        }
+
+        val builder = NotificationCompat.Builder(applicationContext, "SYNC_CHANNEL_ID")
+            .setSmallIcon(R.drawable.ic_launcher_sync_failed)
+            .setContentTitle("Sync Failed")
+            .setContentText("Failed to synchronize Farms Data with the server.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        with(NotificationManagerCompat.from(applicationContext)) {
+            notify(4, builder.build())
+        }
     }
 
     private fun checkNotificationPermission(): Boolean {

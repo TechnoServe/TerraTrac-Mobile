@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TerraTrac</string>
-    <string name="farm_list">Liste des fermes</string>
+    <string name="farm_list">Liste des parcelles de ferme</string>
     <string name="app_intro">Application mobile de base pour la traçabilité du café afin de respecter la réglementation européenne sur la déforestation</string>
     <string name="developed_by">Développée par</string>
     <string name="delete_this_item">Supprimer cette ferme</string>
@@ -21,13 +21,13 @@
     <string name="harvested_this_year">Café récoltée cette année</string>
     <string name="kgs">Kgs</string>
     <string name="download_csv">Télécharger le Csv</string>
-    <string name="update_farm">Modifier cette ferme</string>
+    <string name="update_farm">Modifier cette parcelle de ferme</string>
     <string name="farm_name">Nom du fermier</string>
-    <string name="size_in_hectares">Taille de la ferme</string>
+    <string name="size_in_hectares">Taille de la parcelle de ferme</string>
     <string name="harvested_this_year_in_kgs">Café récoltée cette année en Kgs</string>
     <string name="get_coordinates">Obtenir les coordonnées</string>
     <string name="take_picture">Prendre une photo</string>
-    <string name="add_farm">Ajouter une ferme</string>
+    <string name="add_farm">Ajouter une parcelle de ferme</string>
     <string name="permission_granted">Permission accordée</string>
     <string name="permission_denied">Permission refusée</string>
     <string name="fill_form">Veuillez remplir tous les champs</string>
@@ -52,7 +52,7 @@
     <string name="clear_map">Do you want to clear the map?</string>
     <string name="confirm_update_site">Continúe con \'yes\' si desea actualizar el nombre del sitio de la colección.</string>
     <string name="update_site">Actualizar el sitio de recopilación</string>
-    <string name="farm_info">Informations sur la ferme</string>
+    <string name="farm_info">Informations sur parcelle à la ferme</string>
     <string name="finish">Finir</string>
     <string name="start">Commencer</string>
     <string name="can_not_get_location">Impossible d\'obtenir la localisation, réessayer</string>

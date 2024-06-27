@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">TerraTrac</string>
-    <string name="farm_list">Farm List</string>
+    <string name="farm_list">Farm Plots List</string>
     <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
     <string name="developed_by">Developed By</string>
     <string name="delete_this_item">Delete this item</string>
@@ -21,13 +21,13 @@
     <string name="harvested_this_year">Cherry harvested this year</string>
     <string name="kgs">Kgs</string>
     <string name="download_csv">Download Csv</string>
-    <string name="update_farm">Update Farm</string>
+    <string name="update_farm">Update Farm Plot</string>
     <string name="farm_name">Farmer Name</string>
-    <string name="size_in_hectares">Farm Size</string>
+    <string name="size_in_hectares">Farm Plot Size</string>
     <string name="harvested_this_year_in_kgs">Cherry harvested this year in Kgs</string>
     <string name="get_coordinates">Get Coordinates</string>
     <string name="take_picture">Take Picture</string>
-    <string name="add_farm">Add Farm</string>
+    <string name="add_farm">Add Farm Plot </string>
     <string name="permission_granted">Permission Granted</string>
     <string name="permission_denied">Permission Denied</string>
     <string name="fill_form">Please fill in all fields</string>
@@ -37,8 +37,8 @@
     <string name="set_polygon">Set Polygon</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
-    <string name="confirm_add_farm">Want to set the farm polygon? If not, add farm.</string>
-    <string name="confirm_update_farm">Want to update the farm polygon? If no, update farm.</string>
+    <string name="confirm_add_farm">Want to set the farm Plot polygon? If not, add farm plot.</string>
+    <string name="confirm_update_farm">Want to update the farm Plot polygon? If no, update farm plot.</string>
     <string name="accuracy">Accuracy</string>
     <string name="confirm_set_polygon">Have you finished setting the polygon? If so, proceed and save by selecting the \'Yes\' button.</string>
     <string name="clear_map">Do you want to clear the map?</string>
@@ -51,7 +51,7 @@
     <string name="member_id">Member ID</string>
     <string name="get_started">Get Started</string>
     <string name="invalid_phone_number">Invalid Phone Number</string>
-    <string name="farm_info">Farm Info</string>
+    <string name="farm_info">Farm Plot Info</string>
     <string name="finish">Finish</string>
     <string name="start">Start</string>
     <string name="can_not_get_location">Can\'t get location, Try again</string>
