@@ -7,7 +7,7 @@
     <string name="member_id">member id</string>
     <string name="get_started">Get Started</string>
     <string name="invalid_phone_number">Invalid Phone Number</string>
-    <string name="farm_info">Farm Info</string>
+    <string name="farm_info">Farm Plot Info</string>
     <string name="finish">Finish</string>
     <string name="start">Start</string>
     <string name="can_not_get_location">Can\'t get location, Try again</string>

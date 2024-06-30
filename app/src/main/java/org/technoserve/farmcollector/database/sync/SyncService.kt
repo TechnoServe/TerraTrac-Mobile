@@ -45,7 +45,7 @@ class SyncService : Service() {
             .build()
 
         // Create a periodic work request to sync data every 2 hours
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.MINUTES)
+        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.HOURS)
             .setConstraints(constraints)
             .addTag(syncWorkTag)
             .build()

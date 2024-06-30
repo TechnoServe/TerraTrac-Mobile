@@ -46,8 +46,6 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
             //showSyncNotification()
         } else {
             Log.d(TAG, "Notification permission not granted.")
-            // Handle the case where notification permission is not granted
-            // For example, inform the user through other means or log the event
         }
 
         val db = AppDatabase.getInstance(applicationContext)

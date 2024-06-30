@@ -55,7 +55,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
@@ -77,7 +76,6 @@ import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.map.getCenterOfPolygon
-import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -87,6 +85,18 @@ import java.util.Objects
 import java.util.UUID
 import javax.inject.Inject
 
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun AreaInputField(farmViewModel: FarmViewModel) {
+//    val size by farmViewModel.size.collectAsState()
+//
+//    TextField(
+//        singleLine = true,
+//        value = size,
+//        onValueChange = { farmViewModel.updateSize(it)},
+//        label = { Text("Enter Size") }
+//    )
+//}
 
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
@@ -129,7 +139,7 @@ fun FarmForm(
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
 
-    //var size by rememberSaveable { mutableStateOf("") }
+    // var size by rememberSaveable { mutableStateOf("") }
     //var size by remember { mutableStateOf("") }
     // var area by remember { mutableStateOf(0.0) }
 
@@ -146,7 +156,8 @@ fun FarmForm(
     )
 
     val mapViewModel: MapViewModel = viewModel()
-    val size by mapViewModel.size.collectAsState()
+    var size by rememberSaveable { mutableStateOf("") }
+//    var size by mapViewModel.size.collectAsState()
     //var textFieldValue by remember { mutableStateOf(TextFieldValue(size.toString())) }
 
     val file = context.createImageFile()
@@ -182,12 +193,13 @@ fun FarmForm(
         // convert selectedUnit to hectares
         //val sizeInHa = convertSize(size.toDouble(), selectedUnit)
 
-        // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
-        val sizeInHa = if ((size.toFloatOrNull() ?: 0f) < 4f) {
-            convertSize(size.toDouble(), selectedUnit)
-        } else {
-            mapViewModel.calculateArea(coordinatesData)?:0.0f
-        }
+//        // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
+//        val sizeInHa = if ((size.toFloatOrNull() ?: 0f) < 4f) {
+//            convertSize(size.toDouble(), selectedUnit)
+//        } else {
+//            mapViewModel.calculateArea(coordinatesData)?:0.0f
+//        }
+        val sizeInHa= mapViewModel.saveSize(selectedUnit, coordinatesData)
 
         //save unit in sharedPreference
         with(sharedPref.edit()) {
@@ -226,7 +238,7 @@ fun FarmForm(
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
-            title = { Text(text = "Add Farm") },
+            title = { Text(text = "Add Farm Plot") },
             text = {
                 Column {
                     Text(text = stringResource(id = R.string.confirm_add_farm))
@@ -449,11 +461,10 @@ fun FarmForm(
                 singleLine = true,
                 value = size,
                 onValueChange = {
-                    mapViewModel.updateSize(it)
+                    size = it
                     val newSize = it.toDoubleOrNull() ?: 0.0
-                    mapViewModel.updateSize(newSize.toString()) // Update ViewModel size based on TextField input
+                    mapViewModel.updateSize(newSize.toString())
                 },
-
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
                 ),
@@ -469,6 +480,8 @@ fun FarmForm(
                     .weight(1f)
                     .padding(bottom = 16.dp)
             )
+
+            //AreaInputField( farmViewModel = farmViewModel)
             Spacer(modifier = Modifier.width(16.dp))
             // Size measure
             ExposedDropdownMenuBox(
@@ -618,8 +631,9 @@ fun FarmForm(
                 .padding(bottom = 5.dp)
                 .height(50.dp),
         ) {
+            val enteredSize = size.toFloatOrNull() ?: 0f
             Text(
-                text = if ((size.toFloatOrNull() ?: 0f) >= 4f) {
+                text = if (enteredSize >= 4f) {
                     stringResource(id = R.string.set_polygon)
                 } else {
                     stringResource(id = R.string.get_coordinates)

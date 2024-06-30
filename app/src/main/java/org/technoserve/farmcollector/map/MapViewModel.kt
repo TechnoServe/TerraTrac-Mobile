@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.technoserve.farmcollector.utils.GeoCalculator
+import org.technoserve.farmcollector.utils.convertSize
 import javax.inject.Inject
 
 @HiltViewModel
@@ -96,9 +97,25 @@ class MapViewModel @Inject constructor() : ViewModel() {
         _showDialog.value = false
     }
 
-    fun updateRadiusWithChoice(choice: String) {
+    fun updateSizeWithChoice(choice: String) {
         _size.value = choice
         _showDialog.value = false
+    }
+    // Method to retrieve the size input
+    fun getSizeInput(): Double? {
+        return size.value.toDoubleOrNull()
+    }
+
+    // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
+    fun saveSize(selectedUnit: String, coordinatesData: List<Pair<Double, Double>>?): Number {
+        val currentSize = size.value.toFloatOrNull() ?: 0.0f
+        val finalSize = if (currentSize < 4f) {
+            convertSize(currentSize.toDouble(), selectedUnit)
+        } else {
+            calculateArea(coordinatesData) ?: 0.0f
+        }
+        updateSize(finalSize.toString())
+        return finalSize
     }
 
 

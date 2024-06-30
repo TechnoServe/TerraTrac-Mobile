@@ -66,24 +66,6 @@ import java.util.concurrent.TimeUnit
 //@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    /*
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission is granted. Continue with the action that requires permission.
-            // showSyncNotification()
-
-            // Start the service
-            val serviceIntent = Intent(this, SyncService::class.java)
-            startService(serviceIntent)
-
-        } else {
-            // Permission is denied. Handle the case where the user denies the permission.
-        }
-    }
-     */
-
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -213,36 +195,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        /*
-        // Request notification permission if needed and show notification
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            when {
-                ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED -> {
-                    // Permission is already granted
-                    // Start the service
-                    val serviceIntent = Intent(this, SyncService::class.java)
-                    startService(serviceIntent)
-                }
-                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                    // Show an educational UI to explain why the permission is needed
-                    // Then request the permission
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-                else -> {
-                    // Directly request the permission
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
-        } else {
-            // For Android versions below 13, no need to request permission
-//            showSyncNotification()
-        }
-
-         */
     }
 
     private fun requestSyncPermission() {

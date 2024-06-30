@@ -45,8 +45,8 @@
     <string name="set_polygon">Establecer polígono</string>
     <string name="dummy_button">Botón ficticio</string>
     <string name="dummy_content">CONTENIDO TONTO</string>
-    <string name="confirm_add_farm">¿Desea establecer el polígono de la granja? Si no es así, agregue la granja.</string>
-    <string name="confirm_update_farm">¿Desea actualizar el polígono de la granja? Si no es así, actualice la granja.</string>
+    <string name="confirm_add_farm">Voulez-vous définir le polygone pour les parcelle agricoles? Sinon, ajoutez la parcelle de ferme.</string>
+    <string name="confirm_update_farm">Voulez-vous mettre à jour le polygone de la parcelle agricole? Sinon, mettez à jour la parcelle agricole.</string>
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">¿Has terminado de configurar el polígono? Si es así, proceda y guarde seleccionando el botón \'Sí\'.</string>
     <string name="clear_map">Do you want to clear the map?</string>
