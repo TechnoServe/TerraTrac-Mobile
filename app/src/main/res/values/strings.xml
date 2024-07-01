@@ -77,5 +77,7 @@
     <string name="cancel">Cancel</string>
     <string name="choose_area">Choose the area</string>
     <string name="please_choose_area">Please choose the area to use:</string>
-    <string name="add_farm_plot_title">Add Farm Plot</string>
+    <string name="add_farm_plot_title">Add Plot</string>
+    <string name="calculated_area">Calculated Area (%1$s hectares)</string>
+    <string name="entered_size">Entered Size (%1$s hectares)</string>
 </resources>

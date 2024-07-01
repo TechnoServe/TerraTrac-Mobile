@@ -66,6 +66,10 @@ import org.technoserve.farmcollector.utils.GeoCalculator
  * This screen helps you to capture and visualize farm polygon.
  * When capturing, You are able to start, add point, clear map or remove a point on the map
  */
+
+const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
+const val ENTERED_AREA_OPTION = "ENTERED_AREA"
+
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MissingPermission")
 @Composable
@@ -159,11 +163,14 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         showDialog = mapViewModel.showDialog.collectAsState().value,
         onDismiss = { mapViewModel.dismissDialog() },
         onConfirm = { chosenArea ->
-            val chosenSize =
-                if (chosenArea.contains("Calculated")) calculatedArea.toString() else enteredArea.toString()
+            val chosenSize = when (chosenArea) {
+                CALCULATED_AREA_OPTION -> calculatedArea.toString()
+                ENTERED_AREA_OPTION -> enteredArea.toString()
+                else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
+            }
             sharedPref.edit().putString("plot_size", chosenSize).apply()
             navController.navigateUp()
-        },
+        } ,
         calculatedArea = calculatedArea,
         enteredArea = enteredArea
     )

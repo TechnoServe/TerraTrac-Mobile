@@ -79,4 +79,6 @@
     <string name="choose_area">Elija área</string>
     <string name="please_choose_area">Por favor elige el área a utilizar:</string>
     <string name="add_farm_plot_title">Lafa qonnaa itti dabali</string>
+    <string name="calculated_area">Bal’ina shallagame (%1$s hektaara) .</string>
+    <string name="entered_size">Guddina Galfame (%1$s hektaara) .</string>
 </resources>

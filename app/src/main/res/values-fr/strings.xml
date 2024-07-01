@@ -79,4 +79,7 @@
     <string name="choose_area">choisissez l\'aire</string>
     <string name="please_choose_area">Veuillez choisir l\'aire à utiliser:</string>
     <string name="add_farm_plot_title">Ajouter une parcelle de ferme</string>
+
+    <string name="calculated_area">l\'aire  calculée (%1$s hectares)</string>
+    <string name="entered_size">Taille saisie (%1$s hectares)</string>
 </resources>

@@ -79,4 +79,7 @@
     <string name="choose_area">አካባቢውን ይምረጡ</string>
     <string name="please_choose_area">እባክዎ የሚጠቀሙበትን ቦታ ይምረጡ፡-</string>
     <string name="add_farm_plot_title">የእርሻ ሴራ አክል</string>
+
+    <string name="calculated_area">የተሰላ አካባቢ (%1$s ሄክታር)</string>
+    <string name="entered_size">የገባው መጠን (%1$s ሄክታር)</string>
 </resources>
