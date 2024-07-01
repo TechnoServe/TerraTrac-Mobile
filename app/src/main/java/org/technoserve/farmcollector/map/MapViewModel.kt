@@ -103,7 +103,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
     }
     // Method to retrieve the size input
     fun getSizeInput(): Double? {
-        return size.value.toDoubleOrNull()
+        return _size.value.toDoubleOrNull()
     }
 
     // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value

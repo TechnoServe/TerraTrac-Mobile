@@ -32,7 +32,7 @@ fun AreaDialog(
 
             },
             text = {
-                Text(text =stringResource(id = R.string.please_choose_area) )
+                Text(text = stringResource(id = R.string.please_choose_area))
             },
             confirmButton = {
                 TextButton(onClick = { onConfirm(options[0]) }) {

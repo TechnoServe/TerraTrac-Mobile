@@ -3,6 +3,7 @@ package org.technoserve.farmcollector.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.location.Location
 import android.os.Looper
 import android.util.Log
@@ -82,6 +83,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val farmInfo = farmData?.first
     var accuracy by remember { mutableStateOf("") }
     var viewSelectFarm by remember { mutableStateOf(false) }
+    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
 
     val locationRequest = LocationRequest.create().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -132,7 +134,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         viewSelectFarm = true
     }
 
-    val enteredArea = mapViewModel.getSizeInput() ?: 0.0
+    val enteredArea = sharedPref.getString("plot_size", "0.0")?.toDoubleOrNull() ?: 0.0
     val calculatedArea = mapViewModel.calculateArea(coordinates)
 
     // Confirm farm polygon setting
@@ -141,7 +143,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             title = stringResource(id = R.string.set_polygon),
             message = stringResource(id = R.string.confirm_set_polygon),
             showConfirmDialog,
-            fun(){
+            fun() {
                 mapViewModel.clearCoordinates()
                 mapViewModel.addCoordinates(coordinates)
                 navController.previousBackStackEntry?.savedStateHandle?.apply {
@@ -157,11 +159,12 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         showDialog = mapViewModel.showDialog.collectAsState().value,
         onDismiss = { mapViewModel.dismissDialog() },
         onConfirm = { chosenArea ->
-            val chosenSize = if (chosenArea.contains("Calculated")) calculatedArea.toString() else enteredArea.toString()
-            mapViewModel.updateSizeWithChoice(chosenSize);
+            val chosenSize =
+                if (chosenArea.contains("Calculated")) calculatedArea.toString() else enteredArea.toString()
+            sharedPref.edit().putString("plot_size", chosenSize).apply()
             navController.navigateUp()
         },
-        calculatedArea = calculatedArea.toDouble(),
+        calculatedArea = calculatedArea,
         enteredArea = enteredArea
     )
 

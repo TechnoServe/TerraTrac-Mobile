@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +53,16 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -143,9 +148,11 @@ fun FarmForm(
     )
 
     val mapViewModel: MapViewModel = viewModel()
-    var size by rememberSaveable { mutableStateOf("") }
-//    var size by mapViewModel.size.collectAsState()
-    //var textFieldValue by remember { mutableStateOf(TextFieldValue(size.toString())) }
+    var size by rememberSaveable {
+        mutableStateOf(
+            sharedPref.getString("plot_size", "") ?: ""
+        )
+    }
 
     val file = context.createImageFile()
     val uri = FileProvider.getUriForFile(
@@ -154,6 +161,26 @@ fun FarmForm(
     )
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Update the value from SharedPreferences when the screen is resumed
+                size = sharedPref.getString("plot_size", "") ?: ""
+//                delete plot_size from sharedPreference
+                with(sharedPref.edit()) {
+                    remove("plot_size")
+                    apply()
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     if (showLocationDialog.value) {
         AlertDialog(
@@ -186,7 +213,7 @@ fun FarmForm(
 //        } else {
 //            mapViewModel.calculateArea(coordinatesData)?:0.0f
 //        }
-        val sizeInHa= mapViewModel.saveSize(selectedUnit, coordinatesData)
+        val sizeInHa = size.toFloatOrNull() ?: 0f
 
         //save unit in sharedPreference
         with(sharedPref.edit()) {
@@ -448,8 +475,10 @@ fun FarmForm(
                 value = size,
                 onValueChange = {
                     size = it
-                    val newSize = it.toDoubleOrNull() ?: 0.0
-                    mapViewModel.updateSize(newSize.toString())
+                    with(sharedPref.edit()) {
+                        putString("plot_size", size)
+                        apply()
+                    }
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
