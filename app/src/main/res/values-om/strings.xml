@@ -21,13 +21,13 @@
     <string name="harvested_this_year">Cheerii bara kana sassaabame</string>
     <string name="kgs">kiiloo giraama</string>
     <string name="download_csv">tarree buufachuuf</string>
-    <string name="update_farm">Qonna Fooyyessi</string>
+    <string name="update_farm">Lafa Qonna Fooyyessi</string>
     <string name="farm_name">Maqaa qonnaan bulaa</string>
     <string name="size_in_hectares">Bal’inni isaa hektaaradhaan</string>
     <string name="harvested_this_year_in_kgs">Cheerii bara kana kiiloogiraamaan sassaabame</string>
     <string name="get_coordinates">Qindeessitoota Argachuu</string>
     <string name="take_picture">Suuraa Fudhadhaa</string>
-    <string name="add_farm">Qonna Dabalaa</string>
+    <string name="add_farm">Lafa Qonnaa Dabaluu</string>
     <string name="permission_granted">Hayyamni Kenname</string>
     <string name="permission_denied">Hayyamni Dhorkame</string>
     <string name="fill_form">Dirree hunda guutaa suuraa ka\'aa</string>
@@ -45,8 +45,8 @@
     <string name="set_polygon">Pooligoonii saagi</string>
     <string name="dummy_button">Button Dummy</string>
     <string name="dummy_content">QABIYYEE DUMMY</string>
-    <string name="confirm_add_farm">Pooligoonii qonnaa saaguu barbaadduu? Yoo hin taane qonna itti dabali.</string>
-    <string name="confirm_update_farm">Pooligoonii qonnaa haaromsuu barbaadduu? Yoo lakki ta\'e, qonna haaromsi.</string>
+    <string name="confirm_add_farm">Qonna Plootii poligoonii saaguu barbaadduu? Yoo hin taane, lafa qonnaa itti dabali.</string>
+    <string name="confirm_update_farm">Qonna Plot polygon haaromsuu barbaadduu? Yoo hin taane, lafa qonnaa haaromsi.</string>
     <string name="accuracy">Dogoggoraala</string>
     <string name="confirm_set_polygon">Pooligoonii saaguu xumurteettaa? Yoo akkas ta\'e, itti fufii qaree \'Eeyyee\' filachuudhaan saagi.</string>
     <string name="clear_map">Kaartaa qulqulleessuu barbaadduu?</string>
@@ -76,4 +76,7 @@
     <string name="error_export_msg">Dogoggorri yeroo deetaa ergitu, maaloo irra deebi\'ii yaali.</string>
     <string name="export">Alergii</string>
     <string name="cancel">Haquu</string>
+    <string name="choose_area">Elija área</string>
+    <string name="please_choose_area">Por favor elige el área a utilizar:</string>
+    <string name="add_farm_plot_title">Lafa qonnaa itti dabali</string>
 </resources>

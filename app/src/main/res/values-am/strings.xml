@@ -76,4 +76,7 @@
     <string name="error_export_msg">ውሂብ ወደ ውጭ በመላክ ላይ ስህተት፣ እባክዎ እንደገና ይሞክሩ።</string>
     <string name="export">ወደ ውጪ ላክ</string>
     <string name="cancel">ሰርዝ</string>
+    <string name="choose_area">አካባቢውን ይምረጡ</string>
+    <string name="please_choose_area">እባክዎ የሚጠቀሙበትን ቦታ ይምረጡ፡-</string>
+    <string name="add_farm_plot_title">የእርሻ ሴራ አክል</string>
 </resources>

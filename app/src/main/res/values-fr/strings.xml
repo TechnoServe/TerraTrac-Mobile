@@ -42,16 +42,16 @@
     <string name="get_started">Démarrer</string>
     <string name="invalid_phone_number">Numéro de téléphone non valide</string>
     <string name="coordinates">coordonnées</string>
-    <string name="set_polygon">Establecer polígono</string>
+    <string name="set_polygon">définir un polygone</string>
     <string name="dummy_button">Botón ficticio</string>
     <string name="dummy_content">CONTENIDO TONTO</string>
     <string name="confirm_add_farm">Voulez-vous définir le polygone pour les parcelle agricoles? Sinon, ajoutez la parcelle de ferme.</string>
     <string name="confirm_update_farm">Voulez-vous mettre à jour le polygone de la parcelle agricole? Sinon, mettez à jour la parcelle agricole.</string>
     <string name="accuracy">Exactitud</string>
-    <string name="confirm_set_polygon">¿Has terminado de configurar el polígono? Si es así, proceda y guarde seleccionando el botón \'Sí\'.</string>
+    <string name="confirm_set_polygon">Avez-vous fini de définir le polygone ? Si tel est le cas, continuez et enregistrez en sélectionnant le bouton « Oui ».</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continúe con \'yes\' si desea actualizar el nombre del sitio de la colección.</string>
-    <string name="update_site">Actualizar el sitio de recopilación</string>
+    <string name="confirm_update_site">Continuez avec « oui » si vous souhaitez mettre à jour le nom du site de collecte.</string>
+    <string name="update_site">Mettre à jour le site de collecte</string>
     <string name="farm_info">Informations sur parcelle à la ferme</string>
     <string name="finish">Finir</string>
     <string name="start">Commencer</string>
@@ -76,4 +76,7 @@
     <string name="error_export_msg">Erreur lors de l\'exportation des données, veuillez réessayer.</string>
     <string name="export">Exporter</string>
     <string name="cancel">Annuler</string>
+    <string name="choose_area">choisissez l\'aire</string>
+    <string name="please_choose_area">Veuillez choisir l\'aire à utiliser:</string>
+    <string name="add_farm_plot_title">Ajouter une parcelle de ferme</string>
 </resources>

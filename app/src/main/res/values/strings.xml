@@ -75,4 +75,7 @@
     <string name="error_export_msg">Error while exporting data, please try again.</string>
     <string name="export">Export</string>
     <string name="cancel">Cancel</string>
+    <string name="choose_area">Choose the area</string>
+    <string name="please_choose_area">Please choose the area to use:</string>
+    <string name="add_farm_plot_title">Add Farm Plot</string>
 </resources>

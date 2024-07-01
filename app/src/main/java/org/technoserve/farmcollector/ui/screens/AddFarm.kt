@@ -238,7 +238,7 @@ fun FarmForm(
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
-            title = { Text(text = "Add Farm Plot") },
+            title = { Text(text = stringResource(id=R.string.add_farm_plot_title)) },
             text = {
                 Column {
                     Text(text = stringResource(id = R.string.confirm_add_farm))

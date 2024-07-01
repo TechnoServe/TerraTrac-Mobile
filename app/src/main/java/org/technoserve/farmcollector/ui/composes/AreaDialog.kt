@@ -7,6 +7,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import org.technoserve.farmcollector.R
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -20,16 +22,17 @@ fun AreaDialog(
     if (showDialog) {
         val options = listOf(
             "Calculated Area (${String.format("%.2f", calculatedArea)} hectares)",
-            "Entered Area (${String.format("%.2f", enteredArea)} hectares)"
+            "Entered Size (${String.format("%.2f", enteredArea)} hectares)"
         )
 
         AlertDialog(
             onDismissRequest = onDismiss,
             title = {
-                Text(text = "Choose Area")
+                Text(text = stringResource(id = R.string.choose_area))
+
             },
             text = {
-                Text(text = "Please choose the area to use:")
+                Text(text =stringResource(id = R.string.please_choose_area) )
             },
             confirmButton = {
                 TextButton(onClick = { onConfirm(options[0]) }) {
@@ -41,7 +44,7 @@ fun AreaDialog(
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(id = R.string.cancel))
                 }
             }
         )
