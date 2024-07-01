@@ -133,13 +133,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     }
 
     val enteredArea = mapViewModel.getSizeInput() ?: 0.0
-    println("Entered area: $enteredArea")
-    val calculatedArea = mapViewModel.calculateArea(coordinates)?: 0.0f
+    val calculatedArea = mapViewModel.calculateArea(coordinates)
 
     // Confirm farm polygon setting
     if (showConfirmDialog.value) {
-
-
         ConfirmDialog(
             title = stringResource(id = R.string.set_polygon),
             message = stringResource(id = R.string.confirm_set_polygon),
@@ -161,7 +158,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         onDismiss = { mapViewModel.dismissDialog() },
         onConfirm = { chosenArea ->
             val chosenSize = if (chosenArea.contains("Calculated")) calculatedArea.toString() else enteredArea.toString()
-            Log.d(TAG, "Chosen Size $chosenSize")
             mapViewModel.updateSizeWithChoice(chosenSize);
             navController.navigateUp()
         },

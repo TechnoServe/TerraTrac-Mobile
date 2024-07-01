@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TerraTrac</string>
-    <string name="farm_list">የእርሻ ዝርዝር</string>
+    <string name="farm_list">ሴራዎች ዝርዝር</string>
     <string name="app_intro">የአውሮፓ ህብረት የደን ጭፍጨፋ ደንብን ለማክበር የቡና መከታተያ መሰረታዊ የሞባይል መተግበሪያ</string>
     <string name="developed_by">የተገነባው በ</string>
     <string name="delete_this_item">ይህን ንጥል ሰርዝ</string>
@@ -21,20 +21,20 @@
     <string name="harvested_this_year">ቼሪ በዚህ አመት ተሰብስቧል</string>
     <string name="kgs">ኪሎግራም</string>
     <string name="download_csv">ሰነድ አውርድ</string>
-    <string name="update_farm">እርሻን አዘምን</string>
+    <string name="update_farm">ሴራ ያዘምኑ</string>
     <string name="farm_name">የእርሻ ስም</string>
-    <string name="size_in_hectares">በሄክታር መጠን</string>
+    <string name="size_in_hectares">የሴራው መጠን</string>
     <string name="harvested_this_year_in_kgs">ቼሪ በዚህ ዓመት በኪሎግራም ተሰብስቧል</string>
     <string name="get_coordinates">መጋጠሚያዎችን ያግኙ</string>
     <string name="take_picture">ፎቶ አንሳ</string>
-    <string name="add_farm">እርሻ አክል</string>
+    <string name="add_farm">ሴራ ጨምር</string>
     <string name="permission_granted">ፍቃድ ተሰጥቷል።</string>
     <string name="permission_denied">የተሰረዘ ፈቃድ</string>
     <string name="fill_form">እባክዎን ሁሉንም መስኮች ይሙሉ እና ፎቶ ያንሱ</string>
     <string name="collection_site_list">የመሰብሰቢያ ቦታዎች</string>
     <string name="add_site">ድረ-ገጽ ጨምር</string>
     <string name="site_name">የሳይት ስም</string>
-    <string name="confirm_add_farm">እርሻውን\'ን ብዙ ማህደር ማዘጋጀት ትፈልጋለህ? ካልሆነ እርሻ ጨምር ።</string>
+    <string name="confirm_add_farm">የፕላት ፖሊጎን ማዘጋጀት ይፈልጋሉ? ካልሆነ ሴራ ያክሉ።</string>
     <string name="set_polygon">ብዙ ማጣቀሻ</string>
     <string name="unit">ዩኒት</string>
     <string name="agent_name">የወኪል ስም</string>
@@ -46,13 +46,13 @@
     <string name="coordinates">ቅንጅት</string>
     <string name="dummy_button">ዳሚ ቁልፍ</string>
     <string name="dummy_content">የዱሚ ይዘት</string>
-    <string name="confirm_update_farm">የእርሻውን ፖሊጎን ማሻሻል ትፈልጋለህ? ካልሆነ ግን እርሻውን ማሻሻል።</string>
+    <string name="confirm_update_farm">Plot polygonን ማዘመን ይፈልጋሉ? አይደለም ከሆነ፣ ሴራውን ያዘምኑ።</string>
     <string name="accuracy">ትክክለኝነት</string>
     <string name="confirm_set_polygon">ብዙ ጊዜ ማመቻቸትህን ጨርሰሃል? ከሆነ የ አዎ የሚለውን ቁልፍ በመምረጥ አስቀምጥና አስቀምጥ።</string>
     <string name="clear_map">ካርታውን ማጽዳት ትፈልጋለህ?</string>
     <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ስም ማሻሻል ከፈለጋችሁ አዎ ጋር ይቀጥሉ።</string>
     <string name="update_site">የውሂብ ማሰባሰቢያ ስሪት</string>
-    <string name="farm_info">የእርሻ ኢንፎ</string>
+    <string name="farm_info">ሴራ መረጃ</string>
     <string name="finish">ጨርስ</string>
     <string name="start">ጀምር</string>
     <string name="can_not_get_location">ቦታ ማግኘት አይቻልም, እንደገና ይሞክሩ</string>

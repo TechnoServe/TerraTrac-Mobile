@@ -138,7 +138,7 @@ fun FarmList(navController: NavController, siteId: Long) {
             item {
 
                 Button(onClick = { showExportDialog = true }) {
-                    Text("Export Data")
+                    Text(stringResource(id = R.string.export_data))
                 }
 
                 if (showExportDialog) {
@@ -711,7 +711,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
-            title = { Text(text = "Update Farm") },
+            title = { Text(text = stringResource(id = R.string.update_farm)) },
             text = {
                 Column {
                     Text(text = stringResource(id = R.string.confirm_update_farm))

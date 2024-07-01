@@ -85,19 +85,6 @@ import java.util.Objects
 import java.util.UUID
 import javax.inject.Inject
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun AreaInputField(farmViewModel: FarmViewModel) {
-//    val size by farmViewModel.size.collectAsState()
-//
-//    TextField(
-//        singleLine = true,
-//        value = size,
-//        onValueChange = { farmViewModel.updateSize(it)},
-//        label = { Text("Enter Size") }
-//    )
-//}
-
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
@@ -238,13 +225,12 @@ fun FarmForm(
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
-            title = { Text(text = stringResource(id=R.string.add_farm_plot_title)) },
+            title = { Text(text = stringResource(id = R.string.add_farm)) },
             text = {
                 Column {
                     Text(text = stringResource(id = R.string.confirm_add_farm))
                 }
             },
-
             confirmButton = {
                 TextButton(onClick = {
                     saveFarm()

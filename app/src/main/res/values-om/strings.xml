@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TerraTrac</string>
-    <string name="farm_list">Tarree Qonnaa</string>
+    <string name="farm_list">Tarree Plootii</string>
     <string name="app_intro">Dambii bosona ciruu Gamtaa Awurooppaa eeguuf appii mobaayilaa bu\'uuraa hordoffii bunaa</string>
     <string name="developed_by">Kan qopheesse</string>
     <string name="delete_this_item">Wanticha kana haqi</string>
@@ -23,7 +23,7 @@
     <string name="download_csv">tarree buufachuuf</string>
     <string name="update_farm">Lafa Qonna Fooyyessi</string>
     <string name="farm_name">Maqaa qonnaan bulaa</string>
-    <string name="size_in_hectares">Bal’inni isaa hektaaradhaan</string>
+    <string name="size_in_hectares">Guddina Plootii</string>
     <string name="harvested_this_year_in_kgs">Cheerii bara kana kiiloogiraamaan sassaabame</string>
     <string name="get_coordinates">Qindeessitoota Argachuu</string>
     <string name="take_picture">Suuraa Fudhadhaa</string>
@@ -52,7 +52,7 @@
     <string name="clear_map">Kaartaa qulqulleessuu barbaadduu?</string>
     <string name="confirm_update_site">Yoo maqaa saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
     <string name="update_site">Saayitii Walitti Qabuu Fooyyessi</string>
-    <string name="farm_info">Odeeffannoo Qonnaa</string>
+    <string name="farm_info">Odeeffannoo Lafaa</string>
     <string name="finish">Xumuruu</string>
     <string name="start">Eegaluu</string>
     <string name="can_not_get_location">Bakka argachuu hin dandeenye, Irra deebi\'ii yaalaa</string>
