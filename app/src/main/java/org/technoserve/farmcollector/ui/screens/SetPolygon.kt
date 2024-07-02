@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.Intent
 import android.location.Location
+import android.location.LocationManager
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -21,12 +24,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,7 +100,55 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         fastestInterval = 500 // Fastest update interval in milliseconds
     }
 
+
+    val showAlertDialog = remember { mutableStateOf(false) }
+
+    val showPermissionRequest = remember { mutableStateOf(false) }
+
     val mapViewModel: MapViewModel = viewModel()
+    // Remember the state for showing the dialog
+    val showLocationDialog = remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(Unit) {
+        mapViewModel.clearCoordinates()
+        if (!isLocationEnabled(context)) {
+            showLocationDialog.value = true
+    }
+    }
+
+    // Define string constants
+    val titleText = stringResource(id = R.string.enable_location_services)
+    val messageText = stringResource(id = R.string.location_services_required_message)
+    val enableButtonText = stringResource(id = R.string.enable)
+    val cancelButtonText = stringResource(id = R.string.cancel)
+
+// Dialog to prompt user to enable location services
+    if (showLocationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialog.value = false },
+            title = { Text(titleText) },
+            text = { Text(messageText) },
+            confirmButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    promptEnableLocation(context)
+                }) {
+                    Text(enableButtonText)
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
+                }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            }
+
+        )
+    }
+
 
     if (!isCapturingCoordinates && farmInfo == null) {
         fusedLocationClient.getCurrentLocation(locationRequest.priority,
@@ -141,23 +194,74 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val enteredArea = sharedPref.getString("plot_size", "0.0")?.toDoubleOrNull() ?: 0.0
     val calculatedArea = mapViewModel.calculateArea(coordinates)
 
-    // Confirm farm polygon setting
+//    // Confirm farm polygon setting
+//    if (showConfirmDialog.value) {
+//        ConfirmDialog(
+//            title = stringResource(id = R.string.set_polygon),
+//            message = stringResource(id = R.string.confirm_set_polygon),
+//            showConfirmDialog,
+//            fun() {
+//                mapViewModel.clearCoordinates()
+//                mapViewModel.addCoordinates(coordinates)
+//                navController.previousBackStackEntry?.savedStateHandle?.apply {
+//                    set("coordinates", coordinates)
+//                }
+//
+//                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+//            }
+//        )
+//    }
+
+
     if (showConfirmDialog.value) {
         ConfirmDialog(
             title = stringResource(id = R.string.set_polygon),
             message = stringResource(id = R.string.confirm_set_polygon),
             showConfirmDialog,
             fun() {
-                mapViewModel.clearCoordinates()
-                mapViewModel.addCoordinates(coordinates)
-                navController.previousBackStackEntry?.savedStateHandle?.apply {
-                    set("coordinates", coordinates)
-                }
+                // Check if coordinates size is greater than 4
+//                if (coordinates.size >= 4 && coordinates.first() == coordinates.last()) {
+                if (coordinates.size >= 3) {
+                    mapViewModel.clearCoordinates()
+                    mapViewModel.addCoordinates(coordinates)
+                    navController.previousBackStackEntry?.savedStateHandle?.apply {
+                        set("coordinates", coordinates)
+                    }
 
-                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                } else {
+                    showAlertDialog.value = true
+                }
             }
         )
     }
+
+// Alert dialog for insufficient coordinates
+    if (showAlertDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                showAlertDialog.value = false
+            },
+            title = {
+                Text(text = stringResource(id = R.string.insufficient_coordinates_title))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.insufficient_coordinates_message))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAlertDialog.value = false
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.ok))
+                    showConfirmDialog.value = false
+                    mapViewModel.clearCoordinates()
+                }
+            }
+        )
+    }
+
     // Display AreaDialog if needed
     AreaDialog(
         showDialog = mapViewModel.showDialog.collectAsState().value,
@@ -169,6 +273,8 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
             }
             sharedPref.edit().putString("plot_size", chosenSize).apply()
+            coordinates = listOf() // Clear coordinates array when starting
+            mapViewModel.clearCoordinates()
             navController.navigateUp()
         } ,
         calculatedArea = calculatedArea,
@@ -310,12 +416,16 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
-                            if (!isCapturingCoordinates && !showConfirmDialog.value) {
-                                coordinates = listOf() // Clear coordinates array when starting
-                                viewModel.clearCoordinates()
-                                isCapturingCoordinates = true
-                            } else if (isCapturingCoordinates && !showConfirmDialog.value) {
-                                showConfirmDialog.value = true
+                            if (!isLocationEnabled(context)) {
+                                showLocationDialog.value = true
+                            } else {
+                                if (!isCapturingCoordinates && !showConfirmDialog.value) {
+                                    coordinates = listOf() // Clear coordinates array when starting
+                                    viewModel.clearCoordinates()
+                                    isCapturingCoordinates = true
+                                } else if (isCapturingCoordinates && !showConfirmDialog.value) {
+                                    showConfirmDialog.value = true
+                                }
                             }
                         }) {
                         Text(

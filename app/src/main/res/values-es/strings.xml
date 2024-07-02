@@ -82,4 +82,18 @@
 
     <string name="calculated_area">Área calculada (%1$s hectáreas)</string>
     <string name="entered_size">Tamaño ingresado (%1$s hectáreas)</string>
+
+    <string name="insufficient_coordinates_title">Coordenadas Insuficientes</string>
+    <string name="insufficient_coordinates_message">El polígono requiere al menos 4 points. Por favor, capture las coordenadas nuevamente.</string>
+    <string name="ok">OK</string>
+
+    <string name="enable_location_services">Habilitar Servicios de Localización</string>
+    <string name="location_services_required_message">Se requieren servicios de localización para esta función. Por favor, habilite los servicios de localización.</string>
+    <string name="enable">Habilitar</string>
+    <string name="site_added_successfully">Sitio agregado con éxito</string>
+    <string name="location_permission_denied_message">No podrá usar el permiso de ubicación para acceder al mapa.</string>
+
+
+
+
 </resources>

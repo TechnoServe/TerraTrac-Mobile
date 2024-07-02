@@ -80,4 +80,16 @@
     <string name="add_farm_plot_title">Add Plot</string>
     <string name="calculated_area">Calculated Area (%1$s hectares)</string>
     <string name="entered_size">Entered Size (%1$s hectares)</string>
+
+    <string name="insufficient_coordinates_title">Insufficient Coordinates</string>
+    <string name="insufficient_coordinates_message">The polygon requires at least 4 points. Please capture the coordinates again.</string>
+    <string name="ok">OK</string>
+
+    <string name="enable_location_services">Enable Location Services</string>
+    <string name="location_services_required_message">Location services are required for this feature. Please enable location services.</string>
+    <string name="enable">Enable</string>
+    <string name="site_added_successfully">Site added successfully</string>
+    <string name="location_permission_denied_message">You will not be able to use the location permission to access the location</string>
+    <string name="open_settings">Open Settings\n</string>
+
 </resources>

@@ -1,10 +1,12 @@
 package org.technoserve.farmcollector.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.graphics.Bitmap
 import android.location.LocationManager
 import android.os.Looper
@@ -39,6 +41,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,8 +60,12 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardType.Companion.Uri
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.content.PermissionChecker
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -66,12 +73,19 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.v3.ktx.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -90,6 +104,9 @@ import java.util.Objects
 import java.util.UUID
 import javax.inject.Inject
 
+
+
+private const val REQUEST_CHECK_SETTINGS = 1000
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
@@ -162,6 +179,49 @@ fun FarmForm(
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
 
+
+//    LaunchedEffect(Unit) {
+//        checkLocationAndRequestPermissions(context)
+//    }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            // Access location services
+        } else {
+            // Handle the denied permission
+            Toast.makeText(context, "Location permission is required to access this feature.", Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun fetchLocationAndNavigate() {
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 10000 // Update interval in milliseconds
+            fastestInterval = 5000 // Fastest update interval in milliseconds
+        }
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    locationResult.lastLocation?.let { lastLocation ->
+                        // Handle the new location
+                        latitude = "${lastLocation.latitude}"
+                        longitude = "${lastLocation.longitude}"
+
+                        // Navigate to 'setPolygon' if conditions are met
+                        navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
+                        navController.navigate("setPolygon")
+                        mapViewModel.clearCoordinates()
+                    }
+                }
+            },
+            Looper.getMainLooper()
+        )
+    }
+
+
+
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -196,7 +256,9 @@ fun FarmForm(
                 }
             },
             dismissButton = {
-                Button(onClick = { showLocationDialog.value = false }) {
+                Button(onClick = { showLocationDialog.value = false
+                    Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
+                }) {
                     Text(stringResource(id = R.string.no))
                 }
             }
@@ -214,13 +276,6 @@ fun FarmForm(
 //            mapViewModel.calculateArea(coordinatesData)?:0.0f
 //        }
         val sizeInHa = size.toFloatOrNull() ?: 0f
-
-        //save unit in sharedPreference
-        with(sharedPref.edit()) {
-            putString("unit", selectedUnit)
-            apply()
-        }
-
         // Add farm
         // Generating a UUID for a new farm before saving it
         val newUUID = UUID.randomUUID()
@@ -246,6 +301,7 @@ fun FarmForm(
 //                    context.finish()
         navController.navigate("farmList/${siteId}")
     }
+
 
 
     if (showDialog.value) {
@@ -293,6 +349,7 @@ fun FarmForm(
             // You can display an error message for this field if needed
         }
 
+
         if (size.isBlank() || size.toFloatOrNull() == null) {
             isValid = false
             // You can display an error message for this field if needed
@@ -315,6 +372,8 @@ fun FarmForm(
     val permissionGranted = stringResource(id = R.string.permission_granted)
     val permissionDenied = stringResource(id = R.string.permission_denied)
     val fillForm = stringResource(id = R.string.fill_form)
+
+    val showPermissionRequest = remember { mutableStateOf(false) }
 
     var imageInputStream: InputStream? = null
     val resultLauncher =
@@ -608,10 +667,27 @@ fun FarmForm(
                 )
             }
         }
+        if (showPermissionRequest.value) {
+            LocationPermissionRequest(
+                onLocationEnabled = {
+                    showLocationDialog.value = true
+                },
+                onPermissionsGranted = {
+                    showPermissionRequest.value = false
+                },
+                onPermissionsDenied = {
+                    // Handle permissions denied
+                    // Show a message or take appropriate action
+                }
+            )
+        }
+
+        // Button to trigger the location permission request
         Button(
             onClick = {
-                // Simulate collecting latitude and longitude
-                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
+                showPermissionRequest.value = true
+                val enteredSize = size.toFloatOrNull() ?: 0f
+                if (enteredSize < 4f) {
                     if (isLocationEnabled(context)) {
                         val locationRequest = LocationRequest.create().apply {
                             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -636,8 +712,11 @@ fun FarmForm(
                         showLocationDialog.value = true
                     }
                 } else {
-                    navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
-                    navController.navigate("setPolygon")
+                        showPermissionRequest.value = true
+                        // Action for sizes greater than or equal to 4
+                        navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
+                        navController.navigate("setPolygon")
+                        mapViewModel.clearCoordinates()
                 }
             },
             modifier = Modifier
@@ -645,6 +724,7 @@ fun FarmForm(
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
                 .height(50.dp),
+            enabled = size.isNotBlank()
         ) {
             val enteredSize = size.toFloatOrNull() ?: 0f
             Text(
@@ -655,6 +735,59 @@ fun FarmForm(
                 }
             )
         }
+
+
+
+//        Button(
+//            onClick = {
+//                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
+//                    if (isLocationEnabled(context)) {
+//                        val locationRequest = LocationRequest.create().apply {
+//                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+//                            interval = 10000 // Update interval in milliseconds
+//                            fastestInterval = 5000 // Fastest update interval in milliseconds
+//                        }
+//
+//                        fusedLocationClient.requestLocationUpdates(
+//                            locationRequest,
+//                            object : LocationCallback() {
+//                                override fun onLocationResult(locationResult: LocationResult) {
+//                                    locationResult.lastLocation?.let { lastLocation ->
+//                                        // Handle the new location
+//                                        latitude = "${lastLocation.latitude}"
+//                                        longitude = "${lastLocation.longitude}"
+//                                    }
+//                                }
+//                            },
+//                            Looper.getMainLooper()
+//                        )
+//                    } else {
+//                        showLocationDialog.value = true
+//                    }
+//                } else {
+//                    navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
+//                    navController.navigate("setPolygon")
+//                    mapViewModel.clearCoordinates()
+//                }
+//            },
+//            modifier = Modifier
+//                .align(Alignment.CenterHorizontally)
+//                .fillMaxWidth(0.7f)
+//                .padding(bottom = 5.dp)
+//                .height(50.dp),
+//            enabled = size.isNotBlank()
+//        ) {
+//            val enteredSize = size.toFloatOrNull() ?: 0f
+//            Text(
+//                text = if (enteredSize >= 4f) {
+//                    stringResource(id = R.string.set_polygon)
+//                } else {
+//                    stringResource(id = R.string.get_coordinates)
+//                }
+//            )
+//        }
+
+
 
 //        if (!farmerPhoto.isBlank())
 //        {
@@ -780,6 +913,73 @@ fun promptEnableLocation(context: Context) {
     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
     context.startActivity(intent)
 }
+
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun LocationPermissionRequest(
+    onLocationEnabled: () -> Unit,
+    onPermissionsGranted: () -> Unit,
+    onPermissionsDenied: () -> Unit
+) {
+    val context = LocalContext.current
+    val multiplePermissionsState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+
+    LaunchedEffect(Unit) {
+        if (isLocationEnabled(context)) {
+            if (multiplePermissionsState.allPermissionsGranted) {
+                onPermissionsGranted()
+            } else {
+                multiplePermissionsState.launchMultiplePermissionRequest()
+            }
+        } else {
+            onLocationEnabled()
+        }
+    }
+
+    val showLocationDialogNew = remember { mutableStateOf(false) }
+
+
+    // Optionally, show some text to inform the user about the importance of permissions
+    if (!multiplePermissionsState.allPermissionsGranted) {
+        Column {
+            AlertDialog(
+                onDismissRequest = { showLocationDialogNew.value = false },
+                title = { Text(stringResource(id = R.string.enable_location)) },
+                text = { Text(stringResource(id = R.string.enable_location_msg)) },
+                confirmButton = {
+                    Button(onClick = {
+                        // Perform action to enable location permissions
+                        promptEnableLocation(context)
+                        showLocationDialogNew.value = false  // Dismiss the dialog after action
+                    }) {
+                        Text(stringResource(id = R.string.yes))
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = {
+                        // Show a toast message indicating that the permission was denied
+                        Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
+                        showLocationDialogNew.value = false  // Dismiss the dialog after action
+                    }) {
+                        Text(stringResource(id = R.string.no))
+                    }
+                }
+            )
+        }
+    }
+}
+
+
+
+
+
+
 
 @SuppressLint("SimpleDateFormat")
 fun Context.createImageFile(): File {

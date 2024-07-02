@@ -9,7 +9,7 @@ object GeoCalculator {
     @SuppressLint("DefaultLocale")
     // The function to calculate the Area using the captured Polygons
     fun calculateArea(polygon: List<Pair<Double, Double>>?): Double {
-        if (polygon == null || polygon.size <= 4) {
+        if (polygon == null || polygon.size < 3) {
             return 0.0
         }
         // Convert the polygon vertices to LatLng objects expected by SphericalUtil

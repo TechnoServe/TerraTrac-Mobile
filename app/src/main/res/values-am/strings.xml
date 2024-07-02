@@ -82,4 +82,16 @@
 
     <string name="calculated_area">የተሰላ አካባቢ (%1$s ሄክታር)</string>
     <string name="entered_size">የገባው መጠን (%1$s ሄክታር)</string>
+
+    <string name="insufficient_coordinates_title">የበቂ እስክሪፕታስ</string>
+    <string name="insufficient_coordinates_message">ነጠላ እንገባ ቢያንስ አራት እስክሪፕታስ ያስፈልጋል። እባኮትን እስክሪፕታስን እንደገና ይይዙ።</string>
+    <string name="ok">እሺ</string>
+
+    <string name="enable_location_services">የአቀባበል አገልግሎቶችን አንቀሳቅስ</string>
+    <string name="location_services_required_message">የአቀባበል አገልግሎቶች ለዚህ ተግባር ያስፈልጋሉ። እባኮትን የአቀባበል አገልግሎቶችን አንቀሳቅሱ።</string>
+    <string name="enable">አንቀሳቅስ</string>
+    <string name="site_added_successfully">ድርጅቱ በስኬት ተጨምሯል</string>
+    <string name="location_permission_denied_message">አካባቢ ፈቃድ እንደአልገባኝ ስለሆኑ ወደ ካርታ ሂደው ማግኘት አልቻሉም።</string>
+
+
 </resources>
