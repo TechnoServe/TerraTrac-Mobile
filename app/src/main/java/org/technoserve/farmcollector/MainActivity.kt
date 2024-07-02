@@ -1,6 +1,7 @@
 package org.technoserve.farmcollector
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -66,17 +67,6 @@ import java.util.concurrent.TimeUnit
 //@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission is granted. Continue with the action that requires permission.
-            startSyncService()
-        } else {
-            // Permission is denied. Handle the case where the user denies the permission.
-        }
-    }
-
     private val viewModel: MapViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels {
         LanguageViewModelFactory(application)
@@ -85,6 +75,7 @@ class MainActivity : ComponentActivity() {
         getSharedPreferences("theme_mode", MODE_PRIVATE)
     }
 
+    @SuppressLint("InlinedApi")
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,11 +92,6 @@ class MainActivity : ComponentActivity() {
         // Start the service when the activity is created
         startSyncService()
 
-        // Optionally, request permission if needed
-        requestSyncPermission()
-
-
-
         setContent {
             val navController = rememberNavController()
             val currentLanguage by languageViewModel.currentLanguage.collectAsState()
@@ -117,10 +103,11 @@ class MainActivity : ComponentActivity() {
             FarmCollectorTheme(darkTheme = darkMode.value) {
                 val multiplePermissionsState = rememberMultiplePermissionsState(
                     listOf(
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
                     )
                 )
                 LaunchedEffect(true) {
@@ -197,30 +184,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun requestSyncPermission() {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission already granted, continue with the action
-                startSyncService()
-            }
-            else -> {
-                // Permission has not been granted, request it
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
-
     private fun startSyncService() {
         val serviceIntent = Intent(this, SyncService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
     }
-
-
-
-
 }
-
