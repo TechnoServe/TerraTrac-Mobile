@@ -49,6 +49,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -637,6 +638,48 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         context.packageName + ".provider", file
     )
 
+
+    LaunchedEffect(Unit) {
+        if (!isLocationEnabled(context)) {
+            showLocationDialog.value = true
+        }
+    }
+
+    // Define string constants
+    val titleText = stringResource(id = R.string.enable_location_services)
+    val messageText = stringResource(id = R.string.location_services_required_message)
+    val enableButtonText = stringResource(id = R.string.enable)
+    val cancelButtonText = stringResource(id = R.string.cancel)
+
+    // Dialog to prompt user to enable location services
+    if (showLocationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialog.value = false },
+            title = { Text(titleText) },
+            text = { Text(messageText) },
+            confirmButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    promptEnableLocation(context)
+                }) {
+                    Text(enableButtonText)
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
+                }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            }
+
+        )
+    }
+
+
+
+
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
         coordinates =
             navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
@@ -897,37 +940,45 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         }
         Button(
             onClick = {
-                if (isLocationEnabled(context) && context.hasLocationPermission()) {
-                    if (size.toFloatOrNull() != null && size.toFloat() < 4) {
-                        // Simulate collecting latitude and longitude
-                        if (context.hasLocationPermission()) {
-                            val locationRequest = LocationRequest.create().apply {
-                                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                                interval = 10000 // Update interval in milliseconds
-                                fastestInterval = 5000 // Fastest update interval in milliseconds
-                            }
+                showPermissionRequest.value = true
+                if (!isLocationEnabled(context)) {
+                    showLocationDialog.value = true
+                } else {
+                    if (isLocationEnabled(context) && context.hasLocationPermission()) {
+                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
+                            // Simulate collecting latitude and longitude
+                            if (context.hasLocationPermission()) {
+                                val locationRequest = LocationRequest.create().apply {
+                                    priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                                    interval = 10000 // Update interval in milliseconds
+                                    fastestInterval =
+                                        5000 // Fastest update interval in milliseconds
+                                }
 
-                            fusedLocationClient.requestLocationUpdates(
-                                locationRequest,
-                                object : LocationCallback() {
-                                    override fun onLocationResult(locationResult: LocationResult) {
-                                        locationResult.lastLocation?.let { lastLocation ->
-                                            // Handle the new location
-                                            latitude = "${lastLocation.latitude}"
-                                            longitude = "${lastLocation.longitude}"
-                                            // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                fusedLocationClient.requestLocationUpdates(
+                                    locationRequest,
+                                    object : LocationCallback() {
+                                        override fun onLocationResult(locationResult: LocationResult) {
+                                            locationResult.lastLocation?.let { lastLocation ->
+                                                // Handle the new location
+                                                latitude = "${lastLocation.latitude}"
+                                                longitude = "${lastLocation.longitude}"
+                                                // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                            }
                                         }
-                                    }
-                                },
-                                Looper.getMainLooper()
-                            )
+                                    },
+                                    Looper.getMainLooper()
+                                )
+                            }
+                        } else {
+                            if (isLocationEnabled(context)) {
+                                navController.navigate("setPolygon")
+                            }
                         }
                     } else {
-                        navController.navigate("setPolygon")
+                        showPermissionRequest.value = true
+                        showLocationDialog.value = true
                     }
-                } else {
-                    showPermissionRequest.value = true
-                    showLocationDialog.value = true
                 }
             },
 
