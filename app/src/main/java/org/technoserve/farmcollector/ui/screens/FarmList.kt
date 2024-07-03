@@ -744,7 +744,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 //            }
 
             // Ensure the coordinates have at least 4 points for size greater than 4 hectares
-            if ((size.toFloatOrNull() ?: 0f) > 4) {
+            if ((size.toFloatOrNull() ?: 0f) >= 4) {
                 if ((coordinates?.size ?: 0) < 3) {
                     Toast.makeText(context, "Please capture at least 4 points for the polygon when the size is greater than 4 hectares.", Toast.LENGTH_SHORT).show()
                     return
@@ -990,7 +990,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             enabled = size.toFloatOrNull() != null
         ) {
             Text(
-                text = if (size.toFloatOrNull() != null && size.toFloat() <= 4) stringResource(id = R.string.get_coordinates) else stringResource(
+                text = if (size.toFloatOrNull() != null && size.toFloat() < 4) stringResource(id = R.string.get_coordinates) else stringResource(
                     id = R.string.set_new_polygon
                 )
             )

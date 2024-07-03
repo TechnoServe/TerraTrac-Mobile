@@ -1,5 +1,7 @@
 package org.technoserve.farmcollector.ui.composes
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -18,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
@@ -73,6 +76,7 @@ fun UpdateCollectionDialog(
     site: CollectionSite, showDialog: MutableState<Boolean>,
     farmViewModel: FarmViewModel
 ) {
+    val context = LocalContext.current as Activity
     var name by rememberSaveable { mutableStateOf(site.name) }
     var agentName by rememberSaveable { mutableStateOf(site.agentName) }
     var phoneNumber by rememberSaveable { mutableStateOf(site.phoneNumber) }
@@ -150,6 +154,9 @@ fun UpdateCollectionDialog(
                 TextButton(onClick = {
                     if (validateForm(name, agentName, phoneNumber, email, village, district)) {
                         showConfirmDialog = true
+                    }
+                    else {
+                        Toast.makeText(context, R.string.fill_form, Toast.LENGTH_SHORT).show()
                     }
                 }) {
                     Text(text = stringResource(id = R.string.yes))
