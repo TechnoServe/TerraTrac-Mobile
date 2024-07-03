@@ -628,6 +628,9 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
     val showDialog = remember { mutableStateOf(false) }
+    val showLocationDialog = remember { mutableStateOf(false) }
+    val showLocationDialogNew = remember { mutableStateOf(false) }
+    val showPermissionRequest = remember { mutableStateOf(false) }
     val file = context.createImageFile()
     val uri = FileProvider.getUriForFile(
         Objects.requireNonNull(context),
@@ -754,6 +757,23 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
 
+    if (showPermissionRequest.value) {
+        LocationPermissionRequest(
+            onLocationEnabled = {
+                showLocationDialog.value = true
+            },
+            onPermissionsGranted = {
+                showPermissionRequest.value = false
+            },
+            onPermissionsDenied = {
+                // Handle permissions denied
+                // Show a message or take appropriate action
+            },
+            showLocationDialogNew = showLocationDialogNew,
+            hasToShowDialog = showLocationDialogNew.value
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -877,32 +897,37 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         }
         Button(
             onClick = {
-                if (size.toFloatOrNull() != null && size.toFloat() <= 4) {
-                    // Simulate collecting latitude and longitude
-                    if (context.hasLocationPermission()) {
-                        val locationRequest = LocationRequest.create().apply {
-                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                            interval = 10000 // Update interval in milliseconds
-                            fastestInterval = 5000 // Fastest update interval in milliseconds
-                        }
+                if (isLocationEnabled(context) && context.hasLocationPermission()) {
+                    if (size.toFloatOrNull() != null && size.toFloat() < 4) {
+                        // Simulate collecting latitude and longitude
+                        if (context.hasLocationPermission()) {
+                            val locationRequest = LocationRequest.create().apply {
+                                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                                interval = 10000 // Update interval in milliseconds
+                                fastestInterval = 5000 // Fastest update interval in milliseconds
+                            }
 
-                        fusedLocationClient.requestLocationUpdates(
-                            locationRequest,
-                            object : LocationCallback() {
-                                override fun onLocationResult(locationResult: LocationResult) {
-                                    locationResult.lastLocation?.let { lastLocation ->
-                                        // Handle the new location
-                                        latitude = "${lastLocation.latitude}"
-                                        longitude = "${lastLocation.longitude}"
-                                        // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                            fusedLocationClient.requestLocationUpdates(
+                                locationRequest,
+                                object : LocationCallback() {
+                                    override fun onLocationResult(locationResult: LocationResult) {
+                                        locationResult.lastLocation?.let { lastLocation ->
+                                            // Handle the new location
+                                            latitude = "${lastLocation.latitude}"
+                                            longitude = "${lastLocation.longitude}"
+                                            // Log.d("FARM_LOCATION", "loaded success,,,,,,,")
+                                        }
                                     }
-                                }
-                            },
-                            Looper.getMainLooper()
-                        )
+                                },
+                                Looper.getMainLooper()
+                            )
+                        }
+                    } else {
+                        navController.navigate("setPolygon")
                     }
                 } else {
-                    navController.navigate("setPolygon")
+                    showPermissionRequest.value = true
+                    showLocationDialog.value = true
                 }
             },
 
