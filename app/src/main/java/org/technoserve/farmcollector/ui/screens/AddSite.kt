@@ -297,7 +297,7 @@ fun SiteForm(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (validateForm() && isValidPhoneNumber(phoneNumber)) {
+                if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
                     addSite(
                         farmViewModel,
                         name,
