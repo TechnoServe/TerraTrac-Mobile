@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">TerraTrac</string>
     <string name="farm_list">Lista de Parcelas granjas</string>
-    <string name="app_intro">Aplicación móvil básica para la trazabilidad del café para el cumplimiento de la regulación de deforestación de la UE</string>
+    <string name="app_intro">Aplicación móvil básica para la trazabilidad para el cumplimiento de la regulación de deforestación de la UE</string>
     <string name="developed_by">Desarrollado por</string>
     <string name="delete_this_item">Eliminar este elemento</string>
     <string name="are_you_sure">Estas seguro</string>

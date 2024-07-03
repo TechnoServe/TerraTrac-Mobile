@@ -98,11 +98,6 @@ fun SiteForm(navController: NavController) {
             isValid = false
             // You can display an error message for this field if needed
         }
-        if (phoneNumber.isNotBlank()) {
-            isValid = false
-            // You can display an error message for this field if needed
-        }
-
         if (village.isBlank()) {
             isValid = false
             // You can display an error message for this field if needed
@@ -202,7 +197,9 @@ fun SiteForm(navController: NavController) {
                 onDone = { focusRequester3.requestFocus() }
             ),
             value = phoneNumber,
-            onValueChange = { phoneNumber = it },
+            onValueChange = { phoneNumber = it
+                isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
+            },
             label = { Text(stringResource(id = R.string.phone_number)) },
             supportingText = {
                 if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text("Invalid Phone Number")

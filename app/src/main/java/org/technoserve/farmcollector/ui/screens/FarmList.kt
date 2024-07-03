@@ -658,7 +658,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             isValid = false
         }
 
-        if (size.isBlank()) {
+        if (size.toFloatOrNull()?.let { it > 0 } != true) {
             isValid = false
         }
 
@@ -673,6 +673,8 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
      * Updating Farm details
      * Before sending to the database
      */
+
+
     fun updateFarmInstance() {
         val isValid = validateForm()
         if (isValid) {
@@ -688,11 +690,22 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
 
             // fixing updating farms with size less than 4 ha
 
-            item.coordinates = if (!coordinates.isNullOrEmpty()) {
-                coordinates!!.plus(coordinates!!.first()) as List<Pair<Double, Double>>
+//            item.coordinates = if (!coordinates.isNullOrEmpty()) {
+//                coordinates!!.plus(coordinates!!.first()) as List<Pair<Double, Double>>
+//            } else {
+//                // Default value or an appropriate handling mechanism
+//                listOf(Pair(0.0, 0.0)) // Example default value
+//            }
+
+            // Ensure the coordinates have at least 4 points for size greater than 4 hectares
+            if ((size.toFloatOrNull() ?: 0f) > 4) {
+                if ((coordinates?.size ?: 0) < 3) {
+                    Toast.makeText(context, "Please capture at least 4 points for the polygon when the size is greater than 4 hectares.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
             } else {
-                // Default value or an appropriate handling mechanism
-                listOf(Pair(0.0, 0.0)) // Example default value
+                item.coordinates = coordinates ?: emptyList()
             }
 
             item.size = size.toFloat()
@@ -763,6 +776,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             value = farmerName,
             onValueChange = { farmerName = it },
             label = { Text(stringResource(id = R.string.farm_name)) },
+            isError = farmerName.isBlank(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -830,6 +844,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             onValueChange = { size = it },
             label = { Text(stringResource(id = R.string.size_in_hectares)) },
+            isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
             modifier = Modifier
                 .focusRequester(focusRequester3)
                 .fillMaxWidth()
@@ -896,6 +911,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
                 .height(50.dp),
+            enabled = size.toFloatOrNull() != null
         ) {
             Text(
                 text = if (size.toFloatOrNull() != null && size.toFloat() <= 4) stringResource(id = R.string.get_coordinates) else stringResource(
@@ -905,7 +921,11 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
         }
         Button(
             onClick = {
-                showDialog.value = true
+                if (validateForm()) {
+                    showDialog.value = true
+                } else {
+                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()

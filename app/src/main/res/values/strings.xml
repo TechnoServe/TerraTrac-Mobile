@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">TerraTrac</string>
     <string name="farm_list">Plots List</string>
-    <string name="app_intro">Basic mobile app for coffee traceability for compliance with EU deforestation regulation</string>
+    <string name="app_intro">Basic mobile app for traceability for compliance with EU deforestation regulation</string>
     <string name="developed_by">Developed By</string>
     <string name="delete_this_item">Delete this item</string>
     <string name="are_you_sure">Are you sure?</string>
@@ -66,6 +66,7 @@
     <string name="spanish">Spanish</string>
     <string name="amharic">Amharic</string>
     <string name="oromo">Oromo</string>
+    <string name="swahili">Swahili</string>
     <string name="enable_location">Turn On Location</string>
     <string name="enable_location_msg">Enable Location services in settings to get coordinates.</string>
     <string name="success_export_msg">Data exported successfully</string>
@@ -92,4 +93,6 @@
     <string name="location_permission_denied_message">You will not be able to use the location permission to access the location</string>
     <string name="open_settings">Open Settings\n</string>
 
+    <string name="confirm_update">Confirm Update</string>
+    <string name="are_you_sure_update">Are you sure you want to update this site?</string>
 </resources>
