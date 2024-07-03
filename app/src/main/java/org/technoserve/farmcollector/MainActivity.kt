@@ -3,17 +3,10 @@ package org.technoserve.farmcollector
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,8 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -34,18 +25,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import dagger.hilt.android.AndroidEntryPoint
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.database.sync.SyncService
-import org.technoserve.farmcollector.database.sync.SyncWorker
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.screens.AddFarm
 import org.technoserve.farmcollector.ui.screens.AddSite
@@ -62,7 +46,6 @@ import org.technoserve.farmcollector.utils.LanguageViewModelFactory
 import org.technoserve.farmcollector.utils.getLocalizedLanguages
 import org.technoserve.farmcollector.utils.updateLocale
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 //@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -73,6 +56,9 @@ class MainActivity : ComponentActivity() {
     }
     private val sharedPreferences by lazy {
         getSharedPreferences("theme_mode", MODE_PRIVATE)
+    }
+    private val sharedPref by lazy {
+        getSharedPreferences("FarmCollector", MODE_PRIVATE)
     }
 
     @SuppressLint("InlinedApi")
@@ -87,6 +73,11 @@ class MainActivity : ComponentActivity() {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
+//        remove plot_size from shared preferences if it exists
+        if (sharedPref.contains("plot_size")) {
+            sharedPref.edit().remove("plot_size").apply()
         }
 
         // Start the service when the activity is created

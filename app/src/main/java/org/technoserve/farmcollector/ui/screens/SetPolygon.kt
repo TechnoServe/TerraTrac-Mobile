@@ -2,14 +2,9 @@ package org.technoserve.farmcollector.ui.screens
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ContentValues.TAG
 import android.content.Context
-import android.content.Intent
 import android.location.Location
-import android.location.LocationManager
 import android.os.Looper
-import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,10 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
@@ -58,13 +51,11 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.Farm
-import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.composes.AreaDialog
 import org.technoserve.farmcollector.ui.composes.ConfirmDialog
-import org.technoserve.farmcollector.utils.GeoCalculator
 
 
 /**
@@ -114,7 +105,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         mapViewModel.clearCoordinates()
         if (!isLocationEnabled(context)) {
             showLocationDialog.value = true
-    }
+        }
     }
 
     // Define string constants
@@ -140,7 +131,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             dismissButton = {
                 Button(onClick = {
                     showLocationDialog.value = false
-                    Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        R.string.location_permission_denied_message,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }) {
                     Text(stringResource(id = R.string.cancel))
                 }
@@ -276,7 +271,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             coordinates = listOf() // Clear coordinates array when starting
             mapViewModel.clearCoordinates()
             navController.navigateUp()
-        } ,
+        },
         calculatedArea = calculatedArea,
         enteredArea = enteredArea
     )
@@ -441,46 +436,50 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
                         onClick = {
-                            if (context.hasLocationPermission() && isCapturingCoordinates) {
-                                fusedLocationClient.getCurrentLocation(locationRequest.priority,
-                                    object : CancellationToken() {
-                                        override fun onCanceledRequested(p0: OnTokenCanceledListener) =
-                                            CancellationTokenSource().token
+                            if (!isLocationEnabled(context)) {
+                                showLocationDialog.value = true
+                            } else {
+                                if (context.hasLocationPermission() && isCapturingCoordinates) {
+                                    fusedLocationClient.getCurrentLocation(locationRequest.priority,
+                                        object : CancellationToken() {
+                                            override fun onCanceledRequested(p0: OnTokenCanceledListener) =
+                                                CancellationTokenSource().token
 
-                                        override fun isCancellationRequested() = false
-                                    }).addOnSuccessListener { location: Location? ->
-                                    if (location == null) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.can_not_get_location),
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    } else {
-                                        if (location.latitude.toString()
-                                                .split(".")[1].length < 6 || location.longitude.toString()
-                                                .split(".")[1].length < 6
-                                        ) {
+                                            override fun isCancellationRequested() = false
+                                        }).addOnSuccessListener { location: Location? ->
+                                        if (location == null) {
                                             Toast.makeText(
                                                 context,
                                                 context.getString(R.string.can_not_get_location),
                                                 Toast.LENGTH_LONG
                                             ).show()
+                                        } else {
+                                            if (location.latitude.toString()
+                                                    .split(".")[1].length < 6 || location.longitude.toString()
+                                                    .split(".")[1].length < 6
+                                            ) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.can_not_get_location),
+                                                    Toast.LENGTH_LONG
+                                                ).show()
 
-                                            return@addOnSuccessListener
-                                        }
+                                                return@addOnSuccessListener
+                                            }
 
 //                                            update map camera position
-                                        val coordinate =
-                                            Pair(location.latitude, location.longitude)
-                                        accuracy = location.accuracy.toString()
+                                            val coordinate =
+                                                Pair(location.latitude, location.longitude)
+                                            accuracy = location.accuracy.toString()
 
-                                        coordinates = coordinates + coordinate
-                                        viewModel.addMarker(coordinate)
+                                            coordinates = coordinates + coordinate
+                                            viewModel.addMarker(coordinate)
 
 //                                                add camera position
-                                        viewModel.addCoordinate(
-                                            location.latitude, location.longitude
-                                        )
+                                            viewModel.addCoordinate(
+                                                location.latitude, location.longitude
+                                            )
+                                        }
                                     }
                                 }
                             }
