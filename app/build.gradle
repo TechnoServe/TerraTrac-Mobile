@@ -14,8 +14,8 @@ android {
         applicationId "org.technoserve.farmcollector"
         minSdk 21
         targetSdk 34
-        versionCode 18
-        versionName "2.08"
+        versionCode 22
+        versionName "2.13"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
