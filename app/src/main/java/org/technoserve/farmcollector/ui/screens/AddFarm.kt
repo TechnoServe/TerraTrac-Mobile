@@ -333,6 +333,7 @@ fun FarmForm(
     }
 
     fun validateForm(): Boolean {
+        isValid = true
         if (farmerName.isBlank()) {
             isValid = false
             // You can display an error message for this field if needed
@@ -371,8 +372,9 @@ fun FarmForm(
     val permissionGranted = stringResource(id = R.string.permission_granted)
     val permissionDenied = stringResource(id = R.string.permission_denied)
     val fillForm = stringResource(id = R.string.fill_form)
+    var wasFormValidated by remember { mutableStateOf(false) }
 
-    val showPermissionRequest = remember { mutableStateOf(false) }
+
 
     var imageInputStream: InputStream? = null
     val resultLauncher =
@@ -435,6 +437,7 @@ fun FarmForm(
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
+    val showPermissionRequest = remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -709,13 +712,25 @@ fun FarmForm(
                         )
                     } else {
                         showLocationDialog.value = true
+                        showPermissionRequest.value = false
                     }
-                } else {
-                        showPermissionRequest.value = true
+                }
+                else {
+                    showPermissionRequest.value = true
+                    if (isLocationEnabled(context)) {
                         // Action for sizes greater than or equal to 4
-                        navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
+                        navController.currentBackStackEntry?.arguments?.putParcelable(
+                            "farmData",
+                            null
+                        )
                         navController.navigate("setPolygon")
                         mapViewModel.clearCoordinates()
+                    }
+                        else {
+                            showLocationDialog.value = true
+                            showPermissionRequest.value = false
+                        }
+
                 }
             },
             modifier = Modifier
@@ -962,9 +977,9 @@ fun LocationPermissionRequest(
                 },
                 dismissButton = {
                     Button(onClick = {
+                        showLocationDialogNew.value = false  // Dismiss the dialog after action
                         // Show a toast message indicating that the permission was denied
                         Toast.makeText(context, R.string.location_permission_denied_message, Toast.LENGTH_SHORT).show()
-                        showLocationDialogNew.value = false  // Dismiss the dialog after action
                     }) {
                         Text(stringResource(id = R.string.no))
                     }
