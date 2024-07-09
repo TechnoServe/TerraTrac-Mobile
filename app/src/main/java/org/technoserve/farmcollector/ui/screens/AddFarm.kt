@@ -84,6 +84,7 @@ import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.map.getCenterOfPolygon
+import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -272,7 +273,8 @@ fun FarmForm(
 //        } else {
 //            mapViewModel.calculateArea(coordinatesData)?:0.0f
 //        }
-        val sizeInHa = size.toFloatOrNull() ?: 0f
+       // val sizeInHa = size.toFloatOrNull() ?: 0f
+        val sizeInHa = convertSize(size.toDouble(), selectedUnit)
         // Add farm
         // Generating a UUID for a new farm before saving it
         val newUUID = UUID.randomUUID()
@@ -607,7 +609,8 @@ fun FarmForm(
 //                .padding(bottom = 16.dp)
 //        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-        if ((size.toFloatOrNull() ?: 0f) < 4f) {
+//        if ((size.toFloatOrNull() ?: 0f) < 4f) {
+        if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -685,7 +688,8 @@ fun FarmForm(
         // Button to trigger the location permission request
         Button(
             onClick = {
-                val enteredSize = size.toFloatOrNull() ?: 0f
+//                val enteredSize = size.toFloatOrNull() ?: 0f
+                val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
                 if (isLocationEnabled(context) && context.hasLocationPermission()) {
                     if (enteredSize < 4f) {
                         val locationRequest = LocationRequest.create().apply {
@@ -727,7 +731,9 @@ fun FarmForm(
                 .height(50.dp),
             enabled = size.isNotBlank()
         ) {
-            val enteredSize = size.toFloatOrNull() ?: 0f
+//            val enteredSize = size.toFloatOrNull() ?: 0f
+            val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+
             Text(
                 text = if (enteredSize >= 4f) {
                     stringResource(id = R.string.set_polygon)

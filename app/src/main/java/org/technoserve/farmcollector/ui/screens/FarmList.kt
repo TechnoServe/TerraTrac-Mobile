@@ -88,6 +88,7 @@ import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -946,7 +947,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 } else {
                     if (isLocationEnabled(context) && context.hasLocationPermission()) {
                         if (size.toFloatOrNull() != null && size.toFloat() < 4) {
-                            // Simulate collecting latitude and longitude
+                        // Simulate collecting latitude and longitude
                             if (context.hasLocationPermission()) {
                                 val locationRequest = LocationRequest.create().apply {
                                     priority = LocationRequest.PRIORITY_HIGH_ACCURACY
