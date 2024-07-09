@@ -95,4 +95,5 @@
 
     <string name="confirm_update">Confirm Update</string>
     <string name="are_you_sure_update">Are you sure you want to update this site?</string>
+    <string name="confirm">Confirm</string>
 </resources>

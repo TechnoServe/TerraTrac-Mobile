@@ -200,7 +200,7 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 }
-
+/*
 @Composable
 fun ExportDataDialog(
     onDismiss: () -> Unit,
@@ -392,6 +392,161 @@ fun ExportDataDialog(
             }
         }
     )
+}
+*/
+
+@Composable
+fun ExportDataDialog(
+    onDismiss: () -> Unit,
+    farms: List<Farm>,
+    cwsListItems: List<CollectionSite>
+) {
+    var exportFormat by remember { mutableStateOf("CSV") }
+    var action by remember { mutableStateOf<Action?>(null) }
+    val context = LocalContext.current
+    val activity = context as Activity
+
+    // Function to handle the file creation
+    fun createFile(): File? {
+        val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val file =
+            File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
+
+        try {
+            writeTextData(file, farms, {}, exportFormat)
+            return file
+        } catch (e: IOException) {
+            // Handle file writing errors here
+            Toast.makeText(
+                context,
+                R.string.error_export_msg,
+                Toast.LENGTH_SHORT
+            ).show()
+            onDismiss()
+            return null
+        }
+    }
+
+    // Function to share the file
+    fun shareFile(file: File) {
+        val fileURI: Uri = context.let {
+            FileProvider.getUriForFile(
+                it,
+                context.applicationContext.packageName.toString() + ".provider",
+                file
+            )
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = if (exportFormat == "CSV") "text/csv" else "application/json"
+            putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
+            putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
+            putExtra(Intent.EXTRA_STREAM, fileURI)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooserIntent = Intent.createChooser(shareIntent, "Share file")
+        activity.startActivity(chooserIntent)
+    }
+
+    // Function to handle the export (save) action
+    fun exportFile() {
+        val file = createFile()
+        if (file != null) {
+            // Directly save the file to the device
+            Toast.makeText(
+                context,
+                R.string.success_export_msg,
+                Toast.LENGTH_SHORT
+            ).show()
+            onDismiss()
+        }
+    }
+
+    // Function to handle the share action
+    fun shareFileAction() {
+        val file = createFile()
+        if (file != null) {
+            shareFile(file)
+            onDismiss()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = stringResource(id = R.string.export_data)) },
+        text = {
+            Column {
+                Text(stringResource(id = R.string.export_data_desc))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = exportFormat == "CSV",
+                        onClick = { exportFormat = "CSV" }
+                    )
+                    Text("CSV")
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = exportFormat == "GeoJSON",
+                        onClick = { exportFormat = "GeoJSON" }
+                    )
+                    Text("GeoJSON")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("What would you like to do?")
+                Row {
+                    Button(
+                        onClick = {
+                            action = Action.Export
+                        }
+                    ) {
+                        Text("Save")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            action = Action.Share
+                        }
+                    ) {
+                        Text("Share")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    when (action) {
+                        Action.Export -> exportFile()
+                        Action.Share -> shareFileAction()
+                        else -> onDismiss()
+                    }
+                }
+            ) {
+                Text(stringResource(id = R.string.ok))
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { onDismiss() }
+            ) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        }
+    )
+}
+
+// Enum for actions
+enum class Action {
+    Export,
+    Share
 }
 
 
