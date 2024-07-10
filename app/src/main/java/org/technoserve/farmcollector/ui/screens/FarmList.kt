@@ -35,6 +35,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
@@ -80,6 +82,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.exoplayer.offline.Download
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -104,6 +107,56 @@ import java.util.Objects
 //data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
 
+enum class Action {
+    Export,
+    Share
+}
+
+@Composable
+fun FormatSelectionDialog(
+    onDismiss: () -> Unit,
+    onFormatSelected: (String) -> Unit
+) {
+    var selectedFormat by remember { mutableStateOf("CSV") }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = "Select File Format") },
+        text = {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = selectedFormat == "CSV",
+                        onClick = { selectedFormat = "CSV" }
+                    )
+                    Text("CSV")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = selectedFormat == "GeoJSON",
+                        onClick = { selectedFormat = "GeoJSON" }
+                    )
+                    Text("GeoJSON")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onFormatSelected(selectedFormat)
+                    onDismiss()
+                }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text("Cancel")
+            }
+        }
+    )
+}
 @Composable
 fun FarmList(navController: NavController, siteId: Long) {
     siteID = siteId
@@ -114,8 +167,90 @@ fun FarmList(navController: NavController, siteId: Long) {
     val selectedIds = remember { mutableStateListOf<Long>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
-    val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
-    var showExportDialog by remember { mutableStateOf(false) }
+    // val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
+    // var showExportDialog by remember { mutableStateOf(false) }
+    var showFormatDialog by remember { mutableStateOf(false) }
+    var action by remember { mutableStateOf<Action?>(null) }
+    val activity = context as Activity
+    var exportFormat by remember { mutableStateOf("") }
+
+    // Function to handle the file creation
+    fun createFile(): File? {
+        val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val file =
+            File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
+
+        try {
+            writeTextData(file, listItems, {}, exportFormat)
+            return file
+        } catch (e: IOException) {
+            // Handle file writing errors here
+            Toast.makeText(
+                context,
+                R.string.error_export_msg,
+                Toast.LENGTH_SHORT
+            ).show()
+            return null
+        }
+    }
+
+    // Function to share the file
+    fun shareFile(file: File) {
+        val fileURI: Uri = context.let {
+            FileProvider.getUriForFile(
+                it,
+                context.applicationContext.packageName.toString() + ".provider",
+                file
+            )
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = if (exportFormat == "CSV") "text/csv" else "application/json"
+            putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
+            putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
+            putExtra(Intent.EXTRA_STREAM, fileURI)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooserIntent = Intent.createChooser(shareIntent, "Share file")
+        activity.startActivity(chooserIntent)
+    }
+
+    // Function to handle the export (save) action
+    fun exportFile() {
+        val file = createFile()
+        if (file != null) {
+            // Directly save the file to the device
+            Toast.makeText(
+                context,
+                R.string.success_export_msg,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // Function to handle the share action
+    fun shareFileAction() {
+        val file = createFile()
+        if (file != null) {
+            shareFile(file)
+        }
+    }
+
+    if (showFormatDialog) {
+        FormatSelectionDialog(
+            onDismiss = { showFormatDialog = false },
+            onFormatSelected = { format ->
+                exportFormat = format
+                showFormatDialog = false
+                when (action) {
+                    Action.Export -> exportFile()
+                    Action.Share -> shareFileAction()
+                    else -> {}
+                }
+            }
+        )
+    }
 
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
@@ -132,15 +267,24 @@ fun FarmList(navController: NavController, siteId: Long) {
                 .padding(16.dp)
         ) {
             item {
-                FarmListHeader(
+                FarmListHeaderPlots(
                     title = stringResource(id = R.string.farm_list),
                     onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
                     // onBackClicked = { navController.navigateUp() }, siteList
                     onBackClicked = { navController.navigate("siteList") },
+                    onExportClicked = {
+                        action = Action.Export
+                        showFormatDialog = true
+                    },
+                    onShareClicked = {
+                        action = Action.Share
+                        showFormatDialog = true
+                    },
                     showAdd = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+            /*
             item {
 
                 Button(onClick = { showExportDialog = true }) {
@@ -155,6 +299,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                     )
                 }
             }
+            */
             items(listItems) { farm ->
                 FarmCard(farm = farm, onCardClick = {
                     Bundle().apply {
@@ -182,10 +327,18 @@ fun FarmList(navController: NavController, siteId: Long) {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            FarmListHeader(
+            FarmListHeaderPlots(
                 title = stringResource(id = R.string.farm_list),
                 onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
                 onBackClicked = { navController.navigateUp() },
+                onExportClicked = {
+                    action = Action.Export
+                    showFormatDialog = true
+                },
+                onShareClicked = {
+                    action = Action.Share
+                    showFormatDialog = true
+                },
                 showAdd = true
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -395,160 +548,6 @@ fun ExportDataDialog(
 }
 */
 
-@Composable
-fun ExportDataDialog(
-    onDismiss: () -> Unit,
-    farms: List<Farm>,
-    cwsListItems: List<CollectionSite>
-) {
-    var exportFormat by remember { mutableStateOf("CSV") }
-    var action by remember { mutableStateOf<Action?>(null) }
-    val context = LocalContext.current
-    val activity = context as Activity
-
-    // Function to handle the file creation
-    fun createFile(): File? {
-        val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
-        val file =
-            File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
-
-        try {
-            writeTextData(file, farms, {}, exportFormat)
-            return file
-        } catch (e: IOException) {
-            // Handle file writing errors here
-            Toast.makeText(
-                context,
-                R.string.error_export_msg,
-                Toast.LENGTH_SHORT
-            ).show()
-            onDismiss()
-            return null
-        }
-    }
-
-    // Function to share the file
-    fun shareFile(file: File) {
-        val fileURI: Uri = context.let {
-            FileProvider.getUriForFile(
-                it,
-                context.applicationContext.packageName.toString() + ".provider",
-                file
-            )
-        }
-
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (exportFormat == "CSV") "text/csv" else "application/json"
-            putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
-            putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
-            putExtra(Intent.EXTRA_STREAM, fileURI)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        val chooserIntent = Intent.createChooser(shareIntent, "Share file")
-        activity.startActivity(chooserIntent)
-    }
-
-    // Function to handle the export (save) action
-    fun exportFile() {
-        val file = createFile()
-        if (file != null) {
-            // Directly save the file to the device
-            Toast.makeText(
-                context,
-                R.string.success_export_msg,
-                Toast.LENGTH_SHORT
-            ).show()
-            onDismiss()
-        }
-    }
-
-    // Function to handle the share action
-    fun shareFileAction() {
-        val file = createFile()
-        if (file != null) {
-            shareFile(file)
-            onDismiss()
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text(text = stringResource(id = R.string.export_data)) },
-        text = {
-            Column {
-                Text(stringResource(id = R.string.export_data_desc))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = exportFormat == "CSV",
-                        onClick = { exportFormat = "CSV" }
-                    )
-                    Text("CSV")
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = exportFormat == "GeoJSON",
-                        onClick = { exportFormat = "GeoJSON" }
-                    )
-                    Text("GeoJSON")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("What would you like to do?")
-                Row {
-                    Button(
-                        onClick = {
-                            action = Action.Export
-                        }
-                    ) {
-                        Text("Save")
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = {
-                            action = Action.Share
-                        }
-                    ) {
-                        Text("Share")
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    when (action) {
-                        Action.Export -> exportFile()
-                        Action.Share -> shareFileAction()
-                        else -> onDismiss()
-                    }
-                }
-            ) {
-                Text(stringResource(id = R.string.ok))
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = { onDismiss() }
-            ) {
-                Text(stringResource(id = R.string.cancel))
-            }
-        }
-    )
-}
-
-// Enum for actions
-enum class Action {
-    Export,
-    Share
-}
-
 
 @Composable
 fun DeleteAllDialogPresenter(
@@ -620,6 +619,44 @@ fun FarmListHeader(
         }
     )
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FarmListHeaderPlots(
+    title: String,
+    onAddFarmClicked: () -> Unit,
+    onBackClicked: () -> Unit,
+    onExportClicked: () -> Unit,
+    onShareClicked: () -> Unit,
+    showAdd: Boolean
+) {
+    TopAppBar(
+        title = { Text(title) },
+        navigationIcon = {
+            IconButton(onClick = onBackClicked) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+        },
+        actions = {
+            IconButton(onClick = onExportClicked) {
+                Icon(
+                    painter = painterResource(id = R.drawable.save),
+                    contentDescription = "Export"
+                )
+            }
+            IconButton(onClick = onShareClicked) {
+                Icon(Icons.Default.Share, contentDescription = "Share")
+            }
+            if (showAdd) {
+                IconButton(onClick = onAddFarmClicked) {
+                    Icon(Icons.Default.Add, contentDescription = "Add")
+                }
+            }
+        }
+    )
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -965,6 +1002,9 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
 
+    var showFormatDialog by remember { mutableStateOf(false) }
+    var action by remember { mutableStateOf<Action?>(null) }
+
     if (showPermissionRequest.value) {
         LocationPermissionRequest(
             onLocationEnabled = {
@@ -989,10 +1029,18 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
-        FarmListHeader(
+        FarmListHeaderPlots(
             title = stringResource(id = R.string.update_farm),
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
+            onExportClicked = {
+                action = Action.Export
+                showFormatDialog = true
+            },
+            onShareClicked = {
+                action = Action.Share
+                showFormatDialog = true
+            },
             showAdd = false
         )
         TextField(
