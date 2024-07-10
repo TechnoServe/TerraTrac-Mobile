@@ -7,7 +7,13 @@ import android.location.Location
 import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -17,12 +23,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,15 +46,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
@@ -49,6 +74,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.hasLocationPermission
@@ -65,6 +92,46 @@ import org.technoserve.farmcollector.ui.composes.ConfirmDialog
 
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
 const val ENTERED_AREA_OPTION = "ENTERED_AREA"
+
+
+@Composable
+fun IconWithTooltip(
+    icon: ImageVector,
+    contentDescription: String?,
+    tint: Color
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    Box(modifier = Modifier.padding(16.dp)) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .hoverable(interactionSource = interactionSource),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = tint
+            )
+        }
+
+        if (isHovered && !contentDescription.isNullOrBlank()) {
+            Popup {
+                Text(
+                    text = contentDescription,
+                    fontSize = 12.sp,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .background(Color.Black)
+                        .padding(8.dp)
+                )
+            }
+        }
+    }
+}
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MissingPermission")
@@ -423,12 +490,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 }
                             }
                         }) {
-                        Text(
-                            fontSize = 12.sp,
-                            color = Color.Black,
-                            text = if (isCapturingCoordinates) stringResource(id = R.string.finish) else stringResource(
-                                id = R.string.start
-                            )
+                        Icon(
+                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
+                            contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp)
                         )
                     }
                     ElevatedButton(modifier = Modifier
@@ -484,10 +550,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 }
                             }
                         }) {
-                        Text(
-                            fontSize = 12.sp,
-                            color = Color.White,
-                            text = stringResource(id = R.string.add_point)
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(id = R.string.add_point),
+                            tint = Color.White
                         )
                     }
                     ElevatedButton(modifier = Modifier
@@ -497,10 +563,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         onClick = {
                             showClearMapDialog.value = true
                         }) {
-                        Text(
-                            fontSize = 12.sp,
-                            color = Color.Black,
-                            text = stringResource(id = R.string.reset)
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = stringResource(id = R.string.reset),
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp)
                         )
                     }
                     ElevatedButton(modifier = Modifier.fillMaxWidth(0.28f),
@@ -510,11 +577,11 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             coordinates = coordinates.dropLast(1)
                             viewModel.removeLastCoordinate();
                         }) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 12.sp,
-                            color = Color.White,
-                            text = stringResource(id = R.string.drop_point)
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(id = R.string.drop_point),
+                            tint = Color.White,
+                            modifier = Modifier.padding(4.dp)
                         )
                     }
                 }
