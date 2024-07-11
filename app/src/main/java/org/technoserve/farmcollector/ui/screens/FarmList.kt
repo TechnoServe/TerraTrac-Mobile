@@ -1002,9 +1002,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
 
-    var showFormatDialog by remember { mutableStateOf(false) }
-    var action by remember { mutableStateOf<Action?>(null) }
-
     if (showPermissionRequest.value) {
         LocationPermissionRequest(
             onLocationEnabled = {
@@ -1029,18 +1026,10 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
-        FarmListHeaderPlots(
+        FarmListHeader(
             title = stringResource(id = R.string.update_farm),
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
-            onExportClicked = {
-                action = Action.Export
-                showFormatDialog = true
-            },
-            onShareClicked = {
-                action = Action.Share
-                showFormatDialog = true
-            },
             showAdd = false
         )
         TextField(
