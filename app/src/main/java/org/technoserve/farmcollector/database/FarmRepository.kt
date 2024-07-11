@@ -18,6 +18,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.insert(farm)
     }
 
+    private suspend fun addFarms(farms: List<Farm>) {
+        farmDAO.insertAll(farms)
+    }
+
     suspend fun addSite(site: CollectionSite) {
         farmDAO.insertSite(site)
     }
@@ -57,6 +61,16 @@ class FarmRepository(private val farmDAO: FarmDAO) {
 
     suspend fun deleteListSite(ids: List<Long>) {
         farmDAO.deleteListSite(ids)
+    }
+
+    private suspend fun isFarmDuplicate(farm: Farm): Boolean {
+        return farmDAO.getFarmByRemoteId(farm.remoteId) != null
+    }
+
+    suspend fun importFarms(farms: List<Farm>) {
+        // Check for duplicates and filter them out
+        val nonDuplicateFarms = farms.filterNot { isFarmDuplicate(it) }
+        addFarms(nonDuplicateFarms)
     }
 
 }

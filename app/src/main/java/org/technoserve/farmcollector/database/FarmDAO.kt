@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import java.util.UUID
 
 @Dao
 interface FarmDAO {
@@ -26,6 +27,10 @@ interface FarmDAO {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(farm: Farm)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(farms: List<Farm>)
+
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertSite(site: CollectionSite)
@@ -74,5 +79,8 @@ interface FarmDAO {
 
     @Query("SELECT * FROM Farms WHERE synced = 0")
     suspend fun getUnsyncedFarms(): List<Farm>
+
+    @Query("SELECT * FROM Farms WHERE remote_id= :remoteId LIMIT 1")
+    suspend fun getFarmByRemoteId(remoteId: UUID): Farm?
 
 }

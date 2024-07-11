@@ -1,17 +1,31 @@
 package org.technoserve.farmcollector.database
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.opencsv.CSVReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.Date
+import java.util.UUID
+
+data class ImportResult(val success: Boolean, val message: String)
 
 class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -19,7 +33,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
     val readAllSites: RefreshableLiveData<List<CollectionSite>>
     val readData: RefreshableLiveData<List<Farm>>
 
-   // private val sizeInputLiveData: MutableLiveData<Double> = MutableLiveData()
+    private val _farms = MutableLiveData<List<Farm>>()
+    val farms: LiveData<List<Farm>> get() = _farms
 
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
@@ -36,9 +51,11 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         return repository.readFarm(farmId)
     }
 
-    fun addFarm(farm: Farm) {
+    fun addFarm(farm: Farm, siteId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addFarm(farm)
+            // Update the LiveData list
+            _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
         }
     }
 
@@ -101,25 +118,163 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-//    // Method to set the size input
-//    fun setSizeInput(size: Double) {
-//        sizeInputLiveData.value = size
-//    }
-//
-//    // Method to retrieve the size input
-//    fun getSizeInput(): LiveData<Double> {
-//        return sizeInputLiveData
-//    }
-//
-//    // Method to update the size input
-//    fun updateSizeInput(size: Double) {
-//        // Get the current value of size input
-//        val currentValue = sizeInputLiveData.value ?: 0.0
-//
-//        // Update the size input by adding to the current value
-//        sizeInputLiveData.value = currentValue + size
-//    }
+    private fun parseGeoJson(geoJsonString: String,siteId: Long): List<Farm> {
+        val farms = mutableListOf<Farm>()
+
+        try {
+            val geoJson = JSONObject(geoJsonString)
+            val features = geoJson.getJSONArray("features")
+
+            for (i in 0 until features.length()) {
+                val feature = features.getJSONObject(i)
+                val properties = feature.getJSONObject("properties")
+                val geometry = feature.getJSONObject("geometry")
+
+                val remoteId = UUID.fromString(properties.getString("remote_id"))
+                val farmerName = properties.getString("farmer_name")
+                val memberId = properties.getString("member_id")
+                val village = properties.getString("farm_village")
+                val district = properties.getString("farm_district")
+                val size = properties.getDouble("farm_size").toFloat()
+                val latitude = properties.getDouble("latitude").toString()
+                val longitude = properties.getDouble("longitude").toString()
+                val createdAt = Date(properties.getString("created_at")).time
+                val updatedAt = Date(properties.getString("updated_at")).time
+
+                var coordinates: List<Pair<Double, Double>>? = null
+                val geoType = geometry.getString("type")
+                if (geoType == "Point") {
+                    val coordArray = geometry.getJSONArray("coordinates")
+                    coordinates = listOf(Pair(coordArray.getDouble(0), coordArray.getDouble(1)))
+                } else if (geoType == "Polygon") {
+                    val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
+                    val coordList = mutableListOf<Pair<Double, Double>>()
+                    for (j in 0 until coordArray.length()) {
+                        val coord = coordArray.getJSONArray(j)
+                        coordList.add(Pair(coord.getDouble(0), coord.getDouble(1)))
+                    }
+                    coordinates = coordList
+                }
+
+                farms.add(Farm(siteId,remoteId,"farmer-photo", farmerName, memberId, village, district,2.30f ,size, latitude, longitude, coordinates,false,false, createdAt, updatedAt))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return farms
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun importFile(context: Context, uri: Uri, siteId:Long): ImportResult {
+        var message = "Import successful"
+        var success = false
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val reader = BufferedReader(InputStreamReader(inputStream))
+                val firstLine = reader.readLine()
+                val farms = mutableListOf<Farm>()
+
+                // Determine if the file is CSV or GeoJSON
+                if (firstLine.trim().startsWith("{")) {
+                    // It's a GeoJSON file
+                    val content = StringBuilder()
+                    content.append(firstLine)
+                    reader.lines().forEach { content.append(it) }
+                    reader.close()
+                    val newFarms = parseGeoJson(content.toString(),siteId)
+                    println("Parsed farms from GeoJSON: $newFarms")
+                    for (newFarm in newFarms) {
+                        if (!isDuplicateFarm(newFarm, newFarm.siteId)) {
+                            println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                            addFarm(newFarm, newFarm.siteId)
+                        }
+                        else{
+                            println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                        }
+                    }
+                    success=true
+                }
+                else {
+                    // It's a CSV file
+                    var line: String? = firstLine
+                    while (line != null) {
+                        val values = line.split(",")
+                        if (values.size >= 11) {
+                            val remoteId = UUID.fromString(values[0])
+                            val farmerName = values[1]
+                            val memberId = values[2]
+                            val village = values[3]
+                            val district = values[4]
+                            val size = values[5].toFloat()
+                            val latitude = values[6]
+                            val longitude = values[7]
+                            val coordinates: List<Pair<Double, Double>> = values[8].split(";").map {
+                                val latLng = it.split(":")
+                                Pair(latLng[0].toDouble(), latLng[1].toDouble())
+                            }
+                            val createdAt = values[9].toLong()
+                            val updatedAt = values[10].toLong()
+
+                            val newFarm = Farm(
+                                siteId = siteId,
+                                remoteId = remoteId,
+                                farmerPhoto = "farmer-photo",
+                                farmerName = farmerName,
+                                memberId = memberId,
+                                village = village,
+                                district = district,
+                                purchases = 2.30f,
+                                size = size,
+                                latitude = latitude,
+                                longitude = longitude,
+                                coordinates = coordinates,
+                                synced = false,
+                                scheduledForSync = false,
+                                createdAt = createdAt,
+                                updatedAt = updatedAt
+                            )
+                            if (!isDuplicateFarm(newFarm, siteId)) {
+                                println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                farms.add(newFarm)
+                            }
+                            else{
+                                println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                            }
+                        }
+                        line = reader.readLine()
+                    }
+                    reader.close()
+                    success=true
+                }
+                println("Parsed farms from CSV: $farms")
+                //addFarms(farms)
+                // Update LiveData with the imported farms
+                repository.importFarms(farms)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                success = false
+            }
+        }
+        return ImportResult(success, message)
+    }
+
+
+    private fun isDuplicateFarm(farm: Farm,siteId: Long): Boolean {
+        val existingFarms = repository.readAllFarms(siteId).value ?: return false
+        return existingFarms.any { it.remoteId == farm.remoteId }
+    }
+
+
+    private fun addFarms(farms: List<Farm>) {
+        farms.forEach { addFarm(it,it.siteId) }
+    }
+
 }
+
+
 
 class FarmViewModelFactory(
     private val application: Application

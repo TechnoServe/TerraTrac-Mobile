@@ -903,7 +903,7 @@ fun addFarm(
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addFarm(farm)
+    farmViewModel.addFarm(farm,siteId)
     return farm
 }
 

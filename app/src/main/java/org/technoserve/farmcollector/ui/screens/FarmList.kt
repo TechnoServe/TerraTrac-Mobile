@@ -4,18 +4,24 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
+import android.provider.MediaStore
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -62,6 +69,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -88,6 +96,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.launch
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.CollectionSite
@@ -106,6 +115,7 @@ import java.util.Objects
 
 //data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
+
 
 enum class Action {
     Export,
@@ -157,6 +167,7 @@ fun FormatSelectionDialog(
         }
     )
 }
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(navController: NavController, siteId: Long) {
     siteID = siteId
@@ -173,6 +184,8 @@ fun FarmList(navController: NavController, siteId: Long) {
     var action by remember { mutableStateOf<Action?>(null) }
     val activity = context as Activity
     var exportFormat by remember { mutableStateOf("") }
+
+    var showImportDialog by remember { mutableStateOf(false) }
 
     // Function to handle the file creation
     fun createFile(): File? {
@@ -252,6 +265,132 @@ fun FarmList(navController: NavController, siteId: Long) {
         )
     }
 
+/*
+    // For Android 10 (API 29) and above
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun createFileInDownloadsAndroidQAndAbove(context: Context, filename: String, format: String): File? {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+            put(MediaStore.MediaColumns.MIME_TYPE, if (format == "CSV") "text/csv" else "application/json")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        }
+
+        val resolver = context.contentResolver
+        val uri: Uri? = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+        return uri?.let {
+            val outputStream = resolver.openOutputStream(it)
+            val file = File(context.cacheDir, filename) // Temporary file
+            try {
+                // Write data to file
+                writeTextData(file, listItems, {}, format)
+                // Copy file content to the output stream
+                outputStream?.use { output -> file.inputStream().copyTo(output) }
+                file
+            } catch (e: IOException) {
+                Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+                null
+            }
+        }
+    }
+
+
+    // For Android 9 (API 28) and below
+    fun createFileInDownloadsPreAndroidQ(filename: String, format: String): File? {
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val file = File(downloadsDir, filename)
+        try {
+            // Write data to file
+            writeTextData(file, listItems, {}, format)
+            return file
+        } catch (e: IOException) {
+            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+            return null
+        }
+    }
+
+
+    fun createFile(context: Context, format: String): File? {
+        val filename = if (format == "CSV") "farms.csv" else "farms.json"
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            createFileInDownloadsAndroidQAndAbove(context, filename, format)
+        } else {
+            createFileInDownloadsPreAndroidQ(filename, format)
+        }
+    }
+
+    // Function to handle the file creation
+    fun createFile(): File? {
+        return createFile(context, exportFormat)
+    }
+
+    // Function to share the file
+    fun shareFile(file: File) {
+        val fileURI: Uri = context.let {
+            FileProvider.getUriForFile(
+                it,
+                context.applicationContext.packageName.toString() + ".provider",
+                file
+            )
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = if (exportFormat == "CSV") "text/csv" else "application/json"
+            putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
+            putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
+            putExtra(Intent.EXTRA_STREAM, fileURI)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooserIntent = Intent.createChooser(shareIntent, "Share file")
+        activity.startActivity(chooserIntent)
+    }
+
+    // Function to handle the export (save) action
+    fun exportFile() {
+        val file = createFile()
+        if (file != null) {
+            // Notify user of successful export
+            Toast.makeText(
+                context,
+                R.string.success_export_msg,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // Function to handle the share action
+    fun shareFileAction() {
+        val file = createFile()
+        if (file != null) {
+            shareFile(file)
+        }
+    }
+
+    */
+
+    if (showFormatDialog) {
+        FormatSelectionDialog(
+            onDismiss = { showFormatDialog = false },
+            onFormatSelected = { format ->
+                exportFormat = format
+                showFormatDialog = false
+                when (action) {
+                    Action.Export -> exportFile()
+                    Action.Share -> shareFileAction()
+                    else -> {}
+                }
+            }
+        )
+    }
+
+
+
+
+    if (showImportDialog) {
+        println("site ID am Using: $siteId")
+        ImportFileDialog( siteId,onDismiss = { showImportDialog = false })
+    }
+
+
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
         toDelete.addAll(selectedIds)
@@ -280,6 +419,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                         action = Action.Share
                         showFormatDialog = true
                     },
+                    onImportClicked = { showImportDialog = true },
                     showAdd = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -339,6 +479,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                     action = Action.Share
                     showFormatDialog = true
                 },
+                onImportClicked = { showImportDialog = true },
                 showAdd = true
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -353,6 +494,61 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 }
+
+
+@RequiresApi(Build.VERSION_CODES.N)
+@Composable
+fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val farmViewModel: FarmViewModel = viewModel()
+
+    // Create a launcher to handle the file picker result
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            coroutineScope.launch {
+                try {
+                    val result = farmViewModel.importFile(context, it, siteId)
+                    println("site ID am Using in import dialog: $siteId")
+                    println("Import result: ${result.success}")
+                    if (result.success) {
+                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    onDismiss()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+        AlertDialog(
+            onDismissRequest = { onDismiss() },
+            title = { Text(text = "Import File") },
+            text = { Text("Please select a file to import") },
+            confirmButton = {
+                Button(onClick = {
+                    launcher.launch("*/*")
+                }) {
+                    Text("Select File")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { onDismiss()  }) {
+                    Text("Cancel")
+                }
+            }
+        )
+}
+
+
+
+
+
 /*
 @Composable
 fun ExportDataDialog(
@@ -629,6 +825,7 @@ fun FarmListHeaderPlots(
     onBackClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
+    onImportClicked: () -> Unit,
     showAdd: Boolean
 ) {
     TopAppBar(
@@ -647,6 +844,9 @@ fun FarmListHeaderPlots(
             }
             IconButton(onClick = onShareClicked) {
                 Icon(Icons.Default.Share, contentDescription = "Share")
+            }
+            IconButton(onClick = onImportClicked) {
+                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Import")
             }
             if (showAdd) {
                 IconButton(onClick = onAddFarmClicked) {
