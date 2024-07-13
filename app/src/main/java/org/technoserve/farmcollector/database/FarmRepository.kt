@@ -15,11 +15,13 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     }
 
     suspend fun addFarm(farm: Farm) {
-        farmDAO.insert(farm)
+        if (!isFarmDuplicate(farm)) {
+            farmDAO.insert(farm)
+        }
     }
 
     private suspend fun addFarms(farms: List<Farm>) {
-        farmDAO.insertAll(farms)
+        farmDAO.insertAllIfNotExists(farms)
     }
 
     suspend fun addSite(site: CollectionSite) {

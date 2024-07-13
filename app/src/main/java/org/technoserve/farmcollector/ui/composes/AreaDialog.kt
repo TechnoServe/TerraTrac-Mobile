@@ -2,12 +2,15 @@ package org.technoserve.farmcollector.ui.composes
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
 
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
@@ -55,7 +58,7 @@ fun AreaDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss,modifier = Modifier.padding(top = 16.dp)) {
                     Text(stringResource(id = R.string.cancel))
                 }
             }

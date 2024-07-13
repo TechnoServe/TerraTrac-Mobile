@@ -12,6 +12,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.activity.ComponentActivity.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -265,15 +266,6 @@ fun FarmForm(
 
     fun saveFarm() {
         // convert selectedUnit to hectares
-        //val sizeInHa = convertSize(size.toDouble(), selectedUnit)
-
-//        // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
-//        val sizeInHa = if ((size.toFloatOrNull() ?: 0f) < 4f) {
-//            convertSize(size.toDouble(), selectedUnit)
-//        } else {
-//            mapViewModel.calculateArea(coordinatesData)?:0.0f
-//        }
-       // val sizeInHa = size.toFloatOrNull() ?: 0f
         val sizeInHa = convertSize(size.toDouble(), selectedUnit)
         // Add farm
         // Generating a UUID for a new farm before saving it
@@ -294,7 +286,6 @@ fun FarmForm(
             longitude,
             coordinates = coordinatesData?.plus(coordinatesData.first())
         )
-
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()

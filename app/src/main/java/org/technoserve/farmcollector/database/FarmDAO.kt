@@ -28,7 +28,7 @@ interface FarmDAO {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(farm: Farm)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(farms: List<Farm>)
 
 
@@ -80,7 +80,16 @@ interface FarmDAO {
     @Query("SELECT * FROM Farms WHERE synced = 0")
     suspend fun getUnsyncedFarms(): List<Farm>
 
-    @Query("SELECT * FROM Farms WHERE remote_id= :remoteId LIMIT 1")
+    @Query("SELECT * FROM Farms WHERE remote_id=:remoteId LIMIT 1")
     suspend fun getFarmByRemoteId(remoteId: UUID): Farm?
+
+    @Transaction
+    suspend fun insertAllIfNotExists(farms: List<Farm>) {
+        farms.forEach { farm ->
+            if (getFarmByRemoteId(farm.remoteId) == null) {
+                insertAll(listOf(farm))
+            }
+        }
+    }
 
 }

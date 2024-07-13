@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.opencsv.CSVReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,9 +54,11 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addFarm(farm: Farm, siteId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.addFarm(farm)
-            // Update the LiveData list
-            _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
+            if (!isDuplicateFarm(farm, siteId)) {
+                repository.addFarm(farm)
+                // Update the LiveData list
+                _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
+            }
         }
     }
 
@@ -231,7 +232,6 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                     success=true
-                    // addFarms(newFarms)
                 }
                 else {
                     // It's a CSV file
@@ -297,7 +297,6 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     println("Parsed farms from CSV: $farms")
                     success=true
                 }
-                // addFarms(farms)
                 // Update LiveData with the imported farms
                 repository.importFarms(farms)
             } catch (e: Exception) {
@@ -311,12 +310,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun isDuplicateFarm(farm: Farm,siteId: Long): Boolean {
         val existingFarms = repository.readAllFarms(siteId).value ?: return false
+        println("Existing farms $existingFarms")
         return existingFarms.any { it.remoteId == farm.remoteId }
-    }
-
-
-    private fun addFarms(farms: List<Farm>) {
-        farms.forEach { addFarm(it,it.siteId) }
     }
 
 }

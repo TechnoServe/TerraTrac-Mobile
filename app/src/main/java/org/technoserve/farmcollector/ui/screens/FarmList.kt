@@ -15,6 +15,7 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.activity.ComponentActivity.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -110,7 +111,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.io.PrintWriter
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import java.util.Objects
 
 //data class Farm(val farmerName: String, val village: String, val district: String)
@@ -187,10 +190,15 @@ fun FarmList(navController: NavController, siteId: Long) {
 
     var showImportDialog by remember { mutableStateOf(false) }
 
+
     fun createFile(): File? {
-        val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
+        // Get the current date and time
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val filename = if (exportFormat == "CSV") "farms_$timestamp.csv" else "farms_$timestamp.json"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
-        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
+        // Get the Downloads directory
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val file = File(downloadsDir, filename)
         val getSiteById = cwsListItems.find { it.siteId == siteID }
 
         try {
@@ -875,6 +883,7 @@ fun FarmListHeaderPlots(
     onImportClicked: () -> Unit,
     showAdd: Boolean
 ) {
+    val context = LocalContext.current as Activity
     TopAppBar(
         title = { Text(title) },
         navigationIcon = {
@@ -902,7 +911,15 @@ fun FarmListHeaderPlots(
                 )
             }
             if (showAdd) {
-                IconButton(onClick = onAddFarmClicked) {
+                IconButton(onClick = {
+                    // Remove plot_size from shared preferences
+                    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+                    if (sharedPref.contains("plot_size")) {
+                        sharedPref.edit().remove("plot_size").apply()
+                    }
+                    // Call the onAddFarmClicked lambda
+                    onAddFarmClicked()
+                }) {
                     Icon(Icons.Default.Add, contentDescription = "Add")
                 }
             }

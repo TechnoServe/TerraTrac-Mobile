@@ -37,9 +37,16 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -94,43 +101,39 @@ const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
 const val ENTERED_AREA_OPTION = "ENTERED_AREA"
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IconWithTooltip(
     icon: ImageVector,
     contentDescription: String?,
     tint: Color
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isHovered by interactionSource.collectIsHoveredAsState()
+    val tooltipState = rememberTooltipState()
 
-    Box(modifier = Modifier.padding(16.dp)) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .hoverable(interactionSource = interactionSource),
-            contentAlignment = Alignment.Center
-        ) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = {
+            PlainTooltip {
+                Text(
+                    text = contentDescription ?: "",
+                    color = Color.White
+                )
+            }
+        },
+        state = tooltipState
+    ) {
+        IconButton(onClick = {}) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 tint = tint
             )
         }
-
-        if (isHovered && !contentDescription.isNullOrBlank()) {
-            Popup {
-                Text(
-                    text = contentDescription,
-                    fontSize = 12.sp,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .background(Color.Black)
-                        .padding(8.dp)
-                )
-            }
-        }
     }
 }
+
+
+
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -553,8 +556,15 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = stringResource(id = R.string.add_point),
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.padding(4.dp)
                         )
+//                        IconWithTooltip(
+//                            icon = Icons.Default.Add,
+//                            contentDescription = stringResource(id = R.string.add_point),
+//                            tint = Color.White
+//                        )
+
                     }
                     ElevatedButton(modifier = Modifier
                         .fillMaxWidth(0.22f),
