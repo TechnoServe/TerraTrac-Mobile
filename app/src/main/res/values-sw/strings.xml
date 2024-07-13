@@ -67,6 +67,7 @@
     <string name="spanish">Kihispania</string>
     <string name="amharic">Kiamhari</string>
     <string name="oromo">Kioromo</string>
+    <string name="swahili">Swahili</string>
     <string name="enable_location">Washa Huduma za Eneo</string>
     <string name="enable_location_msg">Washa huduma za eneo katika mipangilio ili kupata mikoordi.</string>
     <string name="success_export_msg">Data imesafirishwa kwa mafanikio</string>
@@ -81,18 +82,24 @@
     <string name="add_farm_plot_title">Ongeza Shamba</string>
     <string name="calculated_area">Eneo Lililokadiriwa (%1$s hekta)</string>
     <string name="entered_size">Ukubwa Ulioingizwa (%1$s hekta)</string>
-
     <string name="insufficient_coordinates_title">Mikoordi Haijatimia</string>
     <string name="insufficient_coordinates_message">Poligoni inahitaji angalau pointi 4. Tafadhali jirekebishe upya mikoordi.</string>
     <string name="ok">Sawa</string>
-
     <string name="enable_location_services">Washa Huduma za Eneo</string>
     <string name="location_services_required_message">Huduma za eneo zinahitajika kwa kipengele hiki. Tafadhali washa huduma za eneo.</string>
     <string name="enable">Washa</string>
     <string name="site_added_successfully">Tovuti imeongezwa kwa mafanikio</string>
     <string name="location_permission_denied_message">Hutaweza kutumia ruhusa ya eneo kupata eneo</string>
     <string name="open_settings">Fungua Mipangilio\n</string>
-
     <string name="confirm_update">Thibitisha Sasisho</string>
     <string name="are_you_sure_update">Je, una uhakika unataka kusasisha tovuti hii?</string>
+    <string name="confirm">Thibitisha</string>
+    <string name="select_file_format">Chagua Umbizo la Faili</string>
+    <string name="csv">CSV</string>
+    <string name="geojson">GeoJSON</string>
+    <string name="import_file">Leta Faili</string>
+    <string name="select_file_to_import">Tafadhali chagua faili la kuingiza</string>
+    <string name="select_file">Chagua Faili</string>
+    <string name="import_successful">Kuleta Kufanikiwa</string>
+    <string name="import_failed">Kuleta Kushindwa</string>
 </resources>

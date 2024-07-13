@@ -67,6 +67,7 @@
     <string name="spanish">Ispaanishii</string>
     <string name="amharic">Afaan Amaaraa</string>
     <string name="oromo">Afaan Oromoo</string>
+    <string name="swahili">Swahili</string>
     <string name="enable_location">Bakka Ibsituu</string>
     <string name="enable_location_msg">Tajaajiloota Bakka qindaa\'inoota keessatti dandeessisi qindaa\'inoota argachuuf.</string>
     <string name="success_export_msg">Deetaan milkaa\'inaan ergame</string>
@@ -81,15 +82,24 @@
     <string name="add_farm_plot_title">Lafa qonnaa itti dabali</string>
     <string name="calculated_area">Bal’ina shallagame (%1$s hektaara) .</string>
     <string name="entered_size">Guddina Galfame (%1$s hektaara) .</string>
-
     <string name="insufficient_coordinates_title">Koordinaatota Hinhafne</string>
     <string name="insufficient_coordinates_message">Poligooniin koordinaatota 4 gosa xiqqaa barbaada. Koordinaatota deebi\'ee qabachuuf yaali.</string>
     <string name="ok">TOLEE</string>
-
     <string name="enable_location_services">Tajaajiloota Bakka Buusuu Hojii Galchuu</string>
     <string name="location_services_required_message">Tajaajiloonni Bakka Buusuu hojii kanaaf barbaachisu. Tajaajiloota Bakka Buusuu Hojii Galchuu</string>
     <string name="enable">Hojii Galchuu</string>
     <string name="site_added_successfully">Bakka galmee milkaa\'inaadhaan dabalame</string>
-
-
+    <string name="location_permission_denied_message">Eyyama iddoo itti fayyadamuuf iddoo seenuu hin dandeessu</string>
+    <string name="open_settings">Sirna bana\n</string>
+    <string name="confirm_update">Haaromsuu mirkaneessi</string>
+    <string name="are_you_sure_update">Bakka kana haaromsuu barbaaddaa?</string>
+    <string name="confirm">Mirkaneessi</string>
+    <string name="select_file_format">Faayilii foormaaticha filadhu</string>
+    <string name="csv">CSV</string>
+    <string name="geojson">GeoJSON</string>
+    <string name="import_file">Faayilii fe\'i</string>
+    <string name="select_file_to_import">Faayilii fe\'uu barbaaddu filadhu</string>
+    <string name="select_file">Faayilii filadhu</string>
+    <string name="import_successful">Galuun milkaa\'eera</string>
+    <string name="import_failed">Galuun hin milkoofne</string>
 </resources>

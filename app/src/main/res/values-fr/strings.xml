@@ -67,6 +67,7 @@
     <string name="spanish">Espagnol</string>
     <string name="amharic">Amharique</string>
     <string name="oromo">Oromo</string>
+    <string name="swahili">Swahili</string>
     <string name="enable_location">Activer la localisation</string>
     <string name="enable_location_msg">Activez les services de localisation dans les paramètres pour obtenir des coordonnées.</string>
     <string name="success_export_msg">Données exportées avec succès</string>
@@ -79,19 +80,26 @@
     <string name="choose_area">choisissez l\'aire</string>
     <string name="please_choose_area">Veuillez choisir l\'aire à utiliser:</string>
     <string name="add_farm_plot_title">Ajouter une parcelle de ferme</string>
-
     <string name="calculated_area">l\'aire  calculée (%1$s hectares)</string>
     <string name="entered_size">Taille saisie (%1$s hectares)</string>
-
     <string name="insufficient_coordinates_title">Coordonnées Insuffisantes</string>
     <string name="insufficient_coordinates_message">Le polygone nécessite au moins 4 points. Veuillez capturer à nouveau les coordonnées.</string>
     <string name="ok">OK</string>
-
     <string name="enable_location_services">Activer les Services de Localisation</string>
     <string name="location_services_required_message">Les services de localisation sont nécessaires pour cette fonctionnalité. Veuillez activer les services de localisation.</string>
     <string name="enable">Activer</string>
     <string name="site_added_successfully">Site ajouté avec succès</string>
-    <string name="location_permission_denied_message">Vous ne pourrez pas utiliser l\'autorisation de localisation pour accéder à la carte.</string>
-
-
+    <string name="location_permission_denied_message">Vous ne pourrez pas utiliser l\'autorisation de localisation pour accéder à la localisation</string>
+    <string name="open_settings">Ouvrir les paramètres\n</string>
+    <string name="confirm_update">Confirmer la mise à jour</string>
+    <string name="are_you_sure_update">Êtes-vous sûr de vouloir mettre à jour ce site ?</string>
+    <string name="confirm">Confirmer</string>
+    <string name="select_file_format">Sélectionner le format de fichier</string>
+    <string name="csv">CSV</string>
+    <string name="geojson">GeoJSON</string>
+    <string name="import_file">Importer le fichier</string>
+    <string name="select_file_to_import">Veuillez sélectionner un fichier à importer</string>
+    <string name="select_file">Sélectionner le fichier</string>
+    <string name="import_successful">Importation réussie</string>
+    <string name="import_failed">Échec de l\'importation</string>
 </resources>

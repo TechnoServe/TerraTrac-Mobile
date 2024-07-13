@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TerraTrac</string>
-    <string name="farm_list">Lista de Parcelas granjas</string>
+    <string name="farm_list">Lista de Parcelas </string>
     <string name="app_intro">Aplicación móvil básica para la trazabilidad para el cumplimiento de la regulación de deforestación de la UE</string>
     <string name="developed_by">Desarrollado por</string>
     <string name="delete_this_item">Eliminar este elemento</string>
@@ -67,6 +67,7 @@
     <string name="spanish">Español</string>
     <string name="amharic">amárico</string>
     <string name="oromo">Oromo</string>
+    <string name="swahili">Swahili</string>
     <string name="enable_location">Activar ubicación</string>
     <string name="enable_location_msg">Habilite los servicios de ubicación en la configuración para obtener coordenadas.</string>
     <string name="success_export_msg">Datos exportados correctamente</string>
@@ -79,21 +80,26 @@
     <string name="choose_area">Elige la zona</string>
     <string name="please_choose_area">Por favor elige el área a utilizar:</string>
     <string name="add_farm_plot_title">Agregar parcela agrícola</string>
-
     <string name="calculated_area">Área calculada (%1$s hectáreas)</string>
     <string name="entered_size">Tamaño ingresado (%1$s hectáreas)</string>
-
     <string name="insufficient_coordinates_title">Coordenadas Insuficientes</string>
     <string name="insufficient_coordinates_message">El polígono requiere al menos 4 points. Por favor, capture las coordenadas nuevamente.</string>
     <string name="ok">OK</string>
-
     <string name="enable_location_services">Habilitar Servicios de Localización</string>
     <string name="location_services_required_message">Se requieren servicios de localización para esta función. Por favor, habilite los servicios de localización.</string>
     <string name="enable">Habilitar</string>
     <string name="site_added_successfully">Sitio agregado con éxito</string>
-    <string name="location_permission_denied_message">No podrá usar el permiso de ubicación para acceder al mapa.</string>
-
-
-
-
+    <string name="location_permission_denied_message">No podrá usar el permiso de ubicación para acceder a la ubicación</string>
+    <string name="open_settings">Abrir configuración\n</string>
+    <string name="confirm_update">Confirmar actualización</string>
+    <string name="are_you_sure_update">¿Está seguro de que desea actualizar este sitio?</string>
+    <string name="confirm">Confirmar</string>
+    <string name="select_file_format">Seleccionar formato de archivo</string>
+    <string name="csv">CSV</string>
+    <string name="geojson">GeoJSON</string>
+    <string name="import_file">Importar archivo</string>
+    <string name="select_file_to_import">Por favor seleccione un archivo para importar</string>
+    <string name="select_file">Seleccionar archivo</string>
+    <string name="import_successful">Importación exitosa</string>
+    <string name="import_failed">Importación fallida</string>
 </resources>

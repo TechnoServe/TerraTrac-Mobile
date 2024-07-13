@@ -67,6 +67,7 @@
     <string name="spanish">ስፓንኛ</string>
     <string name="amharic">አማርኛ</string>
     <string name="oromo">ኦሮሞ</string>
+    <string name="swahili">ስዋሕሊ</string>
     <string name="enable_location">ቦታን አዙሩ</string>
     <string name="enable_location_msg">ቅንጅቶችን ለማግኘት በሁኔታዎች ውስጥ የቦታ አገልግሎቶችን ማስቻል።</string>
     <string name="success_export_msg">ዳታ በተሳካ ሁኔታ ወደ ውጭ ይላካል</string>
@@ -79,19 +80,26 @@
     <string name="choose_area">አካባቢውን ይምረጡ</string>
     <string name="please_choose_area">እባክዎ የሚጠቀሙበትን ቦታ ይምረጡ፡-</string>
     <string name="add_farm_plot_title">የእርሻ ሴራ አክል</string>
-
     <string name="calculated_area">የተሰላ አካባቢ (%1$s ሄክታር)</string>
     <string name="entered_size">የገባው መጠን (%1$s ሄክታር)</string>
-
     <string name="insufficient_coordinates_title">የበቂ እስክሪፕታስ</string>
     <string name="insufficient_coordinates_message">ነጠላ እንገባ ቢያንስ አራት እስክሪፕታስ ያስፈልጋል። እባኮትን እስክሪፕታስን እንደገና ይይዙ።</string>
     <string name="ok">እሺ</string>
-
     <string name="enable_location_services">የአቀባበል አገልግሎቶችን አንቀሳቅስ</string>
     <string name="location_services_required_message">የአቀባበል አገልግሎቶች ለዚህ ተግባር ያስፈልጋሉ። እባኮትን የአቀባበል አገልግሎቶችን አንቀሳቅሱ።</string>
     <string name="enable">አንቀሳቅስ</string>
     <string name="site_added_successfully">ድርጅቱ በስኬት ተጨምሯል</string>
-    <string name="location_permission_denied_message">አካባቢ ፈቃድ እንደአልገባኝ ስለሆኑ ወደ ካርታ ሂደው ማግኘት አልቻሉም።</string>
-
-
+    <string name="location_permission_denied_message">የአካባቢ ፈቃድ እንዲያገኙ ተፈቅዷል። የአካባቢን ፈቃድ ማግኘት አትችሉም</string>
+    <string name="open_settings">ቅንብሮችን ክፈት\n</string>
+    <string name="confirm_update">ዝመናን አረጋግጥ</string>
+    <string name="are_you_sure_update">ይህን ሣይት ማዘመን መፈለግዎን እርግጠኛ ነዎት?</string>
+    <string name="confirm">አረጋግጥ</string>
+    <string name="select_file_format">የፋይል ቅርጸት ይምረጡ</string>
+    <string name="csv">CSV</string>
+    <string name="geojson">GeoJSON</string>
+    <string name="import_file">ፋይል አስመጣ</string>
+    <string name="select_file_to_import">እባክዎ ለማስመጣት ፋይል ይምረጡ</string>
+    <string name="select_file">ፋይል ይምረጡ</string>
+    <string name="import_successful">ማስመጣት ተሳክቷል</string>
+    <string name="import_failed">ማስመጣት አልተሳካም</string>
 </resources>

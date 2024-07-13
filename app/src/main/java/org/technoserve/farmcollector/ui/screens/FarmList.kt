@@ -134,7 +134,7 @@ fun FormatSelectionDialog(
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Select File Format") },
+        title = { Text(text = stringResource(R.string.select_file_format)) },
         text = {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -142,14 +142,14 @@ fun FormatSelectionDialog(
                         selected = selectedFormat == "CSV",
                         onClick = { selectedFormat = "CSV" }
                     )
-                    Text("CSV")
+                    Text(stringResource(R.string.csv))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = selectedFormat == "GeoJSON",
                         onClick = { selectedFormat = "GeoJSON" }
                     )
-                    Text("GeoJSON")
+                    Text(stringResource(R.string.geojson))
                 }
             }
         },
@@ -160,12 +160,12 @@ fun FormatSelectionDialog(
                     onDismiss()
                 }
             ) {
-                Text("Confirm")
+                Text(stringResource(R.string.confirm))
             }
         },
         dismissButton = {
             Button(onClick = { onDismiss() }) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -420,7 +420,6 @@ fun FarmList(navController: NavController, siteId: Long) {
         }
     }
 
-    */
 
     if (showFormatDialog) {
         FormatSelectionDialog(
@@ -436,6 +435,7 @@ fun FarmList(navController: NavController, siteId: Long) {
             }
         )
     }
+    */
 
 
 
@@ -571,11 +571,11 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                     println("site ID am Using in import dialog: $siteId")
                     println("Import result: ${result.success}")
                     if (result.success) {
-                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.import_successful, Toast.LENGTH_SHORT).show()
                     }
                     onDismiss()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -583,18 +583,18 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
 
         AlertDialog(
             onDismissRequest = { onDismiss() },
-            title = { Text(text = "Import File") },
-            text = { Text("Please select a file to import") },
+            title = { Text(text = stringResource(R.string.import_file)) },
+            text = { Text(stringResource(R.string.select_file_to_import)) },
             confirmButton = {
                 Button(onClick = {
                     launcher.launch("*/*")
                 }) {
-                    Text("Select File")
+                    Text(stringResource(R.string.select_file))
                 }
             },
             dismissButton = {
                 Button(onClick = { onDismiss()  }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

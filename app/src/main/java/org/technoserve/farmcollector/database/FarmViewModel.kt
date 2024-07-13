@@ -122,7 +122,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun parseDateStringToTimestamp(dateString: String): Long {
+    private fun parseDateStringToTimestamp(dateString: String): Long {
         val dateFormatter = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US)
         return dateFormatter.parse(dateString).time
     }
@@ -201,9 +201,10 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
 
     @RequiresApi(Build.VERSION_CODES.N)
-    fun importFile(context: Context, uri: Uri, siteId:Long): ImportResult {
-        var message = "Import successful"
-        var success = false
+    suspend fun importFile(context: Context, uri: Uri, siteId:Long): ImportResult {
+        var message = "Import failed" // Default message in case of failure
+        var success = false// Default to failure until proven otherwise
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val inputStream = context.contentResolver.openInputStream(uri)
@@ -231,7 +232,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                         }
                     }
-                    success=true
+                    message = "GeoJSON import successful"
+                    success = true
                 }
                 else {
                     // It's a CSV file
@@ -295,12 +297,14 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     reader.close()
                     println("Parsed farms from CSV: $farms")
-                    success=true
+                    // Update LiveData with the imported farms
+                    repository.importFarms(farms)
+                    message = "CSV import successful"
+                    success = true
                 }
-                // Update LiveData with the imported farms
-                repository.importFarms(farms)
             } catch (e: Exception) {
                 e.printStackTrace()
+                message = "Import failed: ${e.message}"
                 success = false
             }
         }
