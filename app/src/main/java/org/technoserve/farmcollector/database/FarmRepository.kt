@@ -68,8 +68,14 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     }
 
     suspend fun importFarms(farms: List<Farm>) {
-        // Check for duplicates and filter them out
-        val nonDuplicateFarms = farms.filterNot { isFarmDuplicate(it) }
+        val nonDuplicateFarms = mutableListOf<Farm>()
+
+        for (farm in farms) {
+            if (!isFarmDuplicate(farm)) {
+                nonDuplicateFarms.add(farm)
+            }
+        }
+
         addFarms(nonDuplicateFarms)
     }
 

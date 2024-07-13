@@ -19,7 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
+import org.technoserve.farmcollector.database.converters.DateConverter
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Date
@@ -118,6 +120,12 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+
+    fun parseDateStringToTimestamp(dateString: String): Long {
+        val dateFormatter = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US)
+        return dateFormatter.parse(dateString).time
+    }
+
     private fun parseGeoJson(geoJsonString: String,siteId: Long): List<Farm> {
         val farms = mutableListOf<Farm>()
 
@@ -136,16 +144,18 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val village = properties.getString("farm_village")
                 val district = properties.getString("farm_district")
                 val size = properties.getDouble("farm_size").toFloat()
-                val latitude = properties.getDouble("latitude").toString()
-                val longitude = properties.getDouble("longitude").toString()
+                val latitude = properties.getDouble("latitude")
+                val longitude = properties.getDouble("longitude")
                 val createdAt = Date(properties.getString("created_at")).time
                 val updatedAt = Date(properties.getString("updated_at")).time
 
                 var coordinates: List<Pair<Double, Double>>? = null
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
-                    val coordArray = geometry.getJSONArray("coordinates")
-                    coordinates = listOf(Pair(coordArray.getDouble(0), coordArray.getDouble(1)))
+                    val coordArray = geometry.getJSONArray("coordinates")[0] as JSONArray
+                    val lon = coordArray.getDouble(0)
+                    val lat = coordArray.getDouble(1)
+                    coordinates = listOf(Pair(lon, lat))
                 } else if (geoType == "Polygon") {
                     val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
                     val coordList = mutableListOf<Pair<Double, Double>>()
@@ -156,7 +166,30 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     coordinates = coordList
                 }
 
-                farms.add(Farm(siteId,remoteId,"farmer-photo", farmerName, memberId, village, district,2.30f ,size, latitude, longitude, coordinates,false,false, createdAt, updatedAt))
+                val newFarm = Farm(
+                    siteId = siteId,
+                    remoteId = remoteId,
+                    farmerPhoto = "farmer-photo",
+                    farmerName = farmerName,
+                    memberId = memberId,
+                    village = village,
+                    district = district,
+                    purchases = 2.30f,
+                    size = size,
+                    latitude = latitude.toString(),
+                    longitude = longitude.toString(),
+                    coordinates = coordinates,
+                    synced = false,
+                    scheduledForSync = false,
+                    createdAt = createdAt,
+                    updatedAt = updatedAt
+                )
+
+                if (!isDuplicateFarm(newFarm, siteId)) {
+                    farms.add(newFarm)
+                } else {
+                    println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -177,6 +210,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val firstLine = reader.readLine()
                 val farms = mutableListOf<Farm>()
 
+                println("first line $firstLine")
+
                 // Determine if the file is CSV or GeoJSON
                 if (firstLine.trim().startsWith("{")) {
                     // It's a GeoJSON file
@@ -196,27 +231,39 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                     success=true
+                    // addFarms(newFarms)
                 }
                 else {
                     // It's a CSV file
                     var line: String? = firstLine
+                    line = reader.readLine() // Read first data line
                     while (line != null) {
-                        val values = line.split(",")
-                        if (values.size >= 11) {
+                        val values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()) // Split CSV line, ignoring commas within quotes
+                        if (values.size >= 13) {
                             val remoteId = UUID.fromString(values[0])
                             val farmerName = values[1]
                             val memberId = values[2]
-                            val village = values[3]
-                            val district = values[4]
-                            val size = values[5].toFloat()
-                            val latitude = values[6]
-                            val longitude = values[7]
-                            val coordinates: List<Pair<Double, Double>> = values[8].split(";").map {
-                                val latLng = it.split(":")
-                                Pair(latLng[0].toDouble(), latLng[1].toDouble())
-                            }
-                            val createdAt = values[9].toLong()
-                            val updatedAt = values[10].toLong()
+                            val siteName = values[3]
+                            val agentName = values[4]
+                            val village = values[5]
+                            val district = values[6]
+                            val size = values[7].toFloat()
+                            val latitude = values[8]
+                            val longitude = values[9]
+
+                            // Parsing the polygon coordinates
+                            val coordinatesString = values[10].removeSurrounding("\"", "\"")
+                            val coordinates = coordinatesString.replace("[[", "").replace("]]", "")
+                                .split("],\\s*\\[".toRegex()) // Adjust regex to handle spaces
+                                .map {
+                                    val latLng = it.split(",\\s*".toRegex()) // Adjust regex to handle spaces
+                                    Pair(latLng[1].toDouble(), latLng[0].toDouble())
+                                }
+                            val createdAt = parseDateStringToTimestamp(values[11])
+                            val updatedAt = parseDateStringToTimestamp(values[12])
+
+                            // Process each record here
+                            println("Processing record for remote ID: $remoteId")
 
                             val newFarm = Farm(
                                 siteId = siteId,
@@ -247,10 +294,10 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                         line = reader.readLine()
                     }
                     reader.close()
+                    println("Parsed farms from CSV: $farms")
                     success=true
                 }
-                println("Parsed farms from CSV: $farms")
-                //addFarms(farms)
+                // addFarms(farms)
                 // Update LiveData with the imported farms
                 repository.importFarms(farms)
             } catch (e: Exception) {

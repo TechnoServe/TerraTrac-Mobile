@@ -178,7 +178,7 @@ fun FarmList(navController: NavController, siteId: Long) {
     val selectedIds = remember { mutableStateListOf<Long>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
-    // val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
+    val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
     // var showExportDialog by remember { mutableStateOf(false) }
     var showFormatDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf<Action?>(null) }
@@ -187,26 +187,73 @@ fun FarmList(navController: NavController, siteId: Long) {
 
     var showImportDialog by remember { mutableStateOf(false) }
 
-    // Function to handle the file creation
     fun createFile(): File? {
         val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
-        val file =
-            File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
+        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
+        val getSiteById = cwsListItems.find { it.siteId == siteID }
 
         try {
-            writeTextData(file, listItems, {}, exportFormat)
+            file.bufferedWriter().use { writer ->
+                if (exportFormat == "CSV") {
+                    writer.write("remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n")
+                    listItems.forEach { farm ->
+                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                        val matches = regex.findAll(farm.coordinates.toString())
+                        // Reverse the coordinates and format with brackets
+                        val reversedCoordinates = matches.map { match ->
+                            val (lat, lon) = match.destructured
+                            "[$lon, $lat]"
+                        }.joinToString(", ", prefix = "[", postfix = "]")
+                        val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(farm.createdAt)},${Date(farm.updatedAt)}\n"
+                        writer.write(line)
+                    }
+                } else {
+                    val geoJson = buildString {
+                        append("{\"type\": \"FeatureCollection\", \"features\": [")
+                        listItems.forEachIndexed { index, farm ->
+                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                            val matches = regex.findAll(farm.coordinates.toString())
+                            val geoJsonCoordinates = matches.map { match ->
+                                val (lat, lon) = match.destructured
+                                "[$lon, $lat]"
+                            }.joinToString(", ", prefix = "[", postfix = "]")
+                            append("""
+                            {
+                                "type": "Feature",
+                                "properties": {
+                                    "remote_id": "${farm.remoteId}",
+                                    "farmer_name": "${farm.farmerName}",
+                                    "member_id": "${farm.memberId}",
+                                    "collection_site": "${getSiteById?.name}",
+                                    "agent_name": "${getSiteById?.agentName}",
+                                    "farm_village": "${farm.village}",
+                                    "farm_district": "${farm.district}",
+                                    "farm_size": ${farm.size},
+                                    "latitude": ${farm.latitude},
+                                    "longitude": ${farm.longitude},
+                                    "created_at": "${Date(farm.createdAt)}",
+                                    "updated_at": "${Date(farm.updatedAt)}"
+                                },
+                                "geometry": {
+                                    "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
+                                    "coordinates": [${if (farm.coordinates?.isEmpty() == true) "[${farm.longitude}, ${farm.latitude}]" else geoJsonCoordinates}]
+                                }
+                            }${if (index == listItems.size - 1) "" else ","}
+                        """.trimIndent())
+                        }
+                        append("]}")
+                    }
+                    writer.write(geoJson)
+                }
+            }
             return file
         } catch (e: IOException) {
-            // Handle file writing errors here
-            Toast.makeText(
-                context,
-                R.string.error_export_msg,
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
             return null
         }
     }
+
 
     // Function to share the file
     fun shareFile(file: File) {
@@ -843,10 +890,16 @@ fun FarmListHeaderPlots(
                 )
             }
             IconButton(onClick = onShareClicked) {
-                Icon(Icons.Default.Share, contentDescription = "Share")
+                Icon(
+                    painter = painterResource(id = R.drawable.share),
+                    contentDescription = "Share"
+                )
             }
             IconButton(onClick = onImportClicked) {
-                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Import")
+                Icon(
+                    painter = painterResource(id = R.drawable.import_icon),
+                    contentDescription = "Import"
+                )
             }
             if (showAdd) {
                 IconButton(onClick = onAddFarmClicked) {
