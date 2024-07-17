@@ -145,19 +145,21 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val village = properties.getString("farm_village")
                 val district = properties.getString("farm_district")
                 val size = properties.getDouble("farm_size").toFloat()
-                val latitude = properties.getDouble("latitude")
-                val longitude = properties.getDouble("longitude")
+                val latitude = properties.getDouble("latitude").toString()
+                val longitude = properties.getDouble("longitude").toString()
                 val createdAt = Date(properties.getString("created_at")).time
                 val updatedAt = Date(properties.getString("updated_at")).time
 
                 var coordinates: List<Pair<Double, Double>>? = null
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
-                    val coordArray = geometry.getJSONArray("coordinates")[0] as JSONArray
-                    val lon = coordArray.getDouble(0)
-                    val lat = coordArray.getDouble(1)
+                    // Handle Point geometry
+                    val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0).getJSONArray(0)
+                    val lon = coordArray.getDouble(1)
+                    val lat = coordArray.getDouble(0)
                     coordinates = listOf(Pair(lon, lat))
-                } else if (geoType == "Polygon") {
+                }
+                else if (geoType == "Polygon") {
                     val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
                     val coordList = mutableListOf<Pair<Double, Double>>()
                     for (j in 0 until coordArray.length()) {

@@ -194,12 +194,14 @@ fun FarmList(navController: NavController, siteId: Long) {
     fun createFile(): File? {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val filename = if (exportFormat == "CSV") "farms_$timestamp.csv" else "farms_$timestamp.json"
+        val getSiteById = cwsListItems.find { it.siteId == siteID }
+        val siteName = getSiteById?.name ?: "SiteName"
+        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
         // Get the Downloads directory
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
-        val getSiteById = cwsListItems.find { it.siteId == siteID }
+
 
         try {
             file.bufferedWriter().use { writer ->
@@ -885,7 +887,7 @@ fun FarmListHeaderPlots(
 ) {
     val context = LocalContext.current as Activity
     TopAppBar(
-        title = { Text(title) },
+        title = { Text(text=title,fontSize=18.sp) },
         navigationIcon = {
             IconButton(onClick = onBackClicked) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
