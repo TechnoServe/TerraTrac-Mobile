@@ -581,7 +581,7 @@ fun createFile(context: Context, uri: Uri): Boolean {
                         action = Action.Share
                         showFormatDialog = true
                     },
-                    onImportClicked = { showImportDialog = true },
+//                    onImportClicked = { showImportDialog = true },
                     showAdd = true,
                     showExport = listItems.isNotEmpty(),
                     showShare = listItems.isNotEmpty()
@@ -644,7 +644,7 @@ fun createFile(context: Context, uri: Uri): Boolean {
                     action = Action.Share
                     showFormatDialog = true
                 },
-                onImportClicked = { showImportDialog = true },
+//                onImportClicked = { showImportDialog = true },
                 showAdd = true,
                 showExport = listItems.isNotEmpty(),
                 showShare = listItems.isNotEmpty()
@@ -992,7 +992,7 @@ fun FarmListHeaderPlots(
     onBackClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
-    onImportClicked: () -> Unit,
+    //onImportClicked: () -> Unit,
     showAdd: Boolean,
     showExport: Boolean,
     showShare: Boolean
@@ -1019,12 +1019,12 @@ fun FarmListHeaderPlots(
                     Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
                 }
             }
-            IconButton(onClick = onImportClicked) {
-                Icon(
-                    painter = painterResource(id = R.drawable.import_icon),
-                    contentDescription = "Import"
-                )
-            }
+//            IconButton(onClick = onImportClicked) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.import_icon),
+//                    contentDescription = "Import"
+//                )
+//            }
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
