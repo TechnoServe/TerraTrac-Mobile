@@ -106,10 +106,12 @@ import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.utils.convertSize
+import java.io.BufferedWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -124,6 +126,8 @@ enum class Action {
     Export,
     Share
 }
+
+
 
 @Composable
 fun FormatSelectionDialog(
@@ -191,7 +195,7 @@ fun FarmList(navController: NavController, siteId: Long) {
     var showImportDialog by remember { mutableStateOf(false) }
 
 
-    fun createFile(): File? {
+    fun createFileforsharing(): File? {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
@@ -263,6 +267,103 @@ fun FarmList(navController: NavController, siteId: Long) {
             return null
         }
     }
+fun createFile(context: Context, uri: Uri): Boolean {
+    // Get the current date and time
+    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val getSiteById = cwsListItems.find { it.siteId == siteID }
+    val siteName = getSiteById?.name ?: "SiteName"
+    val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
+
+    try {
+        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+            BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
+                if (exportFormat == "CSV") {
+                    writer.write("remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n")
+                    listItems.forEach { farm ->
+                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                        val matches = regex.findAll(farm.coordinates.toString())
+                        val reversedCoordinates = matches.map { match ->
+                            val (lat, lon) = match.destructured
+                            "[$lon, $lat]"
+                        }.joinToString(", ", prefix = "[", postfix = "]")
+                        val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(farm.createdAt)},${Date(farm.updatedAt)}\n"
+                        writer.write(line)
+                    }
+                } else {
+                    val geoJson = buildString {
+                        append("{\"type\": \"FeatureCollection\", \"features\": [")
+                        listItems.forEachIndexed { index, farm ->
+                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                            val matches = regex.findAll(farm.coordinates.toString())
+                            val geoJsonCoordinates = matches.map { match ->
+                                val (lat, lon) = match.destructured
+                                "[$lon, $lat]"
+                            }.joinToString(", ", prefix = "[", postfix = "]")
+                            append("""
+                            {
+                                "type": "Feature",
+                                "properties": {
+                                    "remote_id": "${farm.remoteId}",
+                                    "farmer_name": "${farm.farmerName}",
+                                    "member_id": "${farm.memberId}",
+                                    "collection_site": "${getSiteById?.name}",
+                                    "agent_name": "${getSiteById?.agentName}",
+                                    "farm_village": "${farm.village}",
+                                    "farm_district": "${farm.district}",
+                                    "farm_size": ${farm.size},
+                                    "latitude": ${farm.latitude},
+                                    "longitude": ${farm.longitude},
+                                    "created_at": "${Date(farm.createdAt)}",
+                                    "updated_at": "${Date(farm.updatedAt)}"
+                                },
+                                "geometry": {
+                                    "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
+                                    "coordinates": [${if (farm.coordinates?.isEmpty() == true) "[${farm.longitude}, ${farm.latitude}]" else geoJsonCoordinates}]
+                                }
+                            }${if (index == listItems.size - 1) "" else ","}
+                        """.trimIndent())
+                        }
+                        append("]}")
+                    }
+                    writer.write(geoJson)
+                }
+            }
+        }
+        return true
+    } catch (e: IOException) {
+        Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+        return false
+    }
+}
+
+    val createDocumentLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                val context = activity?.applicationContext
+                if (context != null && createFile(context, uri)) {
+                    Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun initiateFileCreation(activity: Activity) {
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mimeType
+            val getSiteById = cwsListItems.find { it.siteId == siteID }
+            val siteName = getSiteById?.name ?: "SiteName"
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
+            putExtra(Intent.EXTRA_TITLE, filename)
+        }
+        createDocumentLauncher.launch(intent)
+    }
+
+
+
 
 
     // Function to share the file
@@ -287,21 +388,25 @@ fun FarmList(navController: NavController, siteId: Long) {
     }
 
     // Function to handle the export (save) action
-    fun exportFile() {
-        val file = createFile()
-        if (file != null) {
-            // Directly save the file to the device
-            Toast.makeText(
-                context,
-                R.string.success_export_msg,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+//    fun exportFile() {
+//        val file = createFile()
+//        if (file != null) {
+//            // Directly save the file to the device
+//            Toast.makeText(
+//                context,
+//                R.string.success_export_msg,
+//                Toast.LENGTH_SHORT
+//            ).show()
+//        }
+//    }
+    fun exportFile(activity: Activity) {
+        initiateFileCreation(activity)
     }
+
 
     // Function to handle the share action
     fun shareFileAction() {
-        val file = createFile()
+        val file = createFileforsharing()
         if (file != null) {
             shareFile(file)
         }
@@ -314,7 +419,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                 exportFormat = format
                 showFormatDialog = false
                 when (action) {
-                    Action.Export -> exportFile()
+                    Action.Export -> exportFile(activity)
                     Action.Share -> shareFileAction()
                     else -> {}
                 }
@@ -477,7 +582,10 @@ fun FarmList(navController: NavController, siteId: Long) {
                         showFormatDialog = true
                     },
                     onImportClicked = { showImportDialog = true },
-                    showAdd = true
+                    showAdd = true,
+                    showExport = listItems.isNotEmpty(),
+                    showShare = listItems.isNotEmpty()
+
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -537,7 +645,9 @@ fun FarmList(navController: NavController, siteId: Long) {
                     showFormatDialog = true
                 },
                 onImportClicked = { showImportDialog = true },
-                showAdd = true
+                showAdd = true,
+                showExport = listItems.isNotEmpty(),
+                showShare = listItems.isNotEmpty()
             )
             Spacer(modifier = Modifier.height(8.dp))
             Image(
@@ -883,7 +993,9 @@ fun FarmListHeaderPlots(
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
-    showAdd: Boolean
+    showAdd: Boolean,
+    showExport: Boolean,
+    showShare: Boolean
 ) {
     val context = LocalContext.current as Activity
     TopAppBar(
@@ -894,17 +1006,18 @@ fun FarmListHeaderPlots(
             }
         },
         actions = {
-            IconButton(onClick = onExportClicked) {
-                Icon(
-                    painter = painterResource(id = R.drawable.save),
-                    contentDescription = "Export"
-                )
+            if (showExport) {
+                IconButton(onClick = onExportClicked) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.save),
+                        contentDescription = "Export"
+                    )
+                }
             }
-            IconButton(onClick = onShareClicked) {
-                Icon(
-                    painter = painterResource(id = R.drawable.share),
-                    contentDescription = "Share"
-                )
+            if (showShare) {
+                IconButton(onClick = onShareClicked) {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                }
             }
             IconButton(onClick = onImportClicked) {
                 Icon(
@@ -1224,7 +1337,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                 }
                 item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
             } else {
-                item.coordinates = coordinates ?: emptyList()
+                item.coordinates = listOf(Pair( item.longitude.toDoubleOrNull()?:0.0,item.latitude.toDoubleOrNull()?:0.0)) // Example default value
             }
 
 //            item.size = size.toFloat()

@@ -503,7 +503,8 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                     ElevatedButton(modifier = Modifier
                         .fillMaxWidth(0.28f),
                         shape = RoundedCornerShape(0.dp),
-                        colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        //colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
                         onClick = {
                             if (!isLocationEnabled(context)) {
                                 showLocationDialog.value = true
@@ -556,7 +557,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = stringResource(id = R.string.add_point),
-                            tint = Color.White,
+                            tint = Color.Black,
                             modifier = Modifier.padding(4.dp)
                         )
 //                        IconWithTooltip(
@@ -581,7 +582,8 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         )
                     }
                     ElevatedButton(modifier = Modifier.fillMaxWidth(0.28f),
-                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
+//                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
+                        colors = ButtonDefaults.buttonColors(Color.White),
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
                             coordinates = coordinates.dropLast(1)
@@ -590,7 +592,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = stringResource(id = R.string.drop_point),
-                            tint = Color.White,
+                            tint = Color.Black,
                             modifier = Modifier.padding(4.dp)
                         )
                     }
