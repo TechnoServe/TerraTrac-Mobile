@@ -73,7 +73,11 @@ data class Farm(
 
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
-    var updatedAt: Long
+    var updatedAt: Long,
+
+    @ColumnInfo(name = "needsUpdate")
+    var needsUpdate: Boolean = false
+
 ) {
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L

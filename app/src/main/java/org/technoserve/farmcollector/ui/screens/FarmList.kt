@@ -21,6 +21,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -48,6 +51,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -581,7 +585,7 @@ fun createFile(context: Context, uri: Uri): Boolean {
                         action = Action.Share
                         showFormatDialog = true
                     },
-//                    onImportClicked = { showImportDialog = true },
+                    onImportClicked = { showImportDialog = true },
                     showAdd = true,
                     showExport = listItems.isNotEmpty(),
                     showShare = listItems.isNotEmpty()
@@ -644,7 +648,7 @@ fun createFile(context: Context, uri: Uri): Boolean {
                     action = Action.Share
                     showFormatDialog = true
                 },
-//                onImportClicked = { showImportDialog = true },
+                onImportClicked = { showImportDialog = true },
                 showAdd = true,
                 showExport = listItems.isNotEmpty(),
                 showShare = listItems.isNotEmpty()
@@ -671,9 +675,11 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
 
     val farmViewModel: FarmViewModel = viewModel()
+    var selectedFileType by remember { mutableStateOf("csv") }
+    var isDropdownMenuExpanded by remember { mutableStateOf(false) }
 
     // Create a launcher to handle the file picker result
-    val launcher = rememberLauncherForActivityResult(
+    val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
@@ -684,6 +690,11 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                     println("Import result: ${result.success}")
                     if (result.success) {
                         Toast.makeText(context, R.string.import_successful, Toast.LENGTH_SHORT).show()
+                        // Retrieve imported farms and flag those without plot info
+                        val importedFarms = result.importedFarms // Adjust to your actual data
+                        println("Imported farms now: $importedFarms")
+                        farmViewModel.flagFarmersWithNewPlotInfo(siteId, importedFarms)
+
                     }
                     onDismiss()
                 } catch (e: Exception) {
@@ -693,23 +704,103 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
         }
     }
 
-        AlertDialog(
-            onDismissRequest = { onDismiss() },
-            title = { Text(text = stringResource(R.string.import_file)) },
-            text = { Text(stringResource(R.string.select_file_to_import)) },
-            confirmButton = {
-                Button(onClick = {
-                    launcher.launch("*/*")
-                }) {
-                    Text(stringResource(R.string.select_file))
-                }
-            },
-            dismissButton = {
-                Button(onClick = { onDismiss()  }) {
-                    Text(stringResource(R.string.cancel))
+    // Create a launcher to handle the file creation result
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            // Get the template content based on the selected file type
+            val templateContent = farmViewModel.getTemplateContent(selectedFileType)
+            // Save the template content to the created document
+            coroutineScope.launch {
+                try {
+                    farmViewModel.saveFileToUri(context, it, templateContent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
                 }
             }
-        )
+        }
+    }
+
+    // Function to download the template file
+    fun downloadTemplate() {
+        coroutineScope.launch {
+            try {
+                // Prompt the user to select where to save the file
+                createDocumentLauncher.launch(
+                    when (selectedFileType) {
+                        "csv" -> "farm_template.csv"
+                        "json" -> "farm_template.json"
+                        else -> throw IllegalArgumentException("Unsupported file type: $selectedFileType")
+                    }
+                )
+            } catch (e: Exception) {
+                Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = stringResource(R.string.import_file)) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.select_file_type),
+                    modifier = Modifier.padding(bottom = 8.dp)  // Add space below the label
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                        .clickable { isDropdownMenuExpanded = true }
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = if (selectedFileType.isNotEmpty()) selectedFileType else stringResource(R.string.select_file_type),
+                        color = if (selectedFileType.isNotEmpty()) Color.Black else Color.Gray
+                    )
+                    DropdownMenu(
+                        expanded = isDropdownMenuExpanded,
+                        onDismissRequest = { isDropdownMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(onClick = { selectedFileType = "csv";isDropdownMenuExpanded = false }, text = { Text("CSV") })
+                        DropdownMenuItem(onClick = { selectedFileType = "json"; isDropdownMenuExpanded = false}, text = { Text("GeoJSON") })
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { downloadTemplate() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.download_template))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.select_file_to_import),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                importLauncher.launch("*/*")
+            }) {
+                Text(stringResource(R.string.select_file))
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+
+
 }
 
 
@@ -992,7 +1083,7 @@ fun FarmListHeaderPlots(
     onBackClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
-    //onImportClicked: () -> Unit,
+    onImportClicked: () -> Unit,
     showAdd: Boolean,
     showExport: Boolean,
     showShare: Boolean
@@ -1019,12 +1110,12 @@ fun FarmListHeaderPlots(
                     Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
                 }
             }
-//            IconButton(onClick = onImportClicked) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.import_icon),
-//                    contentDescription = "Import"
-//                )
-//            }
+            IconButton(onClick = onImportClicked) {
+                Icon(
+                    painter = painterResource(id = R.drawable.import_icon),
+                    contentDescription = "Import"
+                )
+            }
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences

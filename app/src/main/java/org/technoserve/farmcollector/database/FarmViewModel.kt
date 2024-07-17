@@ -2,9 +2,15 @@ package org.technoserve.farmcollector.database
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,15 +24,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.converters.DateConverter
 import java.io.BufferedReader
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.util.Date
 import java.util.UUID
 
-data class ImportResult(val success: Boolean, val message: String)
+data class ImportResult(val success: Boolean, val message: String, val importedFarms: List<Farm>)
 
 class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -205,7 +215,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
     @RequiresApi(Build.VERSION_CODES.N)
     suspend fun importFile(context: Context, uri: Uri, siteId:Long): ImportResult {
         var message = "Import failed" // Default message in case of failure
-        var success = false// Default to failure until proven otherwise
+        var success = true// Default to failure until proven otherwise
+        var importedFarms= mutableListOf<Farm>()
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -213,6 +224,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val reader = BufferedReader(InputStreamReader(inputStream))
                 val firstLine = reader.readLine()
                 val farms = mutableListOf<Farm>()
+
 
                 println("first line $firstLine")
 
@@ -229,6 +241,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                         if (!isDuplicateFarm(newFarm, newFarm.siteId)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                             addFarm(newFarm, newFarm.siteId)
+                            importedFarms.add(newFarm)
                         }
                         else{
                             println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
@@ -290,6 +303,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             if (!isDuplicateFarm(newFarm, siteId)) {
                                 println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                                 farms.add(newFarm)
+                                importedFarms.add(newFarm)
                             }
                             else{
                                 println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
@@ -303,6 +317,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     repository.importFarms(farms)
                     message = "CSV import successful"
                     success = true
+                    importedFarms=farms
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -310,7 +325,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 success = false
             }
         }
-        return ImportResult(success, message)
+        return ImportResult(success, message, importedFarms)
     }
 
 
@@ -320,9 +335,113 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         return existingFarms.any { it.remoteId == farm.remoteId }
     }
 
+    fun getTemplateContent(fileType: String): String {
+        return when (fileType) {
+            "csv" -> "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n"
+            "json" -> """{
+                        "type": "FeatureCollection",
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "properties": {
+                                    "remote_id": "",
+                                    "farmer_name": "",
+                                    "member_id": "",
+                                    "collection_site": "",
+                                    "agent_name": "",
+                                    "farm_village": "",
+                                    "farm_district": "",
+                                    "farm_size": 0.0,
+                                    "latitude": "",
+                                    "longitude": "",
+                                    "created_at": "",
+                                    "updated_at": ""
+                                },
+                                "geometry": {
+                                    "type": "Point",
+                                    "coordinates": ["longitude", "latitude"]
+                                }
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {
+                                    "remote_id": "",
+                                    "farmer_name": "",
+                                    "member_id": "",
+                                    "collection_site": "",
+                                    "agent_name": "",
+                                    "farm_village": "",
+                                    "farm_district": "",
+                                    "farm_size": "farm size is double",
+                                    "latitude": "latitude value in double",
+                                    "longitude": "longitude value in double",
+                                    "created_at": "",
+                                    "updated_at": ""
+                                },
+                                "geometry": {
+                                    "type": "Polygon",
+                                    "coordinates": [[["longitude","latitude"], ["longitude","latitude"],["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"]]]
+                                }
+                            }
+                        ]
+                    }"""
+            else -> throw IllegalArgumentException("Unsupported file type: $fileType")
+        }
+    }
+
+
+    // Define the method for saving the file to the URI
+    suspend fun saveFileToUri(
+        context: Context,
+        uri: Uri,
+        templateContent: String
+    ) {
+        withContext(Dispatchers.IO) {
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.write(templateContent.toByteArray())
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, R.string.template_downloaded, Toast.LENGTH_SHORT).show()
+                }
+            } ?: withContext(Dispatchers.Main) {
+                Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>) {
+        withContext(Dispatchers.IO) {
+            val existingFarms = repository.readAllFarms(siteId).value
+
+            // Create a map of existing farms by their remoteId for quick lookup
+            val existingFarmMap = existingFarms?.associateBy { it.remoteId } ?: emptyMap()
+
+            // Iterate through imported farms and check for updates
+            for (importedFarm in importedFarms) {
+                val existingFarm = existingFarmMap[importedFarm.remoteId]
+
+                // If the farm is new or has different details, flag it for update
+                if (existingFarm == null || existingFarm != importedFarm) {
+                    importedFarm.needsUpdate = true
+                }
+            }
+
+            // Update farms that need updates
+            importedFarms.filter { it.needsUpdate }.forEach { updateFarm(it) }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }
-
-
 
 class FarmViewModelFactory(
     private val application: Application
