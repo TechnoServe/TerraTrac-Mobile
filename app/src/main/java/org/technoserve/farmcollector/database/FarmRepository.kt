@@ -69,16 +69,31 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getFarmByRemoteId(farm.remoteId) != null
     }
 
-    suspend fun importFarms(farms: List<Farm>) {
+    suspend fun importFarms(farms: List<Farm>): ImportResult {
         val nonDuplicateFarms = mutableListOf<Farm>()
+        val duplicateFarms = mutableListOf<String>()
+        val farmsNeedingUpdate = mutableListOf<Farm>()
 
         for (farm in farms) {
             if (!isFarmDuplicate(farm)) {
                 nonDuplicateFarms.add(farm)
+            } else {
+                duplicateFarms.add("Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
+                farmsNeedingUpdate.add(farm)
             }
         }
 
         addFarms(nonDuplicateFarms)
+
+        return ImportResult(
+            success = nonDuplicateFarms.isNotEmpty(),
+            message = if (nonDuplicateFarms.isNotEmpty()) "Import successful" else "No farms were imported",
+            importedFarms = nonDuplicateFarms,
+            duplicateFarms = duplicateFarms,
+            farmsNeedingUpdate = farmsNeedingUpdate
+        )
     }
+
+
 
 }

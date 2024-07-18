@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +47,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -60,6 +62,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -131,8 +134,6 @@ enum class Action {
     Share
 }
 
-
-
 @Composable
 fun FormatSelectionDialog(
     onDismiss: () -> Unit,
@@ -197,6 +198,9 @@ fun FarmList(navController: NavController, siteId: Long) {
     var exportFormat by remember { mutableStateOf("") }
 
     var showImportDialog by remember { mutableStateOf(false) }
+
+    // Inside your composable function
+    val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
 
     fun createFileforsharing(): File? {
@@ -585,11 +589,12 @@ fun createFile(context: Context, uri: Uri): Boolean {
                         action = Action.Share
                         showFormatDialog = true
                     },
+                    onSearchQueryChanged = setSearchQuery,
                     onImportClicked = { showImportDialog = true },
                     showAdd = true,
                     showExport = listItems.isNotEmpty(),
-                    showShare = listItems.isNotEmpty()
-
+                    showShare = listItems.isNotEmpty(),
+                    showSearch= listItems.isNotEmpty()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -609,22 +614,47 @@ fun createFile(context: Context, uri: Uri): Boolean {
                 }
             }
             */
-            items(listItems) { farm ->
-                FarmCard(farm = farm, onCardClick = {
-                    Bundle().apply {
-                        putSerializable("coordinates",
-                            farm.coordinates?.let { ArrayList(it) })
-                    }
 
-                    navController.currentBackStackEntry?.arguments?.apply {
-                        putSerializable("farmData", Pair(farm, "view"))
+//            items(listItems) { farm ->
+//                FarmCard(farm = farm, onCardClick = {
+//                    Bundle().apply {
+//                        putSerializable("coordinates",
+//                            farm.coordinates?.let { ArrayList(it) })
+//                    }
+//
+//                    navController.currentBackStackEntry?.arguments?.apply {
+//                        putSerializable("farmData", Pair(farm, "view"))
+//                    }
+//                    navController.navigate(route = "setPolygon")
+//                }, onDeleteClick = {
+//                    // When the delete icon is clicked, invoke the onDelete function
+//                    selectedIds.add(farm.id)
+//                    showDeleteDialog.value = true
+//                })
+//                Spacer(modifier = Modifier.height(16.dp))
+//            }
+            items(listItems.filter {
+                it.farmerName.contains(searchQuery, ignoreCase = true)
+                // Adjust filtering based on your farm data structure
+            }) { farm ->
+                FarmCard(
+                    farm = farm,
+                    onCardClick = {
+                        Bundle().apply {
+                            putSerializable("coordinates",
+                                farm.coordinates?.let { ArrayList(it) })
+                        }
+
+                        navController.currentBackStackEntry?.arguments?.apply {
+                            putSerializable("farmData", Pair(farm, "view"))
+                        }
+                        navController.navigate(route = "setPolygon")
+                    },
+                    onDeleteClick = {
+                        selectedIds.add(farm.id)
+                        showDeleteDialog.value = true
                     }
-                    navController.navigate(route = "setPolygon")
-                }, onDeleteClick = {
-                    // When the delete icon is clicked, invoke the onDelete function
-                    selectedIds.add(farm.id)
-                    showDeleteDialog.value = true
-                })
+                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -648,10 +678,12 @@ fun createFile(context: Context, uri: Uri): Boolean {
                     action = Action.Share
                     showFormatDialog = true
                 },
+                onSearchQueryChanged = setSearchQuery,
                 onImportClicked = { showImportDialog = true },
                 showAdd = true,
                 showExport = listItems.isNotEmpty(),
-                showShare = listItems.isNotEmpty()
+                showShare = listItems.isNotEmpty(),
+                showSearch = true,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Image(
@@ -675,7 +707,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
 
     val farmViewModel: FarmViewModel = viewModel()
-    var selectedFileType by remember { mutableStateOf("csv") }
+    var selectedFileType by remember { mutableStateOf("") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
 
     // Create a launcher to handle the file picker result
@@ -688,14 +720,22 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                     val result = farmViewModel.importFile(context, it, siteId)
                     println("site ID am Using in import dialog: $siteId")
                     println("Import result: ${result.success}")
-                    if (result.success) {
-                        Toast.makeText(context, R.string.import_successful, Toast.LENGTH_SHORT).show()
-                        // Retrieve imported farms and flag those without plot info
-                        val importedFarms = result.importedFarms // Adjust to your actual data
-                        println("Imported farms now: $importedFarms")
-                        farmViewModel.flagFarmersWithNewPlotInfo(siteId, importedFarms)
-
+                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    if (result.duplicateFarms.isNotEmpty()) {
+                        Toast.makeText(context, "Duplicate farms found", Toast.LENGTH_SHORT).show()
+                        println("Duplicate farms found:")
+                        result.duplicateFarms.forEach { println(it) }
                     }
+                    // Handle farms needing updates
+                    if (result.farmsNeedingUpdate.isNotEmpty()) {
+                        println("Farms that needs to be updated found:")
+                        // Update the UI to mark farms that need updates
+                       // markFarmsNeedingUpdate(result.farmsNeedingUpdate)
+                    }
+                    // Retrieve imported farms and flag those without plot info
+                    val importedFarms = result.importedFarms // Adjust to your actual data
+                    println("Imported farms now: $importedFarms")
+                    farmViewModel.flagFarmersWithNewPlotInfo(siteId, importedFarms)
                     onDismiss()
                 } catch (e: Exception) {
                     Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
@@ -746,12 +786,12 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
         text = {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(8.dp)
                     .fillMaxWidth()
             ) {
                 Text(
                     text = stringResource(R.string.select_file_type),
-                    modifier = Modifier.padding(bottom = 8.dp)  // Add space below the label
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Box(
                     modifier = Modifier
@@ -774,8 +814,9 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { downloadTemplate() },
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = { downloadTemplate()},
+                    enabled = selectedFileType.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
                 ) {
                     Text(stringResource(R.string.download_template))
                 }
@@ -802,10 +843,6 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
 
 
 }
-
-
-
-
 
 /*
 @Composable
@@ -1084,11 +1121,18 @@ fun FarmListHeaderPlots(
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     showAdd: Boolean,
     showExport: Boolean,
-    showShare: Boolean
+    showShare: Boolean,
+    showSearch: Boolean,
 ) {
     val context = LocalContext.current as Activity
+
+    // State for holding the search query
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
     TopAppBar(
         title = { Text(text=title,fontSize=18.sp) },
         navigationIcon = {
@@ -1116,6 +1160,11 @@ fun FarmListHeaderPlots(
                     contentDescription = "Import"
                 )
             }
+            IconButton(onClick = {
+                isSearchVisible = !isSearchVisible
+            }) {
+                Icon(Icons.Default.Search, contentDescription = "Search")
+            }
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
@@ -1131,6 +1180,26 @@ fun FarmListHeaderPlots(
             }
         }
     )
+
+    // Conditional rendering of the search field
+    if (isSearchVisible && showSearch) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = {
+                searchQuery = it
+                onSearchQueryChanged(it)
+            },
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            label = { Text("Search") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            singleLine = true,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                cursorColor = MaterialTheme.colorScheme.onSurface
+            )
+        )
+    }
 }
 
 

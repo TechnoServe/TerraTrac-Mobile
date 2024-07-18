@@ -36,7 +36,21 @@ import java.io.InputStreamReader
 import java.util.Date
 import java.util.UUID
 
-data class ImportResult(val success: Boolean, val message: String, val importedFarms: List<Farm>)
+data class ImportResult(
+    val success: Boolean,
+    val message: String,
+    val importedFarms: List<Farm>,
+    val duplicateFarms: List<String> = emptyList(),
+    val farmsNeedingUpdate: List<Farm> = emptyList()
+)
+
+data class FarmAddResult(
+    val success: Boolean,
+    val message: String,
+    val farm: Farm
+)
+
+
 
 class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -66,8 +80,12 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!isDuplicateFarm(farm, siteId)) {
                 repository.addFarm(farm)
+                FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
                 _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
+            }
+            else {
+                FarmAddResult(success = false, message = "Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}. Needs update.", farm)
             }
         }
     }
@@ -213,119 +231,135 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
 
     @RequiresApi(Build.VERSION_CODES.N)
-    suspend fun importFile(context: Context, uri: Uri, siteId:Long): ImportResult {
-        var message = "Import failed" // Default message in case of failure
-        var success = true// Default to failure until proven otherwise
-        var importedFarms= mutableListOf<Farm>()
+    suspend fun importFile(context: Context, uri: Uri, siteId: Long): ImportResult = withContext(Dispatchers.IO) {
+        var message = "Import failed"
+        var success = false
+        val importedFarms = mutableListOf<Farm>()
+        val duplicateFarms = mutableListOf<String>()
+        val farmsNeedingUpdate = mutableListOf<Farm>()
 
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                val firstLine = reader.readLine()
-                val farms = mutableListOf<Farm>()
+        try {
+            // Check file extension before proceeding
+            val fileName = uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
+            if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".json", true)) {
+                message = "Unsupported file format. Please upload a CSV or GeoJSON file."
+                return@withContext ImportResult(success, message, importedFarms)
+            }
 
+            val inputStream = context.contentResolver.openInputStream(uri) ?: throw IllegalArgumentException("Cannot open file input stream")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val firstLine = reader.readLine()
+            val farms = mutableListOf<Farm>()
 
-                println("first line $firstLine")
+            println("First line: $firstLine")
 
-                // Determine if the file is CSV or GeoJSON
-                if (firstLine.trim().startsWith("{")) {
-                    // It's a GeoJSON file
-                    val content = StringBuilder()
-                    content.append(firstLine)
-                    reader.lines().forEach { content.append(it) }
-                    reader.close()
-                    val newFarms = parseGeoJson(content.toString(),siteId)
-                    println("Parsed farms from GeoJSON: $newFarms")
-                    for (newFarm in newFarms) {
-                        if (!isDuplicateFarm(newFarm, newFarm.siteId)) {
+            if (firstLine.trim().startsWith("{")) {
+                // It's a GeoJSON file
+                val content = StringBuilder()
+                content.append(firstLine)
+                reader.lines().forEach { content.append(it) }
+                reader.close()
+                val newFarms = parseGeoJson(content.toString(), siteId)
+                println("Parsed farms from GeoJSON: $newFarms")
+                for (newFarm in newFarms) {
+                    if (!isDuplicateFarm(newFarm, siteId)) {
+                        println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                        addFarm(newFarm, newFarm.siteId)
+                        importedFarms.add(newFarm)
+                    } else {
+                        val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                        println(duplicateMessage)
+                        duplicateFarms.add(duplicateMessage)
+                        farmsNeedingUpdate.add(newFarm)
+                    }
+                }
+                message = "GeoJSON import successful"
+                success = true
+            } else if (firstLine.contains(",")) {
+                // It's a CSV file
+                var line: String? = firstLine
+                line = reader.readLine() // Read first data line
+                while (line != null) {
+                    val values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()) // Split CSV line, ignoring commas within quotes
+                    if (values.size >= 13) {
+                        val remoteId = UUID.fromString(values[0])
+                        val farmerName = values[1]
+                        val memberId = values[2]
+                        val siteName = values[3]
+                        val agentName = values[4]
+                        val village = values[5]
+                        val district = values[6]
+                        val size = values[7].toFloat()
+                        val latitude = values[8]
+                        val longitude = values[9]
+
+                        // Parsing the polygon coordinates
+                        val coordinatesString = values[10].removeSurrounding("\"", "\"")
+                        val coordinates = coordinatesString.replace("[[", "").replace("]]", "")
+                            .split("],\\s*\\[".toRegex()) // Adjust regex to handle spaces
+                            .map {
+                                val latLng = it.split(",\\s*".toRegex()) // Adjust regex to handle spaces
+                                Pair(latLng[1].toDouble(), latLng[0].toDouble())
+                            }
+                        val createdAt = parseDateStringToTimestamp(values[11])
+                        val updatedAt = parseDateStringToTimestamp(values[12])
+
+                        // Process each record here
+                        println("Processing record for remote ID: $remoteId")
+
+                        val newFarm = Farm(
+                            siteId = siteId,
+                            remoteId = remoteId,
+                            farmerPhoto = "farmer-photo",
+                            farmerName = farmerName,
+                            memberId = memberId,
+                            village = village,
+                            district = district,
+                            purchases = 2.30f,
+                            size = size,
+                            latitude = latitude,
+                            longitude = longitude,
+                            coordinates = coordinates,
+                            synced = false,
+                            scheduledForSync = false,
+                            createdAt = createdAt,
+                            updatedAt = updatedAt
+                        )
+                        if (!isDuplicateFarm(newFarm, siteId)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                            addFarm(newFarm, newFarm.siteId)
+                            farms.add(newFarm)
                             importedFarms.add(newFarm)
-                        }
-                        else{
-                            println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                        } else {
+                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                            println(duplicateMessage)
+                            duplicateFarms.add(duplicateMessage)
+                            farmsNeedingUpdate.add(newFarm)
                         }
                     }
-                    message = "GeoJSON import successful"
-                    success = true
+                    line = reader.readLine()
                 }
-                else {
-                    // It's a CSV file
-                    var line: String? = firstLine
-                    line = reader.readLine() // Read first data line
-                    while (line != null) {
-                        val values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()) // Split CSV line, ignoring commas within quotes
-                        if (values.size >= 13) {
-                            val remoteId = UUID.fromString(values[0])
-                            val farmerName = values[1]
-                            val memberId = values[2]
-                            val siteName = values[3]
-                            val agentName = values[4]
-                            val village = values[5]
-                            val district = values[6]
-                            val size = values[7].toFloat()
-                            val latitude = values[8]
-                            val longitude = values[9]
+                reader.close()
+                println("Parsed farms from CSV: $farms")
+                repository.importFarms(farms)
 
-                            // Parsing the polygon coordinates
-                            val coordinatesString = values[10].removeSurrounding("\"", "\"")
-                            val coordinates = coordinatesString.replace("[[", "").replace("]]", "")
-                                .split("],\\s*\\[".toRegex()) // Adjust regex to handle spaces
-                                .map {
-                                    val latLng = it.split(",\\s*".toRegex()) // Adjust regex to handle spaces
-                                    Pair(latLng[1].toDouble(), latLng[0].toDouble())
-                                }
-                            val createdAt = parseDateStringToTimestamp(values[11])
-                            val updatedAt = parseDateStringToTimestamp(values[12])
+                message = "CSV import successful"
+                success = true
+            } else {
+                message = "Unrecognized file format. Please upload a valid CSV or GeoJSON file."
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            message = "Import failed: ${e.message}"
+        }
 
-                            // Process each record here
-                            println("Processing record for remote ID: $remoteId")
-
-                            val newFarm = Farm(
-                                siteId = siteId,
-                                remoteId = remoteId,
-                                farmerPhoto = "farmer-photo",
-                                farmerName = farmerName,
-                                memberId = memberId,
-                                village = village,
-                                district = district,
-                                purchases = 2.30f,
-                                size = size,
-                                latitude = latitude,
-                                longitude = longitude,
-                                coordinates = coordinates,
-                                synced = false,
-                                scheduledForSync = false,
-                                createdAt = createdAt,
-                                updatedAt = updatedAt
-                            )
-                            if (!isDuplicateFarm(newFarm, siteId)) {
-                                println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                                farms.add(newFarm)
-                                importedFarms.add(newFarm)
-                            }
-                            else{
-                                println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                            }
-                        }
-                        line = reader.readLine()
-                    }
-                    reader.close()
-                    println("Parsed farms from CSV: $farms")
-                    // Update LiveData with the imported farms
-                    repository.importFarms(farms)
-                    message = "CSV import successful"
-                    success = true
-                    importedFarms=farms
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                message = "Import failed: ${e.message}"
-                success = false
+        // Show a toast message for duplicate farms
+        withContext(Dispatchers.Main) {
+            if (duplicateFarms.isNotEmpty()) {
+                Toast.makeText(context, "Duplicate farms already exist and need updates", Toast.LENGTH_LONG).show()
             }
         }
-        return ImportResult(success, message, importedFarms)
+
+        return@withContext ImportResult(success, message, importedFarms, duplicateFarms)
     }
 
 
@@ -429,17 +463,6 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
             importedFarms.filter { it.needsUpdate }.forEach { updateFarm(it) }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
 
 }
 
