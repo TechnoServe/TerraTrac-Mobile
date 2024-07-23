@@ -795,9 +795,8 @@ fun addFarm(
     latitude: String,
     longitude: String,
     coordinates: List<Pair<Double, Double>>?
-): Farm? {
-    val farm = coordinates?.let {
-        Farm(
+): Farm {
+    val farm = Farm(
         siteId,
         remote_id,
         farmerPhoto,
@@ -809,14 +808,11 @@ fun addFarm(
         size,
         latitude,
         longitude,
-            it,
+        coordinates,
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    }
-    if (farm != null) {
-        farmViewModel.addFarm(farm,siteId)
-    }
+    farmViewModel.addFarm(farm,siteId)
     return farm
 }
 

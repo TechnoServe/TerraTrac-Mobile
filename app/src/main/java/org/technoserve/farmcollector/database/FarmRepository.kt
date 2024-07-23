@@ -96,10 +96,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getFarmByRemoteId(remoteId)
     }
 
-    suspend fun deleteFarmByRemoteId(remoteId: UUID) {
-        farmDAO.deleteFarmByRemoteId(remoteId)
-    }
-
+//    suspend fun deleteFarmByRemoteId(remoteId: UUID) {
+//        farmDAO.deleteFarmByRemoteId(remoteId)
+//    }
+//
 
 
     fun farmNeedsUpdate(existingFarm: Farm, newFarm: Farm): Boolean {

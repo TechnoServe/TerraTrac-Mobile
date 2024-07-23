@@ -373,9 +373,10 @@ fun FarmList(navController: NavController, siteId: Long) {
                                             coordinates.joinToString(", ", prefix = "[", postfix = "]")
                                         }
                                     } else {
-                                        "" // Return an empty string if there are no coordinates
+                                        "" // Return an empty string if here are no coordinates
                                     }
                                 }
+
                             val line =
                                 "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
                                     Date(farm.createdAt)

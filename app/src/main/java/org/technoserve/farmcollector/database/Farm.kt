@@ -26,7 +26,7 @@ data class Farm(
     var siteId: Long,
 
     @ColumnInfo(name = "remote_id")
-    var remoteId: UUID? = null,
+    var remoteId: UUID = UUID.randomUUID(),
 
     @ColumnInfo(name = "farmerPhoto")
     var farmerPhoto: String,

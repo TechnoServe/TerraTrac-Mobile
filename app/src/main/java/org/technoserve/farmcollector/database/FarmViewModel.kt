@@ -252,7 +252,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } else if (isPoint) {
                 // Handle Point Format
-                val coords = cleanedString.removePrefix("[").removeSuffix("]").split(",")
+                val coords = cleanedString.removePrefix("[").removeSuffix("]").split(", ")
                 if (coords.size == 2) {
                     try {
                         val lat = coords[1].toDouble()
@@ -398,7 +398,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             importedFarms.add(newFarm)
                         }
 
-                        val existingFarm = newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
+                        val existingFarm = newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
                         if (existingFarm != null) {
                             if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
                                 // Farm needs an update
