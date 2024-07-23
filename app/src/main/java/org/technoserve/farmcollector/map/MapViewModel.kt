@@ -3,7 +3,6 @@ package org.technoserve.farmcollector.map
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
@@ -14,8 +13,6 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MarkerInfoWindow
-import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.ktx.model.polygonOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -181,7 +178,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         state.value = state.value.copy(clusterItems = currentClusterItems)
     }
 
-    fun addCoordinates(coordinates: List<Pair<Double, Double>>) {
+    fun addCoordinates(coordinates: List<Pair<Double?, Double?>>) {
         // Add coordinates on the map, this list of of LatLong form a polygons
         if (coordinates.isEmpty()) {
             return  // Return early without performing any further actions
@@ -192,6 +189,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
         val polygonOptions = polygonOptions {
             coordinates.forEach { (latitude, longitude) ->
+                if (latitude!= null && longitude!= null)
                 add(LatLng(latitude, longitude))
             }
             fillColor(POLYGON_FILL_COLOR)

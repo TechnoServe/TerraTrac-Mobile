@@ -2,36 +2,23 @@ package org.technoserve.farmcollector.database
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.converters.DateConverter
 import java.io.BufferedReader
-import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.util.Date
 import java.util.UUID
@@ -209,25 +196,29 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     coordinates = coordList
                 }
 
-                val newFarm = Farm(
-                    siteId = siteId,
-                    remoteId = remoteId,
-                    farmerPhoto = "farmer-photo",
-                    farmerName = farmerName,
-                    memberId = memberId,
-                    village = village,
-                    district = district,
-                    purchases = 2.30f,
-                    size = size,
-                    latitude = latitude.toString(),
-                    longitude = longitude.toString(),
-                    coordinates = coordinates,
-                    synced = false,
-                    scheduledForSync = false,
-                    createdAt = createdAt,
-                    updatedAt = updatedAt
-                )
-                farms.add(newFarm)
+                val newFarm = coordinates?.let {
+                    Farm(
+                        siteId = siteId,
+                        remoteId = remoteId,
+                        farmerPhoto = "farmer-photo",
+                        farmerName = farmerName,
+                        memberId = memberId,
+                        village = village,
+                        district = district,
+                        purchases = 2.30f,
+                        size = size,
+                        latitude = latitude.toString(),
+                        longitude = longitude.toString(),
+                        coordinates = it,
+                        synced = false,
+                        scheduledForSync = false,
+                        createdAt = createdAt,
+                        updatedAt = updatedAt
+                    )
+                }
+                if (newFarm != null) {
+                    farms.add(newFarm)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -235,6 +226,50 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
         return farms
     }
+
+    fun parseCoordinates(coordinatesString: String): List<Pair<Double, Double>> {
+        val result = mutableListOf<Pair<Double, Double>>()
+        val cleanedString = coordinatesString.trim().removeSurrounding("\"", "").replace(" ", "")
+
+        if (cleanedString.isNotEmpty()) {
+            // Check if the coordinates are in polygon or point format
+            val isPolygon = cleanedString.startsWith("[[") && cleanedString.endsWith("]]")
+            val isPoint = cleanedString.startsWith("[") && cleanedString.endsWith("]") && !isPolygon
+
+            if (isPolygon) {
+                // Handle Polygon Format
+                val pairs = cleanedString.removePrefix("[[").removeSuffix("]]").split("],[").map { it.split(",") }
+                for (pair in pairs) {
+                    if (pair.size == 2) {
+                        try {
+                            val lat = pair[1].toDouble()
+                            val lon = pair[0].toDouble()
+                            result.add(Pair(lat, lon))
+                        } catch (e: NumberFormatException) {
+                            println("Error parsing polygon coordinate pair: ${pair.joinToString(",")}")
+                        }
+                    }
+                }
+            } else if (isPoint) {
+                // Handle Point Format
+                val coords = cleanedString.removePrefix("[").removeSuffix("]").split(",")
+                if (coords.size == 2) {
+                    try {
+                        val lat = coords[1].toDouble()
+                        val lon = coords[0].toDouble()
+                        result.add(Pair(lat, lon))
+                    } catch (e: NumberFormatException) {
+                        println("Error parsing point coordinate pair: ${coords.joinToString(",")}")
+                    }
+                }
+            } else {
+                println("Unrecognized coordinates format: $coordinatesString")
+            }
+        }
+        return result
+    }
+
+
 
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -273,7 +308,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                         addFarm(newFarm, newFarm.siteId)
                         importedFarms.add(newFarm)
                     }
-                    val existingFarm = repository.getFarmByRemoteId(newFarm.remoteId)
+                    val existingFarm = newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
                     if (existingFarm != null) {
                         if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
                             // Farm needs an update
@@ -299,28 +334,41 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 line = reader.readLine() // Read first data line
                 while (line != null) {
                     val values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()) // Split CSV line, ignoring commas within quotes
-                    if (values.size >= 13) {
-                        val remoteId = UUID.fromString(values[0])
-                        val farmerName = values[1]
-                        val memberId = values[2]
-                        val siteName = values[3]
-                        val agentName = values[4]
-                        val village = values[5]
-                        val district = values[6]
-                        val size = values[7].toFloat()
-                        val latitude = values[8]
-                        val longitude = values[9]
 
-                        // Parsing the polygon coordinates
-                        val coordinatesString = values[10].removeSurrounding("\"", "\"")
-                        val coordinates = coordinatesString.replace("[[", "").replace("]]", "")
-                            .split("],\\s*\\[".toRegex()) // Adjust regex to handle spaces
-                            .map {
-                                val latLng = it.split(",\\s*".toRegex()) // Adjust regex to handle spaces
-                                Pair(latLng[1].toDouble(), latLng[0].toDouble())
-                            }
-                        val createdAt = parseDateStringToTimestamp(values[11])
-                        val updatedAt = parseDateStringToTimestamp(values[12])
+                    if (values.size >= 13) {
+                        val remoteId = try {
+                            if (values[0].isNotEmpty()) UUID.fromString(values[0]) else UUID.randomUUID()
+                        } catch (e: IllegalArgumentException) {
+                            UUID.randomUUID()
+                        }
+
+                        val farmerName = values.getOrNull(1) ?: ""
+                        val memberId = values.getOrNull(2) ?: ""
+                        val siteName = values.getOrNull(3) ?: ""
+                        val agentName = values.getOrNull(4) ?: ""
+                        val village = values.getOrNull(5) ?: ""
+                        val district = values.getOrNull(6) ?: ""
+                        val size = values.getOrNull(7)?.toFloatOrNull()
+                        val latitude = values.getOrNull(8)
+                        val longitude = values.getOrNull(9)
+
+                        // Extract and parse coordinates
+                        val coordinatesString = values.getOrNull(10)?.removeSurrounding("\"", "\"") ?: ""
+                        val coordinates = parseCoordinates(coordinatesString)
+                        println("Coordinates $coordinates")
+
+                        val currentTime = System.currentTimeMillis()
+                        val createdAt = try {
+                            if (values.getOrNull(11)?.isNotEmpty() == true) parseDateStringToTimestamp(values[11]) else currentTime
+                        } catch (e: Exception) {
+                            currentTime
+                        }
+
+                        val updatedAt = try {
+                            if (values.getOrNull(12)?.isNotEmpty() == true) parseDateStringToTimestamp(values[12]) else currentTime
+                        } catch (e: Exception) {
+                            currentTime
+                        }
 
                         // Process each record here
                         println("Processing record for remote ID: $remoteId")
@@ -334,22 +382,23 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             village = village,
                             district = district,
                             purchases = 2.30f,
-                            size = size,
-                            latitude = latitude,
-                            longitude = longitude,
-                            coordinates = coordinates,
+                            size = size ?: 0f, // Use 0 as default if size is null
+                            latitude = latitude ?: "0.0", // Use "0.0" as default if latitude is null
+                            longitude = longitude ?: "0.0", // Use "0.0" as default if longitude is null
+                            coordinates = coordinates ?: emptyList(), // Use empty list if coordinates are null
                             synced = false,
                             scheduledForSync = false,
                             createdAt = createdAt,
                             updatedAt = updatedAt
                         )
+
                         if (!repository.isFarmDuplicateBoolean(newFarm)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                             addFarm(newFarm, newFarm.siteId)
                             importedFarms.add(newFarm)
                         }
 
-                        val existingFarm = repository.getFarmByRemoteId(newFarm.remoteId)
+                        val existingFarm = newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
                         if (existingFarm != null) {
                             if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
                                 // Farm needs an update
@@ -365,7 +414,14 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             // Handle case where farm exists in the system but not in the repository
                             val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
                             println(unknownFarmMessage)
+
+//                            // Remove farm from repository
+//                            runBlocking {
+//                                newFarm.remoteId?.let { repository.deleteFarmByRemoteId(it) }
+//                            }
                         }
+                    } else {
+                        println("Line does not contain enough data: $line")
                     }
                     line = reader.readLine()
                 }
@@ -376,7 +432,8 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
                 message = "CSV import successful"
                 success = true
-            } else {
+            }
+            else {
                 message = "Unrecognized file format. Please upload a valid CSV or GeoJSON file."
             }
         } catch (e: Exception) {

@@ -90,10 +90,13 @@ interface FarmDAO {
     @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
     suspend fun getFarmBySiteId(siteId: Long): Farm?
 
+    @Query("DELETE FROM farms WHERE remote_id = :remoteId")
+    suspend fun deleteFarmByRemoteId(remoteId: UUID)
+
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {
         farms.forEach { farm ->
-            if (getFarmByRemoteId(farm.remoteId) == null) {
+            if (farm.remoteId?.let { getFarmByRemoteId(it) } == null) {
                 insertAll(listOf(farm))
             }
         }

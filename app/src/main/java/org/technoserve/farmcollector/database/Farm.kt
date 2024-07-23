@@ -1,6 +1,5 @@
 package org.technoserve.farmcollector.database
 
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -8,8 +7,6 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
-import org.technoserve.farmcollector.database.sync.DeviceIdUtil
-import org.technoserve.farmcollector.ui.screens.siteID
 import  java.util.UUID
 
 @Entity(
@@ -29,7 +26,7 @@ data class Farm(
     var siteId: Long,
 
     @ColumnInfo(name = "remote_id")
-    var remoteId: UUID = UUID.randomUUID(),
+    var remoteId: UUID? = null,
 
     @ColumnInfo(name = "farmerPhoto")
     var farmerPhoto: String,
@@ -59,7 +56,7 @@ data class Farm(
     var longitude: String,
 
     @ColumnInfo(name = "coordinates")
-    var coordinates: List<Pair<Double, Double>>?,
+    var coordinates: List<Pair<Double?, Double?>>?,
 
     @ColumnInfo(name = "synced")
     val synced: Boolean = false,
@@ -105,7 +102,7 @@ data class FarmDto(
     val farm_size: Float,
     val latitude: String,
     val longitude: String,
-    val polygon: List<Pair<Double, Double>>,
+    val polygon: List<Pair<Double?, Double?>>,
     val device_id: String,
     val collection_site: Long,
     val agent_name: String
@@ -116,19 +113,21 @@ fun List<Farm>.toDtoList(deviceId: String, farmDao: FarmDAO): List<FarmDto> {
         val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
         val agentName = collectionSite?.agentName ?: "Unknown"
 
-        FarmDto(
-            remote_id = farm.remoteId,
-            farmer_name = farm.farmerName,
-            farm_village = farm.village,
-            farm_district = farm.district,
-            farm_size = farm.size,
-            latitude = farm.latitude,
-            longitude = farm.longitude,
-            polygon = farm.coordinates ?: emptyList(),
-            device_id = deviceId,
-            collection_site = farm.siteId,
-            agent_name = agentName
-        )
+        farm.remoteId?.let {
+            FarmDto(
+                remote_id = it,
+                farmer_name = farm.farmerName,
+                farm_village = farm.village,
+                farm_district = farm.district,
+                farm_size = farm.size,
+                latitude = farm.latitude,
+                longitude = farm.longitude,
+                polygon = farm.coordinates ?: emptyList(),
+                device_id = deviceId,
+                collection_site = farm.siteId,
+                agent_name = agentName
+            )
+        }!!
     }
 }
 

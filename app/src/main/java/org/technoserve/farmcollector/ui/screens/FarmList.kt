@@ -1,10 +1,8 @@
 package org.technoserve.farmcollector.ui.screens
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,10 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
-import android.provider.MediaStore
 import android.view.KeyEvent
 import android.widget.Toast
-import androidx.activity.ComponentActivity.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -35,7 +31,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -50,9 +45,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -101,10 +94,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.exoplayer.offline.Download
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -113,7 +104,6 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
@@ -125,7 +115,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
-import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -284,11 +273,25 @@ fun FarmList(navController: NavController, siteId: Long) {
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
-                        // Reverse the coordinates and format with brackets
-                        val reversedCoordinates = matches.map { match ->
-                            val (lat, lon) = match.destructured
-                            "[$lon, $lat]"
-                        }.joinToString(", ", prefix = "[", postfix = "]")
+                        val reversedCoordinates = matches
+                            .map { match ->
+                                val (lat, lon) = match.destructured
+                                "[$lon, $lat]"
+                            }
+                            .toList() // Convert Sequence to List for easy handling
+                            .let { coordinates ->
+                                if (coordinates.isNotEmpty()) {
+                                    if (coordinates.size == 1) {
+                                        // Single point, return without additional brackets
+                                        coordinates.first()
+                                    } else {
+                                        // Multiple points, add enclosing brackets
+                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                    }
+                                } else {
+                                    "" // Return an empty string if there are no coordinates
+                                }
+                            }
                         val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(farm.createdAt)},${Date(farm.updatedAt)}\n"
                         writer.write(line)
                     }
@@ -354,10 +357,25 @@ fun FarmList(navController: NavController, siteId: Long) {
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-                            val reversedCoordinates = matches.map { match ->
-                                val (lat, lon) = match.destructured
-                                "[$lon, $lat]"
-                            }.joinToString(", ", prefix = "[", postfix = "]")
+                            val reversedCoordinates = matches
+                                .map { match ->
+                                    val (lat, lon) = match.destructured
+                                    "[$lon, $lat]"
+                                }
+                                .toList() // Convert Sequence to List for easy handling
+                                .let { coordinates ->
+                                    if (coordinates.isNotEmpty()) {
+                                        if (coordinates.size == 1) {
+                                            // Single point, return without additional brackets
+                                            coordinates.first()
+                                        } else {
+                                            // Multiple points, add enclosing brackets
+                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                        }
+                                    } else {
+                                        "" // Return an empty string if there are no coordinates
+                                    }
+                                }
                             val line =
                                 "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
                                     Date(farm.createdAt)

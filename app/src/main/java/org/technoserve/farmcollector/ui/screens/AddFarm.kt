@@ -12,7 +12,6 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.Toast
-import androidx.activity.ComponentActivity.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -796,8 +795,9 @@ fun addFarm(
     latitude: String,
     longitude: String,
     coordinates: List<Pair<Double, Double>>?
-): Farm {
-    val farm = Farm(
+): Farm? {
+    val farm = coordinates?.let {
+        Farm(
         siteId,
         remote_id,
         farmerPhoto,
@@ -809,11 +809,14 @@ fun addFarm(
         size,
         latitude,
         longitude,
-        coordinates,
+            it,
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addFarm(farm,siteId)
+    }
+    if (farm != null) {
+        farmViewModel.addFarm(farm,siteId)
+    }
     return farm
 }
 
