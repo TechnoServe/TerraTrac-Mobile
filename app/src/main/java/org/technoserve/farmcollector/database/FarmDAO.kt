@@ -18,6 +18,10 @@ interface FarmDAO {
     fun getAll(siteId: Long): LiveData<List<Farm>>
 
     @Transaction
+    @Query("SELECT * FROM Farms WHERE siteId = :siteId ORDER BY createdAt DESC")
+    fun getAllSync(siteId: Long): List<Farm>
+
+    @Transaction
     @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
     fun getSites(): LiveData<List<CollectionSite>>
 
@@ -54,7 +58,7 @@ interface FarmDAO {
     fun update(farm: Farm)
 
     @Delete
-    fun delete(farm: Farm)
+    suspend fun delete(farm: Farm)
 
     @Query("DELETE FROM Farms")
     fun deleteAll()
@@ -82,6 +86,9 @@ interface FarmDAO {
 
     @Query("SELECT * FROM Farms WHERE remote_id=:remoteId LIMIT 1")
     suspend fun getFarmByRemoteId(remoteId: UUID): Farm?
+
+    @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
+    suspend fun getFarmBySiteId(siteId: Long): Farm?
 
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {

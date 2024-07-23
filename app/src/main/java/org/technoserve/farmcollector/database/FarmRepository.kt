@@ -1,6 +1,7 @@
 package org.technoserve.farmcollector.database
 
 import androidx.lifecycle.LiveData
+import java.util.UUID
 
 class FarmRepository(private val farmDAO: FarmDAO) {
 
@@ -10,13 +11,23 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getAll(siteId)
     }
 
+    fun readAllFarmsSync(siteId: Long): List<Farm> {
+        return farmDAO.getAllSync(siteId)
+    }
+
     fun readFarm(farmId: Long): LiveData<List<Farm>> {
         return farmDAO.getFarmById(farmId)
     }
 
     suspend fun addFarm(farm: Farm) {
-        if (!isFarmDuplicate(farm)) {
+        val existingFarm = isFarmDuplicate(farm)
+        if (existingFarm == null) {
             farmDAO.insert(farm)
+        } else {
+            // If the farm exists and needs an update, perform the update
+            if (farmNeedsUpdate(existingFarm, farm)) {
+                farmDAO.update(farm)
+            }
         }
     }
 
@@ -31,9 +42,16 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     fun getLastFarm(): LiveData<List<Farm>> {
         return farmDAO.getLastFarm()
     }
+    suspend fun getFarmBySiteId(siteId: Long): Farm? {
+        return farmDAO.getFarmBySiteId(siteId)
+    }
+
 
     suspend fun updateFarm(farm: Farm) {
         farmDAO.update(farm)
+    }
+    private suspend fun updateFarms(farms: List<Farm>) {
+        farms.forEach { updateFarm(it) }
     }
 
     suspend fun updateSite(site: CollectionSite) {
@@ -65,34 +83,51 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteListSite(ids)
     }
 
-    private suspend fun isFarmDuplicate(farm: Farm): Boolean {
+    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
         return farmDAO.getFarmByRemoteId(farm.remoteId) != null
     }
 
-    suspend fun importFarms(farms: List<Farm>): ImportResult {
-        val nonDuplicateFarms = mutableListOf<Farm>()
-        val duplicateFarms = mutableListOf<String>()
-        val farmsNeedingUpdate = mutableListOf<Farm>()
-
-        for (farm in farms) {
-            if (!isFarmDuplicate(farm)) {
-                nonDuplicateFarms.add(farm)
-            } else {
-                duplicateFarms.add("Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
-                farmsNeedingUpdate.add(farm)
-            }
-        }
-
-        addFarms(nonDuplicateFarms)
-
-        return ImportResult(
-            success = nonDuplicateFarms.isNotEmpty(),
-            message = if (nonDuplicateFarms.isNotEmpty()) "Import successful" else "No farms were imported",
-            importedFarms = nonDuplicateFarms,
-            duplicateFarms = duplicateFarms,
-            farmsNeedingUpdate = farmsNeedingUpdate
-        )
+    suspend fun isFarmDuplicate(farm: Farm): Farm? {
+        return farmDAO.getFarmByRemoteId(farm.remoteId)
     }
+
+    // Function to fetch a farm by remote ID
+    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
+        return farmDAO.getFarmByRemoteId(remoteId)
+    }
+
+
+    fun farmNeedsUpdate(existingFarm: Farm, newFarm: Farm): Boolean {
+        return existingFarm.farmerName != newFarm.farmerName ||
+                existingFarm.size != newFarm.size ||
+                existingFarm.village != newFarm.village ||
+                existingFarm.district != newFarm.district
+    }
+
+//    suspend fun importFarms(farms: List<Farm>): ImportResult {
+//        val nonDuplicateFarms = mutableListOf<Farm>()
+//        val duplicateFarms = mutableListOf<String>()
+//        val farmsNeedingUpdate = mutableListOf<Farm>()
+//
+//        for (farm in farms) {
+//            val existingFarm = isFarmDuplicate(farm)
+//            duplicateFarms.add("Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
+//            if (existingFarm?.let { farmNeedsUpdate(it, farm) } == true) {
+//                farmsNeedingUpdate.add(farm)
+//            }
+//        }
+//
+//        addFarms(nonDuplicateFarms)
+//        // Update farms that need updates
+//        updateFarms(farmsNeedingUpdate)
+//        return ImportResult(
+//            success = nonDuplicateFarms.isNotEmpty(),
+//            message = if (nonDuplicateFarms.isNotEmpty()) "Import successful" else "No farms were imported",
+//            importedFarms = nonDuplicateFarms,
+//            duplicateFarms = duplicateFarms,
+//            farmsNeedingUpdate = farmsNeedingUpdate
+//        )
+//    }
 
 
 

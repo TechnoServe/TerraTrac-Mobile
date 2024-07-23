@@ -78,7 +78,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addFarm(farm: Farm, siteId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (!isDuplicateFarm(farm, siteId)) {
+            if (!repository.isFarmDuplicateBoolean(farm)) {
                 repository.addFarm(farm)
                 FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
@@ -100,9 +100,14 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         return repository.getLastFarm()
     }
 
+    // Updates an existing farm in the repository and updates the LiveData list
     fun updateFarm(farm: Farm) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateFarm(farm)
+
+            // Fetch the updated list and post the value to LiveData
+            val updatedFarms = repository.readAllFarms(farm.siteId).value ?: emptyList()
+            _farms.postValue(updatedFarms)
         }
     }
 
@@ -149,13 +154,20 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun refreshData(siteId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Logic to refresh data, typically re-fetching from the database or repository
+            repository.readAllFarms(siteId)
+        }
+    }
+
 
     private fun parseDateStringToTimestamp(dateString: String): Long {
         val dateFormatter = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US)
         return dateFormatter.parse(dateString).time
     }
 
-    private fun parseGeoJson(geoJsonString: String,siteId: Long): List<Farm> {
+    private suspend fun parseGeoJson(geoJsonString: String, siteId: Long): List<Farm> {
         val farms = mutableListOf<Farm>()
 
         try {
@@ -182,7 +194,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
                     // Handle Point geometry
-                    val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0).getJSONArray(0)
+                    val coordArray = geometry.getJSONArray("coordinates")
                     val lon = coordArray.getDouble(1)
                     val lat = coordArray.getDouble(0)
                     coordinates = listOf(Pair(lon, lat))
@@ -215,12 +227,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     createdAt = createdAt,
                     updatedAt = updatedAt
                 )
-
-                if (!isDuplicateFarm(newFarm, siteId)) {
-                    farms.add(newFarm)
-                } else {
-                    println("Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                }
+                farms.add(newFarm)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -232,16 +239,15 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
     @RequiresApi(Build.VERSION_CODES.N)
     suspend fun importFile(context: Context, uri: Uri, siteId: Long): ImportResult = withContext(Dispatchers.IO) {
-        var message = "Import failed"
+        var message = ""
         var success = false
         val importedFarms = mutableListOf<Farm>()
         val duplicateFarms = mutableListOf<String>()
         val farmsNeedingUpdate = mutableListOf<Farm>()
-
         try {
             // Check file extension before proceeding
             val fileName = uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
-            if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".json", true)) {
+            if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
                 message = "Unsupported file format. Please upload a CSV or GeoJSON file."
                 return@withContext ImportResult(success, message, importedFarms)
             }
@@ -262,15 +268,27 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val newFarms = parseGeoJson(content.toString(), siteId)
                 println("Parsed farms from GeoJSON: $newFarms")
                 for (newFarm in newFarms) {
-                    if (!isDuplicateFarm(newFarm, siteId)) {
+                    if (!repository.isFarmDuplicateBoolean(newFarm)) {
                         println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                         addFarm(newFarm, newFarm.siteId)
                         importedFarms.add(newFarm)
+                    }
+                    val existingFarm = repository.getFarmByRemoteId(newFarm.remoteId)
+                    if (existingFarm != null) {
+                        if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+                            // Farm needs an update
+                            println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                            farmsNeedingUpdate.add(newFarm)
+                        } else {
+                            // Farm is a duplicate but does not need an update
+                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                            println(duplicateMessage)
+                            duplicateFarms.add(duplicateMessage)
+                        }
                     } else {
-                        val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-                        println(duplicateMessage)
-                        duplicateFarms.add(duplicateMessage)
-                        farmsNeedingUpdate.add(newFarm)
+                        // Handle case where farm exists in the system but not in the repository
+                        val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+                        println(unknownFarmMessage)
                     }
                 }
                 message = "GeoJSON import successful"
@@ -325,22 +343,36 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                             createdAt = createdAt,
                             updatedAt = updatedAt
                         )
-                        if (!isDuplicateFarm(newFarm, siteId)) {
+                        if (!repository.isFarmDuplicateBoolean(newFarm)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                            farms.add(newFarm)
+                            addFarm(newFarm, newFarm.siteId)
                             importedFarms.add(newFarm)
+                        }
+
+                        val existingFarm = repository.getFarmByRemoteId(newFarm.remoteId)
+                        if (existingFarm != null) {
+                            if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+                                // Farm needs an update
+                                println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                farmsNeedingUpdate.add(newFarm)
+                            } else {
+                                // Farm is a duplicate but does not need an update
+                                val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                                println(duplicateMessage)
+                                duplicateFarms.add(duplicateMessage)
+                            }
                         } else {
-                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-                            println(duplicateMessage)
-                            duplicateFarms.add(duplicateMessage)
-                            farmsNeedingUpdate.add(newFarm)
+                            // Handle case where farm exists in the system but not in the repository
+                            val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+                            println(unknownFarmMessage)
                         }
                     }
                     line = reader.readLine()
                 }
                 reader.close()
                 println("Parsed farms from CSV: $farms")
-                repository.importFarms(farms)
+                //repository.importFarms(farms)
+                //importFarms(siteId,farms)
 
                 message = "CSV import successful"
                 success = true
@@ -355,24 +387,49 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         // Show a toast message for duplicate farms
         withContext(Dispatchers.Main) {
             if (duplicateFarms.isNotEmpty()) {
-                Toast.makeText(context, "Duplicate farms already exist and need updates", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Duplicate farms exist", Toast.LENGTH_LONG).show()
             }
         }
+        // Show a toast message for farms that needs updates
+        withContext(Dispatchers.Main) {
+            if (farmsNeedingUpdate.isNotEmpty()) {
+                Toast.makeText(context, "${farmsNeedingUpdate.size} farms need to be updated", Toast.LENGTH_LONG).show()
+            }
+        }
+        // Flag farmers with new plot info
+        flagFarmersWithNewPlotInfo(siteId, farmsNeedingUpdate, this@FarmViewModel)
 
-        return@withContext ImportResult(success, message, importedFarms, duplicateFarms)
+        return@withContext ImportResult(success, message, importedFarms, duplicateFarms,farmsNeedingUpdate)
     }
 
+    private suspend fun flagFarmersWithNewPlotInfo(siteId: Long, farmsNeedingUpdate: List<Farm>, farmViewModel: FarmViewModel) = withContext(Dispatchers.IO) {
+        val existingFarms = farmViewModel.getExistingFarms(siteId)
+        val existingFarmMap = existingFarms.associateBy { it.remoteId }
 
-    private fun isDuplicateFarm(farm: Farm,siteId: Long): Boolean {
-        val existingFarms = repository.readAllFarms(siteId).value ?: return false
-        println("Existing farms $existingFarms")
-        return existingFarms.any { it.remoteId == farm.remoteId }
+        for (farmNeedingUpdate in farmsNeedingUpdate) {
+            val existingFarm = existingFarmMap[farmNeedingUpdate.remoteId]
+
+            if (existingFarm != null && existingFarm != farmNeedingUpdate) {
+                existingFarm.needsUpdate = true
+                farmViewModel.updateFarm(existingFarm)
+                println("Flagging farm for update: ${existingFarm.farmerName}, Site ID: ${existingFarm.siteId}, NeedsUpdate:${existingFarm.needsUpdate}")
+                repository.updateFarm(existingFarm)
+                println("Farm updated successfully")
+            } else if (existingFarm == null) {
+                farmNeedingUpdate.needsUpdate = false
+                println("New farm detected, flagging for update: ${farmNeedingUpdate.farmerName}, Site ID: ${farmNeedingUpdate.siteId}")
+            }
+        }
+        farmsNeedingUpdate.forEach { farm ->
+            farmViewModel.updateFarm(farm)
+            println("Updating farm: ${farm.farmerName}, Site ID: ${farm.siteId}, needsUpdate: ${farm.needsUpdate}")
+        }
     }
 
     fun getTemplateContent(fileType: String): String {
         return when (fileType) {
             "csv" -> "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n"
-            "json" -> """{
+            "geojson" -> """{
                         "type": "FeatureCollection",
                         "features": [
                             {
@@ -442,27 +499,19 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun flagFarmersWithNewPlotInfo(siteId: Long, importedFarms: List<Farm>) {
-        withContext(Dispatchers.IO) {
-            val existingFarms = repository.readAllFarms(siteId).value
-
-            // Create a map of existing farms by their remoteId for quick lookup
-            val existingFarmMap = existingFarms?.associateBy { it.remoteId } ?: emptyMap()
-
-            // Iterate through imported farms and check for updates
-            for (importedFarm in importedFarms) {
-                val existingFarm = existingFarmMap[importedFarm.remoteId]
-
-                // If the farm is new or has different details, flag it for update
-                if (existingFarm == null || existingFarm != importedFarm) {
-                    importedFarm.needsUpdate = true
-                }
-            }
-
-            // Update farms that need updates
-            importedFarms.filter { it.needsUpdate }.forEach { updateFarm(it) }
+    suspend fun getExistingFarms(siteId: Long): List<Farm> {
+        return withContext(Dispatchers.IO) {
+            repository.readAllFarmsSync(siteId)
         }
     }
+
+//    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
+//        viewModelScope.launch {
+//            flagFarmersWithNewPlotInfo(siteId, importedFarms, this@FarmViewModel)
+//            // Update the farms LiveData after importing
+//            _farms.postValue(getExistingFarms(siteId))
+//        }
+//    }
 
 }
 

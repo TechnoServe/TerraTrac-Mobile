@@ -114,9 +114,12 @@ fun AddFarm(navController: NavController, siteId: Long) {
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_farm),
+            onSearchQueryChanged = {},
             onAddFarmClicked = { /* Handle adding a farm here */ },
+            onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
-            showAdd = false
+            showAdd = false,
+            showSearch = false
         )
         Spacer(modifier = Modifier.height(16.dp))
         FarmForm(navController, siteId, coordinatesData)
@@ -427,10 +430,18 @@ fun FarmForm(
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -442,11 +453,16 @@ fun FarmForm(
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name) + " (*)") },
+            label = { Text(stringResource(id = R.string.farm_name) + " (*)",color = inputLabelColor)},
             supportingText = { if (!isValid && farmerName.isBlank()) Text("Farmer Name should not be empty") },
             isError = !isValid && farmerName.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -466,7 +482,7 @@ fun FarmForm(
             ),
             value = memberId,
             onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id)) },
+            label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -485,11 +501,16 @@ fun FarmForm(
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village) + " (*)") },
+            label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester1)
@@ -504,11 +525,16 @@ fun FarmForm(
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district) + " (*)") },
+            label = { Text(stringResource(id = R.string.district) + " (*)", color =inputLabelColor) },
             supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester2)
@@ -534,11 +560,16 @@ fun FarmForm(
                     keyboardType = KeyboardType.Number,
                 ),
 
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
+                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
                 supportingText = { if (!isValid && size.isBlank()) Text("Farm Size should not be empty") },
                 isError = !isValid && size.isBlank(),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
@@ -588,17 +619,6 @@ fun FarmForm(
             }
         }
 
-//        TextField(
-//            value = purchases,
-//            keyboardOptions = KeyboardOptions.Default.copy(
-//                keyboardType = KeyboardType.Number,
-//            ),
-//            onValueChange = { purchases = it },
-//            label = { Text(stringResource(id = R.string.harvested_this_year_in_kgs)) },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(bottom = 16.dp)
-//        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
 //        if ((size.toFloatOrNull() ?: 0f) < 4f) {
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
@@ -617,7 +637,7 @@ fun FarmForm(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    label = { Text(stringResource(id = R.string.latitude) + " (*)") },
+                    label = { Text(stringResource(id = R.string.latitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && latitude.split(".").last().length < 6) Text(
                             "Latitude must have at least 6 decimal places"
@@ -643,7 +663,7 @@ fun FarmForm(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    label = { Text(stringResource(id = R.string.longitude) + " (*)") },
+                    label = { Text(stringResource(id = R.string.longitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && longitude.split(".").last().length < 6) Text(
                             "Longitude must have at least 6 decimal places"
@@ -716,6 +736,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
+                .background(buttonColor)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
@@ -733,109 +754,6 @@ fun FarmForm(
                 }
             )
         }
-
-//        Button(
-//            onClick = {
-//                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
-//                    if (isLocationEnabled(context)) {
-//                        val locationRequest = LocationRequest.create().apply {
-//                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//                            interval = 10000 // Update interval in milliseconds
-//                            fastestInterval = 5000 // Fastest update interval in milliseconds
-//                        }
-//
-//                        fusedLocationClient.requestLocationUpdates(
-//                            locationRequest,
-//                            object : LocationCallback() {
-//                                override fun onLocationResult(locationResult: LocationResult) {
-//                                    locationResult.lastLocation?.let { lastLocation ->
-//                                        // Handle the new location
-//                                        latitude = "${lastLocation.latitude}"
-//                                        longitude = "${lastLocation.longitude}"
-//                                    }
-//                                }
-//                            },
-//                            Looper.getMainLooper()
-//                        )
-//                    } else {
-//                        showLocationDialog.value = true
-//                    }
-//                } else {
-//                    navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
-//                    navController.navigate("setPolygon")
-//                    mapViewModel.clearCoordinates()
-//                }
-//            },
-//            modifier = Modifier
-//                .align(Alignment.CenterHorizontally)
-//                .fillMaxWidth(0.7f)
-//                .padding(bottom = 5.dp)
-//                .height(50.dp),
-//            enabled = size.isNotBlank()
-//        ) {
-//            val enteredSize = size.toFloatOrNull() ?: 0f
-//            Text(
-//                text = if (enteredSize >= 4f) {
-//                    stringResource(id = R.string.set_polygon)
-//                } else {
-//                    stringResource(id = R.string.get_coordinates)
-//                }
-//            )
-//        }
-
-
-//        if (!farmerPhoto.isBlank())
-//        {
-//            val imgFile = File(farmerPhoto)
-//
-//            // on below line we are checking if the image file exist or not.
-//            var imgBitmap: Bitmap? = null
-//            if (imgFile.exists()) {
-//                // on below line we are creating an image bitmap variable
-//                // and adding a bitmap to it from image file.
-//                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-//            }
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                    ,
-//                painter = rememberAsyncImagePainter(farmerPhoto),
-//                contentDescription = null
-//            )
-//        }
-//        else
-//        {
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                ,
-//                painter = painterResource(id = R.drawable.image_placeholder),
-//                contentDescription = null
-//            )
-//        }
-//
-//        Button(
-//            onClick = {
-//                val permissionCheckResult =
-//                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-//
-//                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-//                {
-//                    cameraLauncher.launch(uri)
-//                    isImageUploaded = true
-//                }
-//                else
-//                {
-//                    permissionLauncher.launch(Manifest.permission.CAMERA)
-//                }
-//            }
-//        ){
-//            Text(text = stringResource(id = R.string.take_picture))
-//        }
         Button(
             onClick = {
 //                Finding the center of the polygon captured
@@ -855,6 +773,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
+                .background(buttonColor)
                 .fillMaxWidth()
                 .height(50.dp)
         ) {

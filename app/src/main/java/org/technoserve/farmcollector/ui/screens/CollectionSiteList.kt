@@ -58,6 +58,8 @@ fun CollectionSiteList(navController: NavController) {
 
     val listItems by farmViewModel.readAllSites.observeAsState(listOf())
 
+    val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
+
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
         toDelete.addAll(selectedIds)
@@ -90,15 +92,20 @@ fun CollectionSiteList(navController: NavController) {
             item {
                 FarmListHeader(
                     title = stringResource(id = R.string.collection_site_list),
+                    onSearchQueryChanged = setSearchQuery,
                     onAddFarmClicked = { navController.navigate("addSite") },
+                    onBackSearchClicked = { navController.navigate("siteList") },
                     //  onBackClicked = { navController.navigateUp() }
                     onBackClicked = { navController.navigate("home") },
-                    showAdd = true
+                    showAdd = true,
+                    showSearch = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            items(listItems) { site ->
+            items(listItems.filter {
+                it.name.contains(searchQuery, ignoreCase = true)
+            }) { site ->
                 SiteCard(site = site, onCardClick = {
                     // When a SiteCard is clicked, show the dialog
                     navController.navigate("farmList/${site.siteId}")
@@ -122,8 +129,11 @@ fun CollectionSiteList(navController: NavController) {
             FarmListHeader(
                 title = stringResource(id = R.string.collection_site_list),
                 onAddFarmClicked = { navController.navigate("addSite") },
+                onSearchQueryChanged = {},
                 onBackClicked = { navController.navigateUp() },
-                showAdd = true
+                onBackSearchClicked = {},
+                showAdd = true,
+                showSearch = false,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Image(
@@ -154,6 +164,11 @@ fun SiteCard(
             farmViewModel = farmViewModel
         )
     }
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+    val iconColor = if (isDarkTheme) Color.White else Color.Black
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -166,7 +181,7 @@ fun SiteCard(
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
-                .background(Color.White)
+                .background(backgroundColor)
                 .fillMaxWidth() // 90% of the screen width
                 .padding(8.dp),
             onClick = {
@@ -175,7 +190,7 @@ fun SiteCard(
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(backgroundColor)
                     .padding(16.dp)
             ) {
                 Row(
@@ -192,21 +207,22 @@ fun SiteCard(
                             text = site.name,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
                             ),
                             modifier = Modifier
                                 .padding(bottom = 1.dp)
                         )
                         Text(
                             text = "${stringResource(id = R.string.agent_name)}: ${site.agentName}",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             modifier = Modifier
                                 .padding(bottom = 1.dp)
                         )
                         if (site.phoneNumber.isNotEmpty()) {
                             Text(
                                 text = "${stringResource(id = R.string.phone_number)}: ${site.phoneNumber}",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             )
                         }
                     }
@@ -222,7 +238,7 @@ fun SiteCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Update",
-                            tint = Color.Black
+                            tint = iconColor
                         )
                     }
                     Spacer(modifier = Modifier.padding(10.dp))

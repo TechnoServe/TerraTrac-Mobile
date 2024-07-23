@@ -99,43 +99,6 @@ import org.technoserve.farmcollector.ui.composes.ConfirmDialog
 
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
 const val ENTERED_AREA_OPTION = "ENTERED_AREA"
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun IconWithTooltip(
-    icon: ImageVector,
-    contentDescription: String?,
-    tint: Color
-) {
-    val tooltipState = rememberTooltipState()
-
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = {
-            PlainTooltip {
-                Text(
-                    text = contentDescription ?: "",
-                    color = Color.White
-                )
-            }
-        },
-        state = tooltipState
-    ) {
-        IconButton(onClick = {}) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = tint
-            )
-        }
-    }
-}
-
-
-
-
-
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MissingPermission")
 @Composable
@@ -182,7 +145,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val titleText = stringResource(id = R.string.enable_location_services)
     val messageText = stringResource(id = R.string.location_services_required_message)
     val enableButtonText = stringResource(id = R.string.enable)
-    val cancelButtonText = stringResource(id = R.string.cancel)
 
 // Dialog to prompt user to enable location services
     if (showLocationDialog.value) {
@@ -258,26 +220,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
 
     val enteredArea = sharedPref.getString("plot_size", "0.0")?.toDoubleOrNull() ?: 0.0
     val calculatedArea = mapViewModel.calculateArea(coordinates)
-
-//    // Confirm farm polygon setting
-//    if (showConfirmDialog.value) {
-//        ConfirmDialog(
-//            title = stringResource(id = R.string.set_polygon),
-//            message = stringResource(id = R.string.confirm_set_polygon),
-//            showConfirmDialog,
-//            fun() {
-//                mapViewModel.clearCoordinates()
-//                mapViewModel.addCoordinates(coordinates)
-//                navController.previousBackStackEntry?.savedStateHandle?.apply {
-//                    set("coordinates", coordinates)
-//                }
-//
-//                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
-//            }
-//        )
-//    }
-
-
     if (showConfirmDialog.value) {
         ConfirmDialog(
             title = stringResource(id = R.string.set_polygon),
@@ -359,6 +301,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             })
     }
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -380,7 +326,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         }
         Column(
             modifier = Modifier
-                .background(Color.White)
+                .background(backgroundColor)
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
@@ -412,7 +358,9 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                     Row {
                         if (farmInfo != null) {
                             Column(
-                                modifier = Modifier.padding(5.dp)
+                                modifier = Modifier
+                                    .background(backgroundColor)
+                                    .padding(5.dp)
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.farm_info),
@@ -430,13 +378,17 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 )
                                 Text(
                                     text = "${stringResource(id = R.string.farm_name)}: ${farmInfo.farmerName}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                     modifier = Modifier.padding(top = 5.dp)
                                 )
-                                Text(text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}")
+                                Text(text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
                                 Text(
                                     text = "${stringResource(id = R.string.village)}: ${farmInfo.village}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                Text(text = "${stringResource(id = R.string.district)}: ${farmInfo.district}")
+                                Text(text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
                                 if (farmInfo.coordinates?.isEmpty() == true) {
                                     Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
                                     Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
@@ -446,7 +398,8 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                         stringResource(
                                             id = R.string.ha
                                         )
-                                    }"
+                                    }",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
                             }
                         }
@@ -560,11 +513,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                             tint = Color.Black,
                             modifier = Modifier.padding(4.dp)
                         )
-//                        IconWithTooltip(
-//                            icon = Icons.Default.Add,
-//                            contentDescription = stringResource(id = R.string.add_point),
-//                            tint = Color.White
-//                        )
 
                     }
                     ElevatedButton(modifier = Modifier
@@ -601,5 +549,3 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         }
     }
 }
-
-

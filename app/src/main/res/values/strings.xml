@@ -105,6 +105,14 @@
     <string name="template_download_failed">template download failed</string>
     <string name="download_template">Download Template</string>
     <string name="select_file_type">Select Template File Type</string>
+    <string name="confirm_export">You are about to export %1$d farms. %2$d farms have incomplete data. Do you want to proceed?</string>
+    <string name="confirm_share">You are about to share %1$d farms. %2$d farms have incomplete data. Do you want to proceed?</string>
+    <string name="search">Search</string>
+    <string name="all">All</string>
+    <string name="needs_update">Needs Update</string>
+    <string name="no_update_needed">No Update Needed</string>
+    <string name="no_results_found">No Result Found</string>
+
 
 
 

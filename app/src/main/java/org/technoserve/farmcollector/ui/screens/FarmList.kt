@@ -19,6 +19,7 @@ import androidx.activity.ComponentActivity.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +38,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -45,6 +48,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
@@ -64,6 +68,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -135,6 +141,13 @@ enum class Action {
 }
 
 @Composable
+fun isSystemInDarkTheme(): Boolean {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("theme_mode", Context.MODE_PRIVATE)
+    return sharedPreferences.getBoolean("dark_mode", false)
+}
+
+@Composable
 fun FormatSelectionDialog(
     onDismiss: () -> Unit,
     onFormatSelected: (String) -> Unit
@@ -179,6 +192,47 @@ fun FormatSelectionDialog(
         }
     )
 }
+
+
+@Composable
+fun ConfirmationDialog(
+    listItems: List<Farm>,
+    action: Action,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
+        val incompleteFarms = farms.filter { farm ->
+            farm.farmerName.isEmpty() || farm.coordinates.isNullOrEmpty() || farm.latitude.isEmpty() || farm.longitude.isEmpty()
+        }
+        return Pair(farms.size, incompleteFarms)
+    }
+    val (totalFarms, incompleteFarms) = validateFarms(listItems)
+    val message = when (action) {
+        Action.Export -> stringResource(R.string.confirm_export, totalFarms, incompleteFarms.size)
+        Action.Share -> stringResource(R.string.confirm_share, totalFarms, incompleteFarms.size)
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.confirm)) },
+        text = { Text(text = message) },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm()
+                onDismiss()
+            }) {
+                Text(text = stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text(text = stringResource(R.string.no))
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(navController: NavController, siteId: Long) {
@@ -188,6 +242,8 @@ fun FarmList(navController: NavController, siteId: Long) {
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
     val selectedIds = remember { mutableStateListOf<Long>() }
+    // Create a mutable state for the selected farm
+    val selectedFarm = remember { mutableStateOf<Farm?>(null) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
     val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
@@ -198,22 +254,28 @@ fun FarmList(navController: NavController, siteId: Long) {
     var exportFormat by remember { mutableStateOf("") }
 
     var showImportDialog by remember { mutableStateOf(false) }
-
-    // Inside your composable function
+    var showConfirmationDialog by remember { mutableStateOf(false) }
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf(
+        stringResource(id = R.string.all),
+        stringResource(id = R.string.needs_update),
+        stringResource(id = R.string.no_update_needed)
+    )
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val coroutineScope = rememberCoroutineScope()
 
-    fun createFileforsharing(): File? {
+    fun createFileForSharing(): File? {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
-
 
         try {
             file.bufferedWriter().use { writer ->
@@ -259,7 +321,7 @@ fun FarmList(navController: NavController, siteId: Long) {
                                 },
                                 "geometry": {
                                     "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                    "coordinates": [${if (farm.coordinates?.isEmpty() == true) "[${farm.longitude}, ${farm.latitude}]" else geoJsonCoordinates}]
+                                    "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
                                 }
                             }${if (index == listItems.size - 1) "" else ","}
                         """.trimIndent())
@@ -275,105 +337,111 @@ fun FarmList(navController: NavController, siteId: Long) {
             return null
         }
     }
-fun createFile(context: Context, uri: Uri): Boolean {
-    // Get the current date and time
-    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-    val getSiteById = cwsListItems.find { it.siteId == siteID }
-    val siteName = getSiteById?.name ?: "SiteName"
-    val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
 
-    try {
-        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-            BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
-                if (exportFormat == "CSV") {
-                    writer.write("remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n")
-                    listItems.forEach { farm ->
-                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                        val matches = regex.findAll(farm.coordinates.toString())
-                        val reversedCoordinates = matches.map { match ->
-                            val (lat, lon) = match.destructured
-                            "[$lon, $lat]"
-                        }.joinToString(", ", prefix = "[", postfix = "]")
-                        val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(farm.createdAt)},${Date(farm.updatedAt)}\n"
-                        writer.write(line)
-                    }
-                } else {
-                    val geoJson = buildString {
-                        append("{\"type\": \"FeatureCollection\", \"features\": [")
-                        listItems.forEachIndexed { index, farm ->
+    fun createFile(context: Context, uri: Uri): Boolean {
+        // Get the current date and time
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val getSiteById = cwsListItems.find { it.siteId == siteID }
+        val siteName = getSiteById?.name ?: "SiteName"
+        val filename =
+            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+
+        try {
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
+                    if (exportFormat == "CSV") {
+                        writer.write("remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n")
+                        listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-                            val geoJsonCoordinates = matches.map { match ->
+                            val reversedCoordinates = matches.map { match ->
                                 val (lat, lon) = match.destructured
                                 "[$lon, $lat]"
                             }.joinToString(", ", prefix = "[", postfix = "]")
-                            append("""
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "remote_id": "${farm.remoteId}",
-                                    "farmer_name": "${farm.farmerName}",
-                                    "member_id": "${farm.memberId}",
-                                    "collection_site": "${getSiteById?.name}",
-                                    "agent_name": "${getSiteById?.agentName}",
-                                    "farm_village": "${farm.village}",
-                                    "farm_district": "${farm.district}",
-                                    "farm_size": ${farm.size},
-                                    "latitude": ${farm.latitude},
-                                    "longitude": ${farm.longitude},
-                                    "created_at": "${Date(farm.createdAt)}",
-                                    "updated_at": "${Date(farm.updatedAt)}"
-                                },
-                                "geometry": {
-                                    "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                    "coordinates": [${if (farm.coordinates?.isEmpty() == true) "[${farm.longitude}, ${farm.latitude}]" else geoJsonCoordinates}]
-                                }
-                            }${if (index == listItems.size - 1) "" else ","}
-                        """.trimIndent())
+                            val line =
+                                "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                    Date(farm.createdAt)
+                                },${Date(farm.updatedAt)}\n"
+                            writer.write(line)
                         }
-                        append("]}")
+                    } else {
+                        val geoJson = buildString {
+                            append("{\"type\": \"FeatureCollection\", \"features\": [")
+                            listItems.forEachIndexed { index, farm ->
+                                val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
+                                val matches = regex.findAll(farm.coordinates.toString())
+                                val geoJsonCoordinates = matches.map { match ->
+                                    val (lat, lon) = match.destructured
+                                    "[$lon, $lat]"
+                                }.joinToString(", ", prefix = "[", postfix = "]")
+                                append(
+                                    """
+                                {
+                                    "type": "Feature",
+                                    "properties": {
+                                        "remote_id": "${farm.remoteId}",
+                                        "farmer_name": "${farm.farmerName}",
+                                        "member_id": "${farm.memberId}",
+                                        "collection_site": "${getSiteById?.name}",
+                                        "agent_name": "${getSiteById?.agentName}",
+                                        "farm_village": "${farm.village}",
+                                        "farm_district": "${farm.district}",
+                                        "farm_size": ${farm.size},
+                                        "latitude": ${farm.latitude},
+                                        "longitude": ${farm.longitude},
+                                        "created_at": "${Date(farm.createdAt)}",
+                                        "updated_at": "${Date(farm.updatedAt)}"
+                                    },
+                                    "geometry": {
+                                        "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
+                                        "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
+                                    }
+                                }${if (index == listItems.size - 1) "" else ","}
+                            """.trimIndent()
+                                )
+                            }
+                            append("]}")
+                        }
+                        writer.write(geoJson)
                     }
-                    writer.write(geoJson)
                 }
             }
+            return true
+        } catch (e: IOException) {
+            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
+            return false
         }
-        return true
-    } catch (e: IOException) {
-        Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
-        return false
     }
-}
+
+
+
 
     val createDocumentLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                val context = activity?.applicationContext
-                if (context != null && createFile(context, uri)) {
-                    Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT).show()
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    val context = activity?.applicationContext
+                    if (context != null && createFile(context, uri)) {
+                        Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
-    }
+
 
     fun initiateFileCreation(activity: Activity) {
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
+        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = mimeType
             val getSiteById = cwsListItems.find { it.siteId == siteID }
             val siteName = getSiteById?.name ?: "SiteName"
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.json"
+            val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
             putExtra(Intent.EXTRA_TITLE, filename)
         }
         createDocumentLauncher.launch(intent)
     }
-
-
-
-
-
     // Function to share the file
     fun shareFile(file: File) {
         val fileURI: Uri = context.let {
@@ -385,7 +453,7 @@ fun createFile(context: Context, uri: Uri): Boolean {
         }
 
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (exportFormat == "CSV") "text/csv" else "application/json"
+            type = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
             putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
             putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
             putExtra(Intent.EXTRA_STREAM, fileURI)
@@ -394,30 +462,14 @@ fun createFile(context: Context, uri: Uri): Boolean {
         val chooserIntent = Intent.createChooser(shareIntent, "Share file")
         activity.startActivity(chooserIntent)
     }
-
-    // Function to handle the export (save) action
-//    fun exportFile() {
-//        val file = createFile()
-//        if (file != null) {
-//            // Directly save the file to the device
-//            Toast.makeText(
-//                context,
-//                R.string.success_export_msg,
-//                Toast.LENGTH_SHORT
-//            ).show()
-//        }
-//    }
     fun exportFile(activity: Activity) {
-        initiateFileCreation(activity)
+        showConfirmationDialog = true
     }
 
 
     // Function to handle the share action
     fun shareFileAction() {
-        val file = createFileforsharing()
-        if (file != null) {
-            shareFile(file)
-        }
+        showConfirmationDialog = true
     }
 
     if (showFormatDialog) {
@@ -434,266 +486,162 @@ fun createFile(context: Context, uri: Uri): Boolean {
             }
         )
     }
-
-/*
-    // For Android 10 (API 29) and above
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun createFileInDownloadsAndroidQAndAbove(context: Context, filename: String, format: String): File? {
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-            put(MediaStore.MediaColumns.MIME_TYPE, if (format == "CSV") "text/csv" else "application/json")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-        }
-
-        val resolver = context.contentResolver
-        val uri: Uri? = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-        return uri?.let {
-            val outputStream = resolver.openOutputStream(it)
-            val file = File(context.cacheDir, filename) // Temporary file
-            try {
-                // Write data to file
-                writeTextData(file, listItems, {}, format)
-                // Copy file content to the output stream
-                outputStream?.use { output -> file.inputStream().copyTo(output) }
-                file
-            } catch (e: IOException) {
-                Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
-                null
-            }
-        }
-    }
-
-
-    // For Android 9 (API 28) and below
-    fun createFileInDownloadsPreAndroidQ(filename: String, format: String): File? {
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val file = File(downloadsDir, filename)
-        try {
-            // Write data to file
-            writeTextData(file, listItems, {}, format)
-            return file
-        } catch (e: IOException) {
-            Toast.makeText(context, R.string.error_export_msg, Toast.LENGTH_SHORT).show()
-            return null
-        }
-    }
-
-
-    fun createFile(context: Context, format: String): File? {
-        val filename = if (format == "CSV") "farms.csv" else "farms.json"
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            createFileInDownloadsAndroidQAndAbove(context, filename, format)
-        } else {
-            createFileInDownloadsPreAndroidQ(filename, format)
-        }
-    }
-
-    // Function to handle the file creation
-    fun createFile(): File? {
-        return createFile(context, exportFormat)
-    }
-
-    // Function to share the file
-    fun shareFile(file: File) {
-        val fileURI: Uri = context.let {
-            FileProvider.getUriForFile(
-                it,
-                context.applicationContext.packageName.toString() + ".provider",
-                file
-            )
-        }
-
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (exportFormat == "CSV") "text/csv" else "application/json"
-            putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
-            putExtra(Intent.EXTRA_TEXT, "Sharing the farm data file.")
-            putExtra(Intent.EXTRA_STREAM, fileURI)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        val chooserIntent = Intent.createChooser(shareIntent, "Share file")
-        activity.startActivity(chooserIntent)
-    }
-
-    // Function to handle the export (save) action
-    fun exportFile() {
-        val file = createFile()
-        if (file != null) {
-            // Notify user of successful export
-            Toast.makeText(
-                context,
-                R.string.success_export_msg,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    // Function to handle the share action
-    fun shareFileAction() {
-        val file = createFile()
-        if (file != null) {
-            shareFile(file)
-        }
-    }
-
-
-    if (showFormatDialog) {
-        FormatSelectionDialog(
-            onDismiss = { showFormatDialog = false },
-            onFormatSelected = { format ->
-                exportFormat = format
-                showFormatDialog = false
+    if (showConfirmationDialog) {
+        ConfirmationDialog(
+            listItems,
+            action = action!!, // Ensure action is not null
+            onConfirm = {
                 when (action) {
-                    Action.Export -> exportFile()
-                    Action.Share -> shareFileAction()
+                    Action.Export -> initiateFileCreation(activity)
+                    Action.Share -> {
+                        val file = createFileForSharing()
+                        if (file != null) {
+                            shareFile(file)
+                        }
+                    }
                     else -> {}
                 }
-            }
+            },
+            onDismiss = { showConfirmationDialog = false }
         )
     }
-    */
-
-
-
-
     if (showImportDialog) {
         println("site ID am Using: $siteId")
-        ImportFileDialog( siteId,onDismiss = { showImportDialog = false })
+        // ImportFileDialog( siteId,onDismiss = { showImportDialog = false ; refreshTrigger = !refreshTrigger},navController = navController)
+        ImportFileDialog( siteId,onDismiss = { showImportDialog = false },navController = navController)
     }
 
 
     fun onDelete() {
-        val toDelete = mutableListOf<Long>()
-        toDelete.addAll(selectedIds)
-        farmViewModel.deleteList(toDelete)
-        selectedIds.removeAll(selectedIds)
-        showDeleteDialog.value = false
+        selectedFarm.value?.let { farm ->
+            val toDelete = mutableListOf<Long>().apply {
+                addAll(selectedIds)
+                add(farm.id)
+            }
+            farmViewModel.deleteList(toDelete)
+            farmViewModel.deleteFarm(farm)
+            selectedFarm.value = null
+            showDeleteDialog.value = false
+        }
     }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        FarmListHeaderPlots(
+            title = stringResource(id = R.string.farm_list),
+            onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+            onBackClicked = { navController.navigate("siteList") },
+            onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+            onExportClicked = {
+                action = Action.Export
+                showFormatDialog = true
+            },
+            onShareClicked = {
+                action = Action.Share
+                showFormatDialog = true
+            },
+            onSearchQueryChanged = setSearchQuery,
+            onImportClicked = { showImportDialog = true },
+            showAdd = true,
+            showExport = listItems.isNotEmpty(),
+            showShare = listItems.isNotEmpty(),
+            showSearch = listItems.isNotEmpty()
+        )
 
-    if (listItems.isNotEmpty()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TabRow(
+            //selectedTabIndex = selectedTabIndex,
+            selectedTabIndex = pagerState.currentPage,
+            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+            contentColor = MaterialTheme.colorScheme.onSurface
         ) {
-            item {
-                FarmListHeaderPlots(
-                    title = stringResource(id = R.string.farm_list),
-                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                    // onBackClicked = { navController.navigateUp() }, siteList
-                    onBackClicked = { navController.navigate("siteList") },
-                    onExportClicked = {
-                        action = Action.Export
-                        showFormatDialog = true
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
                     },
-                    onShareClicked = {
-                        action = Action.Share
-                        showFormatDialog = true
-                    },
-                    onSearchQueryChanged = setSearchQuery,
-                    onImportClicked = { showImportDialog = true },
-                    showAdd = true,
-                    showExport = listItems.isNotEmpty(),
-                    showShare = listItems.isNotEmpty(),
-                    showSearch= listItems.isNotEmpty()
+                    text = { Text(title) }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
-            /*
-            item {
+        }
 
-                Button(onClick = { showExportDialog = true }) {
-                    Text(stringResource(id = R.string.export_data))
-                }
+        Spacer(modifier = Modifier.height(8.dp))
 
-                if (showExportDialog) {
-                    ExportDataDialog(
-                        onDismiss = { showExportDialog = false },
-                        listItems,
-                        cwsListItems
-                    )
-                }
-            }
-            */
-
-//            items(listItems) { farm ->
-//                FarmCard(farm = farm, onCardClick = {
-//                    Bundle().apply {
-//                        putSerializable("coordinates",
-//                            farm.coordinates?.let { ArrayList(it) })
-//                    }
-//
-//                    navController.currentBackStackEntry?.arguments?.apply {
-//                        putSerializable("farmData", Pair(farm, "view"))
-//                    }
-//                    navController.navigate(route = "setPolygon")
-//                }, onDeleteClick = {
-//                    // When the delete icon is clicked, invoke the onDelete function
-//                    selectedIds.add(farm.id)
-//                    showDeleteDialog.value = true
-//                })
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-            items(listItems.filter {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.weight(1f)
+        ) { page ->
+            val filteredListItems = when (page) {
+                1 -> listItems.filter { it.needsUpdate }
+                2 -> listItems.filter { !it.needsUpdate }
+                else -> listItems
+            }.filter {
                 it.farmerName.contains(searchQuery, ignoreCase = true)
-                // Adjust filtering based on your farm data structure
-            }) { farm ->
-                FarmCard(
-                    farm = farm,
-                    onCardClick = {
-                        Bundle().apply {
-                            putSerializable("coordinates",
-                                farm.coordinates?.let { ArrayList(it) })
-                        }
-
-                        navController.currentBackStackEntry?.arguments?.apply {
-                            putSerializable("farmData", Pair(farm, "view"))
-                        }
-                        navController.navigate(route = "setPolygon")
-                    },
-                    onDeleteClick = {
-                        selectedIds.add(farm.id)
-                        showDeleteDialog.value = true
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
             }
-        }
-        if (showDeleteDialog.value) {
-            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            FarmListHeaderPlots(
-                title = stringResource(id = R.string.farm_list),
-                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                onBackClicked = { navController.navigateUp() },
-                onExportClicked = {
-                    action = Action.Export
-                    showFormatDialog = true
-                },
-                onShareClicked = {
-                    action = Action.Share
-                    showFormatDialog = true
-                },
-                onSearchQueryChanged = setSearchQuery,
-                onImportClicked = { showImportDialog = true },
-                showAdd = true,
-                showExport = listItems.isNotEmpty(),
-                showShare = listItems.isNotEmpty(),
-                showSearch = true,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp, 8.dp),
-                painter = painterResource(id = R.drawable.no_data2),
-                contentDescription = null
-            )
+
+            // Display the list or any other UI elements here based on listItems
+            if (searchQuery.isNotEmpty() && filteredListItems.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.no_results_found),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                if (filteredListItems.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(filteredListItems) { farm ->
+                            FarmCard(
+                                farm = farm,
+                                onCardClick = {
+                                    Bundle().apply {
+                                        putSerializable("coordinates",
+                                            farm.coordinates?.let { ArrayList(it) })
+                                    }
+
+                                    navController.currentBackStackEntry?.arguments?.apply {
+                                        putSerializable("farmData", Pair(farm, "view"))
+                                    }
+                                    navController.navigate(route = "setPolygon")
+                                },
+                                onDeleteClick = {
+                                    selectedIds.add(farm.id)
+                                    selectedFarm.value = farm
+                                    showDeleteDialog.value = true
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp, 8.dp),
+                            painter = painterResource(id = R.drawable.no_data2),
+                            contentDescription = null
+                        )
+                    }
+                }
+
+                if (showDeleteDialog.value) {
+                    DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+                }
+            }
         }
     }
 }
@@ -701,7 +649,7 @@ fun createFile(context: Context, uri: Uri): Boolean {
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
+fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit,navController: NavController) {
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -709,6 +657,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
     val farmViewModel: FarmViewModel = viewModel()
     var selectedFileType by remember { mutableStateOf("") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
+    //var importCompleted by remember { mutableStateOf(false) }
 
     // Create a launcher to handle the file picker result
     val importLauncher = rememberLauncherForActivityResult(
@@ -718,25 +667,9 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
             coroutineScope.launch {
                 try {
                     val result = farmViewModel.importFile(context, it, siteId)
-                    println("site ID am Using in import dialog: $siteId")
-                    println("Import result: ${result.success}")
                     Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-                    if (result.duplicateFarms.isNotEmpty()) {
-                        Toast.makeText(context, "Duplicate farms found", Toast.LENGTH_SHORT).show()
-                        println("Duplicate farms found:")
-                        result.duplicateFarms.forEach { println(it) }
-                    }
-                    // Handle farms needing updates
-                    if (result.farmsNeedingUpdate.isNotEmpty()) {
-                        println("Farms that needs to be updated found:")
-                        // Update the UI to mark farms that need updates
-                       // markFarmsNeedingUpdate(result.farmsNeedingUpdate)
-                    }
-                    // Retrieve imported farms and flag those without plot info
-                    val importedFarms = result.importedFarms // Adjust to your actual data
-                    println("Imported farms now: $importedFarms")
-                    farmViewModel.flagFarmersWithNewPlotInfo(siteId, importedFarms)
-                    onDismiss()
+                    navController.navigate("farmList/${siteId}") // Navigate to the refreshed farm list
+                    onDismiss() // Dismiss the dialog after import is complete
                 } catch (e: Exception) {
                     Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
                 }
@@ -770,7 +703,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                 createDocumentLauncher.launch(
                     when (selectedFileType) {
                         "csv" -> "farm_template.csv"
-                        "json" -> "farm_template.json"
+                        "geojson" -> "farm_template.geojson"
                         else -> throw IllegalArgumentException("Unsupported file type: $selectedFileType")
                     }
                 )
@@ -809,7 +742,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
                         onDismissRequest = { isDropdownMenuExpanded = false }
                     ) {
                         DropdownMenuItem(onClick = { selectedFileType = "csv";isDropdownMenuExpanded = false }, text = { Text("CSV") })
-                        DropdownMenuItem(onClick = { selectedFileType = "json"; isDropdownMenuExpanded = false}, text = { Text("GeoJSON") })
+                        DropdownMenuItem(onClick = { selectedFileType = "geojson"; isDropdownMenuExpanded = false}, text = { Text("GeoJSON") })
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -840,205 +773,7 @@ fun ImportFileDialog(siteId: Long,onDismiss: () -> Unit) {
             }
         }
     )
-
-
 }
-
-/*
-@Composable
-fun ExportDataDialog(
-    onDismiss: () -> Unit,
-    farms: List<Farm>,
-    cwsListItems: List<CollectionSite>
-) {
-    var exportFormat by remember { mutableStateOf("CSV") }
-    // Handle export logic here
-    val context = LocalContext.current
-    val activity = context as Activity
-    val createDocumentLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                // Handle the result as needed
-                if (data != null) {
-                    val uri = data.data
-                    uri?.let {
-                        val contentResolver = context.contentResolver
-                        val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
-                        val getSiteById = cwsListItems.find { it.siteId == siteID }
-
-                        if (outputStream != null) {
-                            PrintWriter(outputStream.bufferedWriter()).use { writer ->
-                                if (exportFormat == "CSV") {
-                                    // Write the header row
-                                    writer.println("farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at")
-
-                                    // Write each farm's data
-                                    for (farm in farms) {
-                                        val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                        val matches = regex.findAll(farm.coordinates.toString())
-
-                                        // Reverse the coordinates and format with brackets
-                                        val reversedCoordinates = matches.map { match ->
-                                            val (lat, lon) = match.destructured
-                                            "[$lon, $lat]"
-                                        }.joinToString(", ", prefix = "[", postfix = "]")
-                                        val line =
-                                            "${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
-                                                Date(farm.createdAt)
-                                            },${Date(farm.updatedAt)}"
-                                        writer.println(line)
-                                    }
-                                } else {
-                                    // GeoJSON format
-                                    val geoJson = buildString {
-                                        append("{\"type\": \"FeatureCollection\", \"features\": [")
-                                        for (farm in farms) {
-                                            val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
-                                            val matches = regex.findAll(farm.coordinates.toString())
-
-                                            // Reverse the coordinates and format as GeoJSON coordinates
-                                            val geoJsonCoordinates = matches.map { match ->
-                                                val (lat, lon) = match.destructured
-                                                "[$lon, $lat]"
-                                            }.joinToString(", ", prefix = "[", postfix = "]")
-
-                                            append(
-                                                """
-                                                {
-                                                    "type": "Feature",
-                                                    "properties": {
-                                                        "remote_id": "${farm.remoteId}",
-                                                        "farmer_name": "${farm.farmerName}",
-                                                        "member_id": "${farm.memberId}",
-                                                        "collection_site": "${getSiteById?.name}",
-                                                        "agent_name": "${getSiteById?.agentName}",
-                                                        "farm_village": "${farm.village}",
-                                                        "farm_district": "${farm.district}",
-                                                        "farm_size": ${farm.size},
-                                                        "latitude": ${farm.latitude},
-                                                        "longitude": ${farm.longitude},
-                                                        "created_at": "${Date(farm.createdAt)}",
-                                                        "updated_at": "${Date(farm.updatedAt)}"
-                                                    },
-                                                    "geometry": {
-                                                        "type": "${
-                                                    if (farm.coordinates!!.size > 1) "Polygon" else "Point"
-                                                }",
-                                                        "coordinates": [
-                                                            ${
-                                                    if (farm.coordinates?.isEmpty() == true) {
-                                                        "[${farm.longitude}, ${farm.latitude}]"
-                                                    } else {
-                                                        geoJsonCoordinates
-                                                    }
-                                                }
-                                                        ]
-                                                    }
-                                                }${
-                                                    if (farms.indexOf(farm) == farms.size - 1) "" else ","
-                                                }
-                                                """.trimIndent()
-                                            )
-                                        }
-                                        append("]}")
-                                    }
-                                    writer.println(geoJson)
-                                }
-
-                                onDismiss()
-
-                                Toast.makeText(
-                                    context,
-                                    R.string.success_export_msg,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-    AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text(text = stringResource(id = R.string.export_data)) },
-        text = {
-            Column {
-                Text(stringResource(id = R.string.export_data_desc))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = exportFormat == "CSV",
-                        onClick = { exportFormat = "CSV" }
-                    )
-                    Text("CSV")
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = exportFormat == "GeoJSON",
-                        onClick = { exportFormat = "GeoJSON" }
-                    )
-                    Text("GeoJSON")
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    ActivityCompat.requestPermissions(
-                        activity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 23
-                    )
-                    val filename = if (exportFormat == "CSV") "farms.csv" else "farms.json"
-                    val mimeType = if (exportFormat == "CSV") "text/csv" else "application/json"
-                    val file =
-                        File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), filename)
-
-                    try {
-                        writeTextData(file, farms, onDismiss, exportFormat)
-                    } catch (e: IOException) {
-                        // Handle file writing errors here
-                        Toast.makeText(
-                            context,
-                            R.string.error_export_msg,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        onDismiss()
-                    }
-                    val fileURI: Uri = context.let {
-                        FileProvider.getUriForFile(
-                            it,
-                            context.applicationContext.packageName.toString() + ".provider",
-                            file
-                        )
-                    }
-                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                        type = mimeType
-                        putExtra(Intent.EXTRA_SUBJECT, "Farm Data")
-                        putExtra(Intent.EXTRA_STREAM, fileURI)
-                        putExtra(Intent.EXTRA_TITLE, "farms${Instant.now().millis}")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    createDocumentLauncher.launch(intent)
-                }
-            ) {
-                Text(stringResource(id = R.string.export))
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = { onDismiss() }
-            ) {
-                Text(stringResource(id = R.string.cancel))
-            }
-        }
-    )
-}
-*/
-
 
 @Composable
 fun DeleteAllDialogPresenter(
@@ -1070,14 +805,22 @@ fun DeleteAllDialogPresenter(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FarmListHeader(
     title: String,
+    onSearchQueryChanged: (String) -> Unit,
     onAddFarmClicked: () -> Unit,
     onBackClicked: () -> Unit,
-    showAdd: Boolean
+    onBackSearchClicked: () -> Unit,
+    showAdd: Boolean,
+    showSearch: Boolean
 ) {
+    // State for holding the search query
+    var searchQuery by remember { mutableStateOf("") }
+
+    var isSearchVisible by remember { mutableStateOf(false) }
+
     TopAppBar(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
@@ -1107,8 +850,60 @@ fun FarmListHeader(
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                 }
             }
+            if (showSearch) {
+                IconButton(onClick = {
+                    isSearchVisible = !isSearchVisible
+                }) {
+                    Icon(Icons.Default.Search, contentDescription = "Search")
+                }
+            }
         }
     )
+    // Conditional rendering of the search field
+    if (isSearchVisible && showSearch) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = {
+                    searchQuery = it
+                    onSearchQueryChanged(it)
+                },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                label = { Text(stringResource(R.string.search)) },
+//                leadingIcon = {
+//                    IconButton(onClick = {
+//                       // onBackSearchClicked()
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        onSearchQueryChanged("")
+                        isSearchVisible = !isSearchVisible
+                    }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                },
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+    }
+
 }
 
 
@@ -1122,10 +917,12 @@ fun FarmListHeaderPlots(
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
     showExport: Boolean,
     showShare: Boolean,
     showSearch: Boolean,
+//    searchResultsEmpty: Boolean
 ) {
     val context = LocalContext.current as Activity
 
@@ -1142,29 +939,29 @@ fun FarmListHeaderPlots(
         },
         actions = {
             if (showExport) {
-                IconButton(onClick = onExportClicked) {
+                IconButton(onClick = onExportClicked,modifier = Modifier.size(36.dp) ) {
                     Icon(
                         painter = painterResource(id = R.drawable.save),
-                        contentDescription = "Export"
+                        contentDescription = "Export",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+                Spacer(modifier = Modifier.width(1.dp))
             }
             if (showShare) {
-                IconButton(onClick = onShareClicked) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
                 }
+                Spacer(modifier = Modifier.width(1.dp))
             }
-            IconButton(onClick = onImportClicked) {
+            IconButton(onClick = onImportClicked,modifier = Modifier.size(36.dp) ) {
                 Icon(
                     painter = painterResource(id = R.drawable.import_icon),
-                    contentDescription = "Import"
+                    contentDescription = "Import",
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = {
-                isSearchVisible = !isSearchVisible
-            }) {
-                Icon(Icons.Default.Search, contentDescription = "Search")
-            }
+            Spacer(modifier = Modifier.width(1.dp))
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
@@ -1174,8 +971,16 @@ fun FarmListHeaderPlots(
                     }
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                },modifier = Modifier.size(36.dp) ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add",modifier = Modifier.size(24.dp) )
+                }
+                Spacer(modifier = Modifier.width(1.dp))
+            }
+            if (showSearch) {
+                IconButton(onClick = {
+                    isSearchVisible = !isSearchVisible
+                },modifier = Modifier.size(36.dp) ) {
+                    Icon(Icons.Default.Search, contentDescription = "Search",modifier = Modifier.size(24.dp) )
                 }
             }
         }
@@ -1183,29 +988,49 @@ fun FarmListHeaderPlots(
 
     // Conditional rendering of the search field
     if (isSearchVisible && showSearch) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = {
-                searchQuery = it
-                onSearchQueryChanged(it)
-            },
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            label = { Text("Search") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                cursorColor = MaterialTheme.colorScheme.onSurface
+                .fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = {
+                    searchQuery = it
+                    onSearchQueryChanged(it)
+                },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                label = { Text(stringResource(R.string.search)) },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        onSearchQueryChanged("")
+                        isSearchVisible = !isSearchVisible
+                    }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                },
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface
+                )
             )
-        )
+        }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
+    println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
+    val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1218,16 +1043,17 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 defaultElevation = 6.dp
             ),
             modifier = Modifier
-                .background(Color.White)
+                .background(backgroundColor)
                 .fillMaxWidth() // 90% of the screen width
-                .padding(8.dp),
+                .padding(8.dp)
+                .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
             onClick = {
                 onCardClick()
             }
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(backgroundColor)
                     .padding(16.dp)
             ) {
                 Row(
@@ -1239,7 +1065,8 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                         text = farm.farmerName,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = textColor
                         ),
                         modifier = Modifier
                             .weight(1.1f)
@@ -1247,11 +1074,9 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                     )
                     Text(
                         text = "${stringResource(id = R.string.size)}: ${farm.size} ${
-                            stringResource(
-                                id = R.string.ha
-                            )
+                            stringResource(id = R.string.ha)
                         }",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(color=textColor),
                         modifier = Modifier
                             .weight(0.9f)
                             .padding(bottom = 4.dp)
@@ -1277,20 +1102,21 @@ fun FarmCard(farm: Farm, onCardClick: () -> Unit, onDeleteClick: () -> Unit) {
                 ) {
                     Text(
                         text = "${stringResource(id = R.string.village)}: ${farm.village}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = "${stringResource(id = R.string.district)}: ${farm.district}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                         modifier = Modifier.weight(1f)
                     )
-
                 }
             }
         }
     }
 }
+
+
 
 fun OutputStream.writeCsv(farms: List<Farm>) {
     val writer = bufferedWriter()
@@ -1394,7 +1220,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val titleText = stringResource(id = R.string.enable_location_services)
     val messageText = stringResource(id = R.string.location_services_required_message)
     val enableButtonText = stringResource(id = R.string.enable)
-    val cancelButtonText = stringResource(id = R.string.cancel)
 
     // Dialog to prompt user to enable location services
     if (showLocationDialog.value) {
@@ -1476,20 +1301,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             item.village = village
             item.district = district
             item.longitude = longitude
-//            item.coordinates =
-//                (coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>?)!!
-
-            // fixing updating farms with size less than 4 ha
-
-//            item.coordinates = if (!coordinates.isNullOrEmpty()) {
-//                coordinates!!.plus(coordinates!!.first()) as List<Pair<Double, Double>>
-//            } else {
-//                // Default value or an appropriate handling mechanism
-//                listOf(Pair(0.0, 0.0)) // Example default value
-//            }
-
-            // Ensure the coordinates have at least 4 points for size greater than 4 hectares
-//            if ((size.toFloatOrNull() ?: 0f) >= 4) {
             if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
                 if ((coordinates?.size ?: 0) < 3) {
                     Toast.makeText(context, "Please capture at least 4 points for the polygon when the size is greater than 4 hectares.", Toast.LENGTH_SHORT).show()
@@ -1499,12 +1310,11 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             } else {
                 item.coordinates = listOf(Pair( item.longitude.toDoubleOrNull()?:0.0,item.latitude.toDoubleOrNull()?:0.0)) // Example default value
             }
-
-//            item.size = size.toFloat()
             item.size= convertSize(size.toDouble(), selectedUnit).toFloat()
             item.purchases = 0.toFloat()
             item.updatedAt = Instant.now().millis
             updateFarm(farmViewModel, item)
+            item.needsUpdate = false
             val returnIntent = Intent()
             context.setResult(Activity.RESULT_OK, returnIntent)
             navController.navigate("farmList/${siteID}")
@@ -1547,6 +1357,13 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     if (showPermissionRequest.value) {
         LocationPermissionRequest(
             onLocationEnabled = {
@@ -1567,15 +1384,18 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.update_farm),
+            onSearchQueryChanged = {},
             onAddFarmClicked = { /* Handle adding a farm here */ },
             onBackClicked = { navController.popBackStack() },
-            showAdd = false
+            onBackSearchClicked = {},
+            showAdd = false,
+            showSearch = false
         )
         TextField(
             singleLine = true,
@@ -1585,7 +1405,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name)) },
+            label = { Text(stringResource(id = R.string.farm_name),color = inputLabelColor) },
             isError = farmerName.isBlank(),
             modifier = Modifier
                 .fillMaxWidth()
@@ -1606,7 +1426,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = memberId,
             onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id)) },
+            label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -1625,7 +1445,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village)) },
+            label = { Text(stringResource(id = R.string.village),color = inputLabelColor) },
             modifier = Modifier
                 .focusRequester(focusRequester1)
                 .fillMaxWidth()
@@ -1639,28 +1459,12 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district)) },
+            label = { Text(stringResource(id = R.string.district),color = inputLabelColor) },
             modifier = Modifier
                 .focusRequester(focusRequester2)
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
-
-//        TextField(
-//            singleLine = true,
-//            value = size,
-//            keyboardOptions = KeyboardOptions.Default.copy(
-//                keyboardType = KeyboardType.Number,
-//            ),
-//            onValueChange = { size = it },
-//            label = { Text(stringResource(id = R.string.size_in_hectares)) },
-//            isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
-//            modifier = Modifier
-//                .focusRequester(focusRequester3)
-//                .fillMaxWidth()
-//                .padding(bottom = 16.dp)
-//        )
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -1675,10 +1479,15 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     keyboardType = KeyboardType.Number,
                 ),
 
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
+                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)",color = inputLabelColor) },
                 isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
@@ -1686,7 +1495,6 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     .padding(bottom = 16.dp)
             )
 
-            //AreaInputField( farmViewModel = farmViewModel)
             Spacer(modifier = Modifier.width(16.dp))
             // Size measure
             ExposedDropdownMenuBox(
@@ -1738,7 +1546,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     readOnly = true,
                     value = latitude,
                     onValueChange = { latitude = it },
-                    label = { Text(stringResource(id = R.string.latitude)) },
+                    label = { Text(stringResource(id = R.string.latitude),color = inputLabelColor) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(bottom = 16.dp)
@@ -1748,7 +1556,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     readOnly = true,
                     value = longitude,
                     onValueChange = { longitude = it },
-                    label = { Text(stringResource(id = R.string.longitude)) },
+                    label = { Text(stringResource(id = R.string.longitude),color = inputLabelColor) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(bottom = 16.dp)
@@ -1764,7 +1572,7 @@ fun UpdateFarmForm(navController: NavController, farmId: Long?, listItems: List<
                     if (isLocationEnabled(context) && context.hasLocationPermission()) {
 //                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
                         if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) {
-                        // Simulate collecting latitude and longitude
+                            // Simulate collecting latitude and longitude
                             if (context.hasLocationPermission()) {
                                 val locationRequest = LocationRequest.create().apply {
                                     priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -1837,3 +1645,8 @@ fun updateFarm(
 ) {
     farmViewModel.updateFarm(item)
 }
+
+
+
+
+
