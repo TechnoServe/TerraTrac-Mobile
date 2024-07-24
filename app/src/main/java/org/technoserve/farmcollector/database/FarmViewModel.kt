@@ -166,16 +166,36 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val properties = feature.getJSONObject("properties")
                 val geometry = feature.getJSONObject("geometry")
 
-                val remoteId = UUID.fromString(properties.getString("remote_id"))
-                val farmerName = properties.getString("farmer_name")
-                val memberId = properties.getString("member_id")
-                val village = properties.getString("farm_village")
-                val district = properties.getString("farm_district")
-                val size = properties.getDouble("farm_size").toFloat()
-                val latitude = properties.getDouble("latitude").toString()
-                val longitude = properties.getDouble("longitude").toString()
-                val createdAt = Date(properties.getString("created_at")).time
-                val updatedAt = Date(properties.getString("updated_at")).time
+                // Handling the remoteId
+                val remoteId = try {
+                    val idString = properties.optString("remote_id")
+                    if (idString.isNotEmpty()) UUID.fromString(idString) else UUID.randomUUID()
+                } catch (e: IllegalArgumentException) {
+                    UUID.randomUUID()
+                }
+
+                val farmerName = properties.optString("farmer_name", "Unknown")
+                val memberId = properties.optString("member_id", "Unknown")
+                val village = properties.optString("farm_village", "Unknown")
+                val district = properties.optString("farm_district", "Unknown")
+                val size = properties.optDouble("farm_size", Double.NaN).toFloat()
+                val latitude = properties.optDouble("latitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
+                val longitude = properties.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
+
+                val currentTime = System.currentTimeMillis()
+
+                val createdAt = try {
+                    properties.optString("created_at").toLongOrNull() ?: currentTime
+                } catch (e: Exception) {
+                    currentTime
+                }
+
+                val updatedAt = try {
+                    properties.optString("updated_at").toLongOrNull() ?: currentTime
+                } catch (e: Exception) {
+                    currentTime
+                }
+
 
                 var coordinates: List<Pair<Double, Double>>? = null
                 val geoType = geometry.getString("type")
@@ -206,9 +226,9 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                         village = village,
                         district = district,
                         purchases = 2.30f,
-                        size = size,
-                        latitude = latitude.toString(),
-                        longitude = longitude.toString(),
+                        size = size.takeIf { !it.isNaN() } ?: 0f,
+                        latitude = latitude ?: "0.0",
+                        longitude = longitude ?: "0.0",
                         coordinates = it,
                         synced = false,
                         scheduledForSync = false,
@@ -226,6 +246,10 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
         return farms
     }
+
+
+
+
 
     fun parseCoordinates(coordinatesString: String): List<Pair<Double, Double>> {
         val result = mutableListOf<Pair<Double, Double>>()

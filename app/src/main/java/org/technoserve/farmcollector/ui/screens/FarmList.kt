@@ -305,33 +305,40 @@ fun FarmList(navController: NavController, siteId: Long) {
                                 val (lat, lon) = match.destructured
                                 "[$lon, $lat]"
                             }.joinToString(", ", prefix = "[", postfix = "]")
-                            append("""
+                            val latitude = farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                            val longitude = farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+
+                            val feature = """
                             {
                                 "type": "Feature",
                                 "properties": {
-                                    "remote_id": "${farm.remoteId}",
-                                    "farmer_name": "${farm.farmerName}",
-                                    "member_id": "${farm.memberId}",
-                                    "collection_site": "${getSiteById?.name}",
-                                    "agent_name": "${getSiteById?.agentName}",
-                                    "farm_village": "${farm.village}",
-                                    "farm_district": "${farm.district}",
-                                    "farm_size": ${farm.size},
-                                    "latitude": ${farm.latitude},
-                                    "longitude": ${farm.longitude},
-                                    "created_at": "${Date(farm.createdAt)}",
-                                    "updated_at": "${Date(farm.updatedAt)}"
+                                    "remote_id": "${farm.remoteId ?: ""}",
+                                    "farmer_name": "${farm.farmerName ?: ""}",
+                                    "member_id": "${farm.memberId ?: ""}",
+                                    "collection_site": "${getSiteById?.name ?: ""}",
+                                    "agent_name": "${getSiteById?.agentName ?: ""}",
+                                    "farm_village": "${farm.village ?: ""}",
+                                    "farm_district": "${farm.district ?: ""}",
+                                     "farm_size": ${farm.size ?: 0.0},
+                                    "latitude": $latitude,
+                                    "longitude": $longitude,
+                                    "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+                                    "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+                                    
                                 },
                                 "geometry": {
-                                    "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                    "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
+                                    "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+                                    "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[0.0, 0.0]"}
                                 }
-                            }${if (index == listItems.size - 1) "" else ","}
-                        """.trimIndent())
+                            }
+                        """.trimIndent()
+                            append(feature)
+                            if (index < listItems.size - 1) append(",")
                         }
                         append("]}")
                     }
                     writer.write(geoJson)
+
                 }
             }
             return file
@@ -393,35 +400,41 @@ fun FarmList(navController: NavController, siteId: Long) {
                                     val (lat, lon) = match.destructured
                                     "[$lon, $lat]"
                                 }.joinToString(", ", prefix = "[", postfix = "]")
-                                append(
-                                    """
-                                {
-                                    "type": "Feature",
-                                    "properties": {
-                                        "remote_id": "${farm.remoteId}",
-                                        "farmer_name": "${farm.farmerName}",
-                                        "member_id": "${farm.memberId}",
-                                        "collection_site": "${getSiteById?.name}",
-                                        "agent_name": "${getSiteById?.agentName}",
-                                        "farm_village": "${farm.village}",
-                                        "farm_district": "${farm.district}",
-                                        "farm_size": ${farm.size},
-                                        "latitude": ${farm.latitude},
-                                        "longitude": ${farm.longitude},
-                                        "created_at": "${Date(farm.createdAt)}",
-                                        "updated_at": "${Date(farm.updatedAt)}"
-                                    },
-                                    "geometry": {
-                                        "type": "${if (farm.coordinates!!.size > 1) "Polygon" else "Point"}",
-                                        "coordinates": ${if (farm.coordinates!!.size > 1) "[$geoJsonCoordinates]" else "[${farm.longitude}, ${farm.latitude}]"}
-                                    }
-                                }${if (index == listItems.size - 1) "" else ","}
-                            """.trimIndent()
-                                )
+                                // Ensure latitude and longitude are not null
+                                val latitude = farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                val longitude = farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+
+                                val feature = """
+                            {
+                                "type": "Feature",
+                                "properties": {
+                                    "remote_id": "${farm.remoteId ?: ""}",
+                                    "farmer_name": "${farm.farmerName ?: ""}",
+                                    "member_id": "${farm.memberId ?: ""}",
+                                    "collection_site": "${getSiteById?.name ?: ""}",
+                                    "agent_name": "${getSiteById?.agentName ?: ""}",
+                                    "farm_village": "${farm.village ?: ""}",
+                                    "farm_district": "${farm.district ?: ""}",
+                                     "farm_size": ${farm.size ?: 0.0},
+                                    "latitude": $latitude,
+                                    "longitude": $longitude,
+                                    "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
+                                    "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
+                                    
+                                },
+                                "geometry": {
+                                    "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
+                                    "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[0.0, 0.0]"}
+                                }
+                            }
+                        """.trimIndent()
+                                append(feature)
+                                if (index < listItems.size - 1) append(",")
                             }
                             append("]}")
                         }
                         writer.write(geoJson)
+
                     }
                 }
             }

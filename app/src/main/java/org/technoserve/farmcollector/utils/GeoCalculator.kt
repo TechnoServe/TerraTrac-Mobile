@@ -21,7 +21,9 @@ object GeoCalculator {
         // Convert area to hectares (1 hectare = 10,000 square meters)
         val areaInHectares = areaInSquareMeters / 10000.0
 
-        // Format the result to 6 decimal places
-        return String.format("%.6f", areaInHectares).toDouble()
+//        // Format the result to 6 decimal places
+//        return String.format("%.6f", areaInHectares).toDouble()
+        // Format the result to 6 decimal places and ensure the correct format
+        return String.format("%.6f", areaInHectares).replace(',', '.').toDouble()
     }
 }
