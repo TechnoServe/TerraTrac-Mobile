@@ -115,4 +115,8 @@
     <string name="no_results_found">Arganno hin argamne</string>
     <string name="duplicate_farms">%1$d daangaa lamaan wal fakkaatan jiru</string>
     <string name="farms_needing_update">%1$d daangaan haalaan qabame</string>
+    <string name="unsupported_file_format">Foormaatin faayilii hin deggaramu. Faayilii CSV yookaan GeoJSON fayyadami.</string>
+    <string name="geojson_import_successful">Galchi GeoJSON milkaa\'aa ta\'eera</string>
+    <string name="csv_import_successful">Galchi CSV milkaa\'aa ta\'eera</string>
+    <string name="import_failed_with_error">Galchi harkifataa: %1$s</string>
 </resources>

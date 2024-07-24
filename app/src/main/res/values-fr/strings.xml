@@ -115,4 +115,8 @@
     <string name="no_results_found">Aucun résultat trouvé</string>
     <string name="duplicate_farms">%1$d fermes en double existent</string>
     <string name="farms_needing_update">%1$d fermes doivent être mises à jour</string>
+    <string name="unsupported_file_format">Format de fichier non pris en charge. Veuillez télécharger un fichier CSV ou GeoJSON.</string>
+    <string name="geojson_import_successful">Importation de GeoJSON réussie</string>
+    <string name="csv_import_successful">Importation de CSV réussie</string>
+    <string name="import_failed_with_error">Échec de l\'importation : %1$s</string>
 </resources>

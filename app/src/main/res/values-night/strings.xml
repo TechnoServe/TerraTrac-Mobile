@@ -115,4 +115,8 @@
     <string name="no_results_found">No Result Found</string>
     <string name="duplicate_farms">%1$d Duplicate farms exist</string>
     <string name="farms_needing_update">%1$d farms need to be updated</string>
+    <string name="unsupported_file_format">Unsupported file format. Please upload a CSV or GeoJSON file.</string>
+    <string name="geojson_import_successful">GeoJSON import successful</string>
+    <string name="csv_import_successful">CSV import successful</string>
+    <string name="import_failed_with_error">Import failed: %1$s</string>
 </resources>

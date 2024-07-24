@@ -314,7 +314,7 @@ class FarmViewModel(
                 val fileName =
                     uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
                 if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
-                    message = "Unsupported file format. Please upload a CSV or GeoJSON file."
+                    message = context.getString(R.string.unsupported_file_format)
                     return@withContext ImportResult(success, message, importedFarms)
                 }
 
@@ -362,7 +362,7 @@ class FarmViewModel(
                             println(unknownFarmMessage)
                         }
                     }
-                    message = "GeoJSON import successful"
+                    message = context.getString(R.string.geojson_import_successful)
                     success = true
                 } else if (firstLine.contains(",")) {
                     // It's a CSV file
@@ -498,31 +498,35 @@ class FarmViewModel(
                     // repository.importFarms(farms)
                     // importFarms(siteId,farms)
 
-                    message = "CSV import successful"
+                    message = context.getString(R.string.csv_import_successful)
                     success = true
                 } else {
-                    message = "Unrecognized file format. Please upload a valid CSV or GeoJSON file."
+                    message = context.getString(R.string.unsupported_file_format)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                message = "Import failed: ${e.message}"
+                message = context.getString(R.string.import_failed_with_error, e.message)
             }
 
             // Show a toast message for duplicate farms
             withContext(Dispatchers.Main) {
                 if (duplicateFarms.isNotEmpty()) {
-                    Toast.makeText(context, "${duplicateFarms.size} Duplicate farms exist", Toast.LENGTH_LONG).show()
+                    val duplicateFarmsMessage = context.getString(R.string.duplicate_farms, duplicateFarms.size)
+                    //Toast.makeText(context, "${duplicateFarms.size} Duplicate farms exist", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, duplicateFarmsMessage, Toast.LENGTH_LONG).show()
                 }
             }
             // Show a toast message for farms that needs updates
             withContext(Dispatchers.Main) {
                 if (farmsNeedingUpdate.isNotEmpty()) {
-                    Toast
-                        .makeText(
-                            context,
-                            "${farmsNeedingUpdate.size} farms need to be updated",
-                            Toast.LENGTH_LONG,
-                        ).show()
+                    val farmsNeedingUpdateMessage = context.getString(R.string.farms_needing_update, farmsNeedingUpdate.size)
+//                    Toast
+//                        .makeText(
+//                            context,
+//                            "${farmsNeedingUpdate.size} farms need to be updated",
+//                            Toast.LENGTH_LONG,
+//                        ).show()
+                    Toast.makeText(context, farmsNeedingUpdateMessage, Toast.LENGTH_LONG).show()
                 }
             }
             // Flag farmers with new plot info

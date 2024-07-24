@@ -115,4 +115,8 @@
     <string name="no_results_found">No se encontraron resultados</string>
     <string name="duplicate_farms">%1$d granjas duplicadas existen</string>
     <string name="farms_needing_update">%1$d granjas necesitan ser actualizadas</string>
+    <string name="unsupported_file_format">Formato de archivo no compatible. Por favor, suba un archivo CSV o GeoJSON.</string>
+    <string name="geojson_import_successful">Importación de GeoJSON exitosa</string>
+    <string name="csv_import_successful">Importación de CSV exitosa</string>
+    <string name="import_failed_with_error">Error en la importación: %1$s</string>
 </resources>
