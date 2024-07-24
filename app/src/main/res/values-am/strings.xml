@@ -102,4 +102,17 @@
     <string name="select_file">ፋይል ይምረጡ</string>
     <string name="import_successful">ማስመጣት ተሳክቷል</string>
     <string name="import_failed">ማስመጣት አልተሳካም</string>
+    <string name="template_downloaded">ተንብላላ በተሳካ ሁኔታ ተወርዷል</string>
+    <string name="template_download_failed">ተንብላላ መውረድ አልተሳካም</string>
+    <string name="download_template">ተንብላላ አውርድ</string>
+    <string name="select_file_type">የመግለጫ አይነት ምርጫ</string>
+    <string name="confirm_export">እ.ኤ.አ. %1$d እርሻዎች እንዲሆኑ ትላለህ። %2$d እርሻዎች ያልተሟሉ መረጃዎች አላቸው። አንቀጽ?</string>
+    <string name="confirm_share">እ.ኤ.አ. %1$d እርሻዎች እንዲሆኑ ትላለህ። %2$d እርሻዎች ያልተሟሉ መረጃዎች አላቸው። አንቀጽ?</string>
+    <string name="search">ፈልግ</string>
+    <string name="all">ሁሉም</string>
+    <string name="needs_update">አሻሻል ያስፈልጋል</string>
+    <string name="no_update_needed">አሻሻል አያስፈልግም</string>
+    <string name="no_results_found">ምንም ውጤት አልተገኘም</string>
+    <string name="duplicate_farms">%1$d ተመሳሳይ እርሻዎች አሉ</string>
+    <string name="farms_needing_update">%1$d እርሻዎች መታደስ ያስፈልጋቸዋል</string>
 </resources>

@@ -14,13 +14,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.technoserve.farmcollector.R
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.Date
 import java.util.UUID
 
 data class ImportResult(
@@ -28,19 +26,18 @@ data class ImportResult(
     val message: String,
     val importedFarms: List<Farm>,
     val duplicateFarms: List<String> = emptyList(),
-    val farmsNeedingUpdate: List<Farm> = emptyList()
+    val farmsNeedingUpdate: List<Farm> = emptyList(),
 )
 
 data class FarmAddResult(
     val success: Boolean,
     val message: String,
-    val farm: Farm
+    val farm: Farm,
 )
 
-
-
-class FarmViewModel(application: Application) : AndroidViewModel(application) {
-
+class FarmViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val repository: FarmRepository
     val readAllSites: RefreshableLiveData<List<CollectionSite>>
     val readData: RefreshableLiveData<List<Farm>>
@@ -55,24 +52,26 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         readData = RefreshableLiveData { repository.readData }
     }
 
-    fun readAllData(siteId: Long): LiveData<List<Farm>> {
-        return repository.readAllFarms(siteId)
-    }
+    fun readAllData(siteId: Long): LiveData<List<Farm>> = repository.readAllFarms(siteId)
 
-    fun getSingleFarm(farmId: Long): LiveData<List<Farm>> {
-        return repository.readFarm(farmId)
-    }
+    fun getSingleFarm(farmId: Long): LiveData<List<Farm>> = repository.readFarm(farmId)
 
-    fun addFarm(farm: Farm, siteId: Long) {
+    fun addFarm(
+        farm: Farm,
+        siteId: Long,
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!repository.isFarmDuplicateBoolean(farm)) {
                 repository.addFarm(farm)
                 FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
                 _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
-            }
-            else {
-                FarmAddResult(success = false, message = "Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}. Needs update.", farm)
+            } else {
+                FarmAddResult(
+                    success = false,
+                    message = "Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}. Needs update.",
+                    farm,
+                )
             }
         }
     }
@@ -83,9 +82,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun getLastFarm(): LiveData<List<Farm>> {
-        return repository.getLastFarm()
-    }
+    fun getLastFarm(): LiveData<List<Farm>> = repository.getLastFarm()
 
     // Updates an existing farm in the repository and updates the LiveData list
     fun updateFarm(farm: Farm) {
@@ -103,7 +100,6 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
             repository.updateSite(site)
         }
     }
-
 
     fun deleteFarm(farm: Farm) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -148,13 +144,16 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
     private fun parseDateStringToTimestamp(dateString: String): Long {
-        val dateFormatter = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US)
+        val dateFormatter =
+            java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US)
         return dateFormatter.parse(dateString).time
     }
 
-    private suspend fun parseGeoJson(geoJsonString: String, siteId: Long): List<Farm> {
+    private suspend fun parseGeoJson(
+        geoJsonString: String,
+        siteId: Long,
+    ): List<Farm> {
         val farms = mutableListOf<Farm>()
 
         try {
@@ -167,35 +166,39 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                 val geometry = feature.getJSONObject("geometry")
 
                 // Handling the remoteId
-                val remoteId = try {
-                    val idString = properties.optString("remote_id")
-                    if (idString.isNotEmpty()) UUID.fromString(idString) else UUID.randomUUID()
-                } catch (e: IllegalArgumentException) {
-                    UUID.randomUUID()
-                }
+                val remoteId =
+                    try {
+                        val idString = properties.optString("remote_id")
+                        if (idString.isNotEmpty()) UUID.fromString(idString) else UUID.randomUUID()
+                    } catch (e: IllegalArgumentException) {
+                        UUID.randomUUID()
+                    }
 
                 val farmerName = properties.optString("farmer_name", "Unknown")
                 val memberId = properties.optString("member_id", "Unknown")
                 val village = properties.optString("farm_village", "Unknown")
                 val district = properties.optString("farm_district", "Unknown")
                 val size = properties.optDouble("farm_size", Double.NaN).toFloat()
-                val latitude = properties.optDouble("latitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
-                val longitude = properties.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
+                val latitude =
+                    properties.optDouble("latitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
+                val longitude =
+                    properties.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }?.toString()
 
                 val currentTime = System.currentTimeMillis()
 
-                val createdAt = try {
-                    properties.optString("created_at").toLongOrNull() ?: currentTime
-                } catch (e: Exception) {
-                    currentTime
-                }
+                val createdAt =
+                    try {
+                        properties.optString("created_at").toLongOrNull() ?: currentTime
+                    } catch (e: Exception) {
+                        currentTime
+                    }
 
-                val updatedAt = try {
-                    properties.optString("updated_at").toLongOrNull() ?: currentTime
-                } catch (e: Exception) {
-                    currentTime
-                }
-
+                val updatedAt =
+                    try {
+                        properties.optString("updated_at").toLongOrNull() ?: currentTime
+                    } catch (e: Exception) {
+                        currentTime
+                    }
 
                 var coordinates: List<Pair<Double, Double>>? = null
                 val geoType = geometry.getString("type")
@@ -205,8 +208,7 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     val lon = coordArray.getDouble(1)
                     val lat = coordArray.getDouble(0)
                     coordinates = listOf(Pair(lon, lat))
-                }
-                else if (geoType == "Polygon") {
+                } else if (geoType == "Polygon") {
                     val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
                     val coordList = mutableListOf<Pair<Double, Double>>()
                     for (j in 0 until coordArray.length()) {
@@ -216,26 +218,27 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     coordinates = coordList
                 }
 
-                val newFarm = coordinates?.let {
-                    Farm(
-                        siteId = siteId,
-                        remoteId = remoteId,
-                        farmerPhoto = "farmer-photo",
-                        farmerName = farmerName,
-                        memberId = memberId,
-                        village = village,
-                        district = district,
-                        purchases = 2.30f,
-                        size = size.takeIf { !it.isNaN() } ?: 0f,
-                        latitude = latitude ?: "0.0",
-                        longitude = longitude ?: "0.0",
-                        coordinates = it,
-                        synced = false,
-                        scheduledForSync = false,
-                        createdAt = createdAt,
-                        updatedAt = updatedAt
-                    )
-                }
+                val newFarm =
+                    coordinates?.let {
+                        Farm(
+                            siteId = siteId,
+                            remoteId = remoteId,
+                            farmerPhoto = "farmer-photo",
+                            farmerName = farmerName,
+                            memberId = memberId,
+                            village = village,
+                            district = district,
+                            purchases = 2.30f,
+                            size = size.takeIf { !it.isNaN() } ?: 0f,
+                            latitude = latitude ?: "0.0",
+                            longitude = longitude ?: "0.0",
+                            coordinates = it,
+                            synced = false,
+                            scheduledForSync = false,
+                            createdAt = createdAt,
+                            updatedAt = updatedAt,
+                        )
+                    }
                 if (newFarm != null) {
                     farms.add(newFarm)
                 }
@@ -246,10 +249,6 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
         return farms
     }
-
-
-
-
 
     fun parseCoordinates(coordinatesString: String): List<Pair<Double, Double>> {
         val result = mutableListOf<Pair<Double, Double>>()
@@ -262,7 +261,12 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 
             if (isPolygon) {
                 // Handle Polygon Format
-                val pairs = cleanedString.removePrefix("[[").removeSuffix("]]").split("],[").map { it.split(",") }
+                val pairs =
+                    cleanedString
+                        .removePrefix("[[")
+                        .removeSuffix("]]")
+                        .split("],[")
+                        .map { it.split(",") }
                 for (pair in pairs) {
                     if (pair.size == 2) {
                         try {
@@ -293,136 +297,52 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         return result
     }
 
-
-
-
     @RequiresApi(Build.VERSION_CODES.N)
-    suspend fun importFile(context: Context, uri: Uri, siteId: Long): ImportResult = withContext(Dispatchers.IO) {
-        var message = ""
-        var success = false
-        val importedFarms = mutableListOf<Farm>()
-        val duplicateFarms = mutableListOf<String>()
-        val farmsNeedingUpdate = mutableListOf<Farm>()
-        try {
-            // Check file extension before proceeding
-            val fileName = uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
-            if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
-                message = "Unsupported file format. Please upload a CSV or GeoJSON file."
-                return@withContext ImportResult(success, message, importedFarms)
-            }
-
-            val inputStream = context.contentResolver.openInputStream(uri) ?: throw IllegalArgumentException("Cannot open file input stream")
-            val reader = BufferedReader(InputStreamReader(inputStream))
-            val firstLine = reader.readLine()
-            val farms = mutableListOf<Farm>()
-
-            println("First line: $firstLine")
-
-            if (firstLine.trim().startsWith("{")) {
-                // It's a GeoJSON file
-                val content = StringBuilder()
-                content.append(firstLine)
-                reader.lines().forEach { content.append(it) }
-                reader.close()
-                val newFarms = parseGeoJson(content.toString(), siteId)
-                println("Parsed farms from GeoJSON: $newFarms")
-                for (newFarm in newFarms) {
-                    if (!repository.isFarmDuplicateBoolean(newFarm)) {
-                        println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                        addFarm(newFarm, newFarm.siteId)
-                        importedFarms.add(newFarm)
-                    }
-                    val existingFarm = newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
-                    if (existingFarm != null) {
-                        if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-                            // Farm needs an update
-                            println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                            farmsNeedingUpdate.add(newFarm)
-                        } else {
-                            // Farm is a duplicate but does not need an update
-                            val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-                            println(duplicateMessage)
-                            duplicateFarms.add(duplicateMessage)
-                        }
-                    } else {
-                        // Handle case where farm exists in the system but not in the repository
-                        val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-                        println(unknownFarmMessage)
-                    }
+    suspend fun importFile(
+        context: Context,
+        uri: Uri,
+        siteId: Long,
+    ): ImportResult =
+        withContext(Dispatchers.IO) {
+            var message = ""
+            var success = false
+            val importedFarms = mutableListOf<Farm>()
+            val duplicateFarms = mutableListOf<String>()
+            val farmsNeedingUpdate = mutableListOf<Farm>()
+            try {
+                // Check file extension before proceeding
+                val fileName =
+                    uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
+                if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
+                    message = "Unsupported file format. Please upload a CSV or GeoJSON file."
+                    return@withContext ImportResult(success, message, importedFarms)
                 }
-                message = "GeoJSON import successful"
-                success = true
-            } else if (firstLine.contains(",")) {
-                // It's a CSV file
-                var line: String? = firstLine
-                line = reader.readLine() // Read first data line
-                while (line != null) {
-                    val values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()) // Split CSV line, ignoring commas within quotes
 
-                    if (values.size >= 13) {
-                        val remoteId = try {
-                            if (values[0].isNotEmpty()) UUID.fromString(values[0]) else UUID.randomUUID()
-                        } catch (e: IllegalArgumentException) {
-                            UUID.randomUUID()
-                        }
+                val inputStream =
+                    context.contentResolver.openInputStream(uri)
+                        ?: throw IllegalArgumentException("Cannot open file input stream")
+                val reader = BufferedReader(InputStreamReader(inputStream))
+                val firstLine = reader.readLine()
+                val farms = mutableListOf<Farm>()
 
-                        val farmerName = values.getOrNull(1) ?: ""
-                        val memberId = values.getOrNull(2) ?: ""
-                        val siteName = values.getOrNull(3) ?: ""
-                        val agentName = values.getOrNull(4) ?: ""
-                        val village = values.getOrNull(5) ?: ""
-                        val district = values.getOrNull(6) ?: ""
-                        val size = values.getOrNull(7)?.toFloatOrNull()
-                        val latitude = values.getOrNull(8)
-                        val longitude = values.getOrNull(9)
+                println("First line: $firstLine")
 
-                        // Extract and parse coordinates
-                        val coordinatesString = values.getOrNull(10)?.removeSurrounding("\"", "\"") ?: ""
-                        val coordinates = parseCoordinates(coordinatesString)
-                        println("Coordinates $coordinates")
-
-                        val currentTime = System.currentTimeMillis()
-                        val createdAt = try {
-                            if (values.getOrNull(11)?.isNotEmpty() == true) parseDateStringToTimestamp(values[11]) else currentTime
-                        } catch (e: Exception) {
-                            currentTime
-                        }
-
-                        val updatedAt = try {
-                            if (values.getOrNull(12)?.isNotEmpty() == true) parseDateStringToTimestamp(values[12]) else currentTime
-                        } catch (e: Exception) {
-                            currentTime
-                        }
-
-                        // Process each record here
-                        println("Processing record for remote ID: $remoteId")
-
-                        val newFarm = Farm(
-                            siteId = siteId,
-                            remoteId = remoteId,
-                            farmerPhoto = "farmer-photo",
-                            farmerName = farmerName,
-                            memberId = memberId,
-                            village = village,
-                            district = district,
-                            purchases = 2.30f,
-                            size = size ?: 0f, // Use 0 as default if size is null
-                            latitude = latitude ?: "0.0", // Use "0.0" as default if latitude is null
-                            longitude = longitude ?: "0.0", // Use "0.0" as default if longitude is null
-                            coordinates = coordinates ?: emptyList(), // Use empty list if coordinates are null
-                            synced = false,
-                            scheduledForSync = false,
-                            createdAt = createdAt,
-                            updatedAt = updatedAt
-                        )
-
+                if (firstLine.trim().startsWith("{")) {
+                    // It's a GeoJSON file
+                    val content = StringBuilder()
+                    content.append(firstLine)
+                    reader.lines().forEach { content.append(it) }
+                    reader.close()
+                    val newFarms = parseGeoJson(content.toString(), siteId)
+                    println("Parsed farms from GeoJSON: $newFarms")
+                    for (newFarm in newFarms) {
                         if (!repository.isFarmDuplicateBoolean(newFarm)) {
                             println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
                             addFarm(newFarm, newFarm.siteId)
                             importedFarms.add(newFarm)
                         }
-
-                        val existingFarm = newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
+                        val existingFarm =
+                            newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
                         if (existingFarm != null) {
                             if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
                                 // Farm needs an update
@@ -430,60 +350,198 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                                 farmsNeedingUpdate.add(newFarm)
                             } else {
                                 // Farm is a duplicate but does not need an update
-                                val duplicateMessage = "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                                val duplicateMessage =
+                                    "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
                                 println(duplicateMessage)
                                 duplicateFarms.add(duplicateMessage)
                             }
                         } else {
                             // Handle case where farm exists in the system but not in the repository
-                            val unknownFarmMessage = "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+                            val unknownFarmMessage =
+                                "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
                             println(unknownFarmMessage)
+                        }
+                    }
+                    message = "GeoJSON import successful"
+                    success = true
+                } else if (firstLine.contains(",")) {
+                    // It's a CSV file
+                    var line: String? = firstLine
+                    line = reader.readLine() // Read first data line
+                    while (line != null) {
+                        val values =
+                            line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()) // Split CSV line, ignoring commas within quotes
+
+                        if (values.size >= 13) {
+                            val remoteId =
+                                try {
+                                    if (values[0].isNotEmpty()) UUID.fromString(values[0]) else UUID.randomUUID()
+                                } catch (e: IllegalArgumentException) {
+                                    UUID.randomUUID()
+                                }
+
+                            val farmerName = values.getOrNull(1) ?: ""
+                            val memberId = values.getOrNull(2) ?: ""
+                            val siteName = values.getOrNull(3) ?: ""
+                            val agentName = values.getOrNull(4) ?: ""
+                            val village = values.getOrNull(5) ?: ""
+                            val district = values.getOrNull(6) ?: ""
+                            val size = values.getOrNull(7)?.toFloatOrNull()
+                            val latitude = values.getOrNull(8)
+                            val longitude = values.getOrNull(9)
+
+                            // Extract and parse coordinates
+                            val coordinatesString =
+                                values.getOrNull(10)?.removeSurrounding("\"", "\"") ?: ""
+                            val coordinates = parseCoordinates(coordinatesString)
+                            println("Coordinates $coordinates")
+
+                            val currentTime = System.currentTimeMillis()
+                            val createdAt =
+                                try {
+                                    if (values
+                                            .getOrNull(11)
+                                            ?.isNotEmpty() == true
+                                    ) {
+                                        parseDateStringToTimestamp(values[11])
+                                    } else {
+                                        currentTime
+                                    }
+                                } catch (e: Exception) {
+                                    currentTime
+                                }
+
+                            val updatedAt =
+                                try {
+                                    if (values
+                                            .getOrNull(12)
+                                            ?.isNotEmpty() == true
+                                    ) {
+                                        parseDateStringToTimestamp(values[12])
+                                    } else {
+                                        currentTime
+                                    }
+                                } catch (e: Exception) {
+                                    currentTime
+                                }
+
+                            // Process each record here
+                            println("Processing record for remote ID: $remoteId")
+
+                            val newFarm =
+                                Farm(
+                                    siteId = siteId,
+                                    remoteId = remoteId,
+                                    farmerPhoto = "farmer-photo",
+                                    farmerName = farmerName,
+                                    memberId = memberId,
+                                    village = village,
+                                    district = district,
+                                    purchases = 2.30f,
+                                    size = size ?: 0f, // Use 0 as default if size is null
+                                    latitude =
+                                        latitude
+                                            ?: "0.0",
+                                    // Use "0.0" as default if latitude is null
+                                    longitude =
+                                        longitude
+                                            ?: "0.0",
+                                    // Use "0.0" as default if longitude is null
+                                    coordinates =
+                                        coordinates
+                                            ?: emptyList(),
+                                    // Use empty list if coordinates are null
+                                    synced = false,
+                                    scheduledForSync = false,
+                                    createdAt = createdAt,
+                                    updatedAt = updatedAt,
+                                )
+
+                            if (!repository.isFarmDuplicateBoolean(newFarm)) {
+                                println("Adding farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                addFarm(newFarm, newFarm.siteId)
+                                importedFarms.add(newFarm)
+                            }
+
+                            val existingFarm =
+                                newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
+                            if (existingFarm != null) {
+                                if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+                                    // Farm needs an update
+                                    println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                    farmsNeedingUpdate.add(newFarm)
+                                } else {
+                                    // Farm is a duplicate but does not need an update
+                                    val duplicateMessage =
+                                        "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+                                    println(duplicateMessage)
+                                    duplicateFarms.add(duplicateMessage)
+                                }
+                            } else {
+                                // Handle case where farm exists in the system but not in the repository
+                                val unknownFarmMessage =
+                                    "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+                                println(unknownFarmMessage)
 
 //                            // Remove farm from repository
 //                            runBlocking {
 //                                newFarm.remoteId?.let { repository.deleteFarmByRemoteId(it) }
 //                            }
+                            }
+                        } else {
+                            println("Line does not contain enough data: $line")
                         }
-                    } else {
-                        println("Line does not contain enough data: $line")
+                        line = reader.readLine()
                     }
-                    line = reader.readLine()
+                    reader.close()
+                    println("Parsed farms from CSV: $farms")
+                    // repository.importFarms(farms)
+                    // importFarms(siteId,farms)
+
+                    message = "CSV import successful"
+                    success = true
+                } else {
+                    message = "Unrecognized file format. Please upload a valid CSV or GeoJSON file."
                 }
-                reader.close()
-                println("Parsed farms from CSV: $farms")
-                //repository.importFarms(farms)
-                //importFarms(siteId,farms)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                message = "Import failed: ${e.message}"
+            }
 
-                message = "CSV import successful"
-                success = true
+            // Show a toast message for duplicate farms
+            withContext(Dispatchers.Main) {
+                if (duplicateFarms.isNotEmpty()) {
+                    Toast.makeText(context, "${duplicateFarms.size} Duplicate farms exist", Toast.LENGTH_LONG).show()
+                }
             }
-            else {
-                message = "Unrecognized file format. Please upload a valid CSV or GeoJSON file."
+            // Show a toast message for farms that needs updates
+            withContext(Dispatchers.Main) {
+                if (farmsNeedingUpdate.isNotEmpty()) {
+                    Toast
+                        .makeText(
+                            context,
+                            "${farmsNeedingUpdate.size} farms need to be updated",
+                            Toast.LENGTH_LONG,
+                        ).show()
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            message = "Import failed: ${e.message}"
+            // Flag farmers with new plot info
+            flagFarmersWithNewPlotInfo(siteId, farmsNeedingUpdate, this@FarmViewModel)
+
+            return@withContext ImportResult(
+                success,
+                message,
+                importedFarms,
+                duplicateFarms,
+                farmsNeedingUpdate,
+            )
         }
 
-        // Show a toast message for duplicate farms
-        withContext(Dispatchers.Main) {
-            if (duplicateFarms.isNotEmpty()) {
-                Toast.makeText(context, "Duplicate farms exist", Toast.LENGTH_LONG).show()
-            }
-        }
-        // Show a toast message for farms that needs updates
-        withContext(Dispatchers.Main) {
-            if (farmsNeedingUpdate.isNotEmpty()) {
-                Toast.makeText(context, "${farmsNeedingUpdate.size} farms need to be updated", Toast.LENGTH_LONG).show()
-            }
-        }
-        // Flag farmers with new plot info
-        flagFarmersWithNewPlotInfo(siteId, farmsNeedingUpdate, this@FarmViewModel)
-
-        return@withContext ImportResult(success, message, importedFarms, duplicateFarms,farmsNeedingUpdate)
-    }
-
-    private suspend fun flagFarmersWithNewPlotInfo(siteId: Long, farmsNeedingUpdate: List<Farm>, farmViewModel: FarmViewModel) = withContext(Dispatchers.IO) {
+    private suspend fun flagFarmersWithNewPlotInfo(
+        siteId: Long,
+        farmsNeedingUpdate: List<Farm>,
+        farmViewModel: FarmViewModel,
+    ) = withContext(Dispatchers.IO) {
         val existingFarms = farmViewModel.getExistingFarms(siteId)
         val existingFarmMap = existingFarms.associateBy { it.remoteId }
 
@@ -493,7 +551,9 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
             if (existingFarm != null && existingFarm != farmNeedingUpdate) {
                 existingFarm.needsUpdate = true
                 farmViewModel.updateFarm(existingFarm)
-                println("Flagging farm for update: ${existingFarm.farmerName}, Site ID: ${existingFarm.siteId}, NeedsUpdate:${existingFarm.needsUpdate}")
+                println(
+                    "Flagging farm for update: ${existingFarm.farmerName}, Site ID: ${existingFarm.siteId}, NeedsUpdate:${existingFarm.needsUpdate}",
+                )
                 repository.updateFarm(existingFarm)
                 println("Farm updated successfully")
             } else if (existingFarm == null) {
@@ -507,66 +567,83 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun getTemplateContent(fileType: String): String {
-        return when (fileType) {
-            "csv" -> "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n"
-            "geojson" -> """{
-                        "type": "FeatureCollection",
-                        "features": [
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "remote_id": "",
-                                    "farmer_name": "",
-                                    "member_id": "",
-                                    "collection_site": "",
-                                    "agent_name": "",
-                                    "farm_village": "",
-                                    "farm_district": "",
-                                    "farm_size": 0.0,
-                                    "latitude": "",
-                                    "longitude": "",
-                                    "created_at": "",
-                                    "updated_at": ""
-                                },
-                                "geometry": {
-                                    "type": "Point",
-                                    "coordinates": ["longitude", "latitude"]
-                                }
-                            },
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "remote_id": "",
-                                    "farmer_name": "",
-                                    "member_id": "",
-                                    "collection_site": "",
-                                    "agent_name": "",
-                                    "farm_village": "",
-                                    "farm_district": "",
-                                    "farm_size": "farm size is double",
-                                    "latitude": "latitude value in double",
-                                    "longitude": "longitude value in double",
-                                    "created_at": "",
-                                    "updated_at": ""
-                                },
-                                "geometry": {
-                                    "type": "Polygon",
-                                    "coordinates": [[["longitude","latitude"], ["longitude","latitude"],["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"]]]
-                                }
-                            }
-                        ]
-                    }"""
+    fun getTemplateContent(fileType: String): String =
+        when (fileType) {
+            "csv" ->
+                """remote_id,          // Optional: can be null if not provided
+           farmer_name,        // can not be null 
+           member_id,          // Optional: can be null if not provided
+           collection_site,   // Optional: can be null if not provided
+           agent_name,        // Optional: can be null if not provided
+           farm_village,      // can not be null 
+           farm_district,     // can not be null 
+           farm_size,         // Optional: can be null if not provided; default value could be 0.0
+           latitude,          // Optional: can be null if not provided
+           longitude,         // Optional: can be null if not provided
+           polygon,           // Optional: can be null if not provided; used for Polygon type
+           created_at,        // Optional: can be null if not provided; default to current time if not available
+           updated_at         // Optional: can be null if not provided; default to current time if not available
+"""
+
+            "geojson" ->
+                """{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "remote_id": "",                    // Optional: can be null if not provided
+                "farmer_name": "",                  // can not be null 
+                "member_id": "",                   // Optional: can be null if not provided
+                "collection_site": "",              // Optional: can be null if not provided
+                "agent_name": "",                   // Optional: can be null if not provided
+                "farm_village": "",                 // can not be null 
+                "farm_district": "",                // can not be null 
+                "farm_size": 0.0,                   // Optional: use a default value of 0.0 if not provided
+                "latitude": "",                     // Optional: can be null if not provided
+                "longitude": "",                    // Optional: can be null if not provided
+                "created_at": "",                   // Optional: can be null if not provided
+                "updated_at": ""                    // Optional: can be null if not provided
+            },
+            "geometry": {
+                "type": "Point",                    // Use "Polygon" if coordinates are for a polygon
+                "coordinates": ["longitude", "latitude"]  // Replace with actual coordinates; can be null if not provided
+            }
+        },
+        
+        {
+            "type": "Feature",
+            "properties": {
+                "remote_id": "",                    // Optional: can be null if not provided
+                "farmer_name": "",                  // Optional: can be null if not provided
+                "member_id": "",                    // Optional: can be null if not provided
+                "collection_site": "",              // Optional: can be null if not provided
+                "agent_name": "",                   // Optional: can be null if not provided
+                "farm_village": "",                 // Optional: can be null if not provided
+                "farm_district": "",                // Optional: can be null if not provided
+                "farm_size": "farm size is double", // Replace with actual value; can be null if not provided
+                "latitude": "latitude value in double", // Replace with actual value; can be null if not provided
+                "longitude": "longitude value in double", // Replace with actual value; can be null if not provided
+                "created_at": "",                   // Optional: can be null if not provided
+                "updated_at": ""                    // Optional: can be null if not provided
+            },
+            "geometry": {
+                "type": "Polygon",                  // Use "Point" if coordinates are for a point
+                "coordinates": [[["longitude","latitude"], ["longitude","latitude"],["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"], ["longitude", "latitude"]]]
+                // Replace with actual coordinates; can be null if not provided
+            }
+        }
+    ]
+}"""
+
             else -> throw IllegalArgumentException("Unsupported file type: $fileType")
         }
-    }
-
 
     // Define the method for saving the file to the URI
     suspend fun saveFileToUri(
         context: Context,
         uri: Uri,
-        templateContent: String
+        templateContent: String,
     ) {
         withContext(Dispatchers.IO) {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -575,16 +652,17 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
                     Toast.makeText(context, R.string.template_downloaded, Toast.LENGTH_SHORT).show()
                 }
             } ?: withContext(Dispatchers.Main) {
-                Toast.makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT).show()
+                Toast
+                    .makeText(context, R.string.template_download_failed, Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
 
-    suspend fun getExistingFarms(siteId: Long): List<Farm> {
-        return withContext(Dispatchers.IO) {
+    suspend fun getExistingFarms(siteId: Long): List<Farm> =
+        withContext(Dispatchers.IO) {
             repository.readAllFarmsSync(siteId)
         }
-    }
 
 //    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
 //        viewModelScope.launch {
@@ -593,11 +671,10 @@ class FarmViewModel(application: Application) : AndroidViewModel(application) {
 //            _farms.postValue(getExistingFarms(siteId))
 //        }
 //    }
-
 }
 
 class FarmViewModelFactory(
-    private val application: Application
+    private val application: Application,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         @Suppress("UNCHECKED_CAST")

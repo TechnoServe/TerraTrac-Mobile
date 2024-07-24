@@ -17,8 +17,10 @@ import org.technoserve.farmcollector.R
  */
 @Composable
 fun ConfirmDialog(
-    title: String, message: String, showDialog: MutableState<Boolean>,
-    onProceedFn: () -> Unit
+    title: String,
+    message: String,
+    showDialog: MutableState<Boolean>,
+    onProceedFn: () -> Unit,
 ) {
     if (showDialog.value) {
         AlertDialog(
@@ -30,7 +32,6 @@ fun ConfirmDialog(
                     Text(text = message)
                 }
             },
-
             confirmButton = {
                 TextButton(onClick = { onProceedFn() }) {
                     Text(text = stringResource(id = R.string.yes))
@@ -40,7 +41,7 @@ fun ConfirmDialog(
                 TextButton(onClick = { showDialog.value = false }) {
                     Text(text = stringResource(id = R.string.no))
                 }
-            }
+            },
         )
     }
 }

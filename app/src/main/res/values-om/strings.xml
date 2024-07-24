@@ -102,4 +102,17 @@
     <string name="select_file">Faayilii filadhu</string>
     <string name="import_successful">Galuun milkaa\'eera</string>
     <string name="import_failed">Galuun hin milkoofne</string>
+    <string name="template_downloaded">template milkaa\'inaan buufame</string>
+    <string name="template_download_failed">template buufachuu hin milkoofne</string>
+    <string name="download_template">Template Buufadhu</string>
+    <string name="select_file_type">Gosa Faayilii Template Filadhu</string>
+    <string name="confirm_export">Farma %1$d dabarfachuuf jira. Farma %2$d odeeffannoo guutuu hin qaban. Itti fufuu barbaadduu?</string>
+    <string name="confirm_share">Farma %1$d qooduu barbaadduu. Farma %2$d odeeffannoo guutuu hin qaban. Itti fufuu barbaadduu?</string>
+    <string name="search">Barbaadi</string>
+    <string name="all">Hundumaa</string>
+    <string name="needs_update">Haaromsa Barbaachisa</string>
+    <string name="no_update_needed">Haaromsi Hin Barbaachisu</string>
+    <string name="no_results_found">Arganno hin argamne</string>
+    <string name="duplicate_farms">%1$d daangaa lamaan wal fakkaatan jiru</string>
+    <string name="farms_needing_update">%1$d daangaan haalaan qabame</string>
 </resources>

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
-import  java.util.UUID
+import java.util.UUID
 
 @Entity(
     tableName = "Farms",
@@ -16,65 +16,48 @@ import  java.util.UUID
             entity = CollectionSite::class,
             parentColumns = ["siteId"],
             childColumns = ["siteId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
 )
 @TypeConverters(CoordinateListConvert::class)
 data class Farm(
     @ColumnInfo(name = "siteId")
     var siteId: Long,
-
     @ColumnInfo(name = "remote_id")
     var remoteId: UUID = UUID.randomUUID(),
-
     @ColumnInfo(name = "farmerPhoto")
     var farmerPhoto: String,
-
     @ColumnInfo(name = "farmerName")
     var farmerName: String,
-
     @ColumnInfo(name = "memberId")
     var memberId: String,
-
     @ColumnInfo(name = "village")
     var village: String,
-
     @ColumnInfo(name = "district")
     var district: String,
-
     @ColumnInfo(name = "purchases")
     var purchases: Float,
-
     @ColumnInfo(name = "size")
     var size: Float,
-
     @ColumnInfo(name = "latitude")
     var latitude: String,
-
     @ColumnInfo(name = "longitude")
     var longitude: String,
-
     @ColumnInfo(name = "coordinates")
     var coordinates: List<Pair<Double?, Double?>>?,
-
     @ColumnInfo(name = "synced")
     val synced: Boolean = false,
-
     @ColumnInfo(name = "scheduledForSync")
     val scheduledForSync: Boolean = false,
-
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
     val createdAt: Long,
-
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
     var updatedAt: Long,
-
     @ColumnInfo(name = "needsUpdate")
-    var needsUpdate: Boolean = false
-
+    var needsUpdate: Boolean = false,
 ) {
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L
@@ -88,11 +71,8 @@ data class Farm(
         return id == other.id
     }
 
-    override fun hashCode(): Int {
-        return id.hashCode()
-    }
+    override fun hashCode(): Int = id.hashCode()
 }
-
 
 data class FarmDto(
     val remote_id: UUID,
@@ -105,11 +85,14 @@ data class FarmDto(
     val polygon: List<Pair<Double?, Double?>>,
     val device_id: String,
     val collection_site: Long,
-    val agent_name: String
+    val agent_name: String,
 )
 
-fun List<Farm>.toDtoList(deviceId: String, farmDao: FarmDAO): List<FarmDto> {
-    return this.map { farm ->
+fun List<Farm>.toDtoList(
+    deviceId: String,
+    farmDao: FarmDAO,
+): List<FarmDto> =
+    this.map { farm ->
         val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
         val agentName = collectionSite?.agentName ?: "Unknown"
 
@@ -125,39 +108,31 @@ fun List<Farm>.toDtoList(deviceId: String, farmDao: FarmDAO): List<FarmDto> {
                 polygon = farm.coordinates ?: emptyList(),
                 device_id = deviceId,
                 collection_site = farm.siteId,
-                agent_name = agentName
+                agent_name = agentName,
             )
         }!!
     }
-}
 
 @Entity(tableName = "CollectionSites")
 data class CollectionSite(
     @ColumnInfo(name = "name")
     var name: String,
-
     @ColumnInfo(name = "agentName")
     var agentName: String,
-
     @ColumnInfo(name = "phoneNumber")
     var phoneNumber: String,
-
     @ColumnInfo(name = "email")
     var email: String,
-
     @ColumnInfo(name = "village")
     var village: String,
-
     @ColumnInfo(name = "district")
     var district: String,
-
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
     val createdAt: Long,
-
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
-    var updatedAt: Long
+    var updatedAt: Long,
 ) {
     @PrimaryKey(autoGenerate = true)
     var siteId: Long = 0L

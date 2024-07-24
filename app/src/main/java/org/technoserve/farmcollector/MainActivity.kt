@@ -33,13 +33,13 @@ import org.technoserve.farmcollector.database.sync.SyncService
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.screens.AddFarm
 import org.technoserve.farmcollector.ui.screens.AddSite
-import org.technoserve.farmcollector.ui.screens.CollectionSiteList
 import org.technoserve.farmcollector.ui.screens.FarmList
 import org.technoserve.farmcollector.ui.screens.Home
 import org.technoserve.farmcollector.ui.screens.ScreenWithSidebar
 import org.technoserve.farmcollector.ui.screens.SetPolygon
 import org.technoserve.farmcollector.ui.screens.SettingsScreen
 import org.technoserve.farmcollector.ui.screens.UpdateFarmForm
+import org.technoserve.farmcollector.ui.screens.CollectionSiteList
 import org.technoserve.farmcollector.ui.theme.FarmCollectorTheme
 import org.technoserve.farmcollector.utils.LanguageViewModel
 import org.technoserve.farmcollector.utils.LanguageViewModelFactory
@@ -47,9 +47,8 @@ import org.technoserve.farmcollector.utils.getLocalizedLanguages
 import org.technoserve.farmcollector.utils.updateLocale
 import java.util.Locale
 
-//@AndroidEntryPoint
+// @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     private val viewModel: MapViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels {
         LanguageViewModelFactory(application)
@@ -92,28 +91,32 @@ class MainActivity : ComponentActivity() {
             }
 
             FarmCollectorTheme(darkTheme = darkMode.value) {
-                val multiplePermissionsState = rememberMultiplePermissionsState(
-                    listOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                val multiplePermissionsState =
+                    rememberMultiplePermissionsState(
+                        listOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        ),
                     )
-                )
                 LaunchedEffect(true) {
                     multiplePermissionsState.launchMultiplePermissionRequest()
                 }
                 Surface(
-                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     val languages = getLocalizedLanguages(applicationContext)
-                    val farmViewModel: FarmViewModel = viewModel(
-                        factory = FarmViewModelFactory(applicationContext as Application)
-                    )
+                    val farmViewModel: FarmViewModel =
+                        viewModel(
+                            factory = FarmViewModelFactory(applicationContext as Application),
+                        )
                     val listItems by farmViewModel.readData.observeAsState(listOf())
                     NavHost(
-                        navController = navController, startDestination = "home"
+                        navController = navController,
+                        startDestination = "home",
                     ) {
                         composable("home") {
                             Home(navController, languageViewModel, languages)
@@ -128,7 +131,8 @@ class MainActivity : ComponentActivity() {
                             if (siteId != null) {
                                 ScreenWithSidebar(navController) {
                                     FarmList(
-                                        navController = navController, siteId = siteId.toLong()
+                                        navController = navController,
+                                        siteId = siteId.toLong(),
                                     )
                                 }
                             }
@@ -149,15 +153,19 @@ class MainActivity : ComponentActivity() {
                                 UpdateFarmForm(
                                     navController = navController,
                                     farmId = farmId.toLong(),
-                                    listItems = listItems
+                                    listItems = listItems,
                                 )
                             }
                         }
                         // Screen for displaying and setting farm polygon coordinates
                         composable(
-                            "setPolygon", arguments = listOf(navArgument("coordinates") {
-                                type = NavType.StringType
-                            })
+                            "setPolygon",
+                            arguments =
+                                listOf(
+                                    navArgument("coordinates") {
+                                        type = NavType.StringType
+                                    },
+                                ),
                         ) {
                             SetPolygon(navController, viewModel)
                         }
@@ -166,7 +174,7 @@ class MainActivity : ComponentActivity() {
                                 navController,
                                 darkMode,
                                 languageViewModel,
-                                languages
+                                languages,
                             )
                         }
                     }

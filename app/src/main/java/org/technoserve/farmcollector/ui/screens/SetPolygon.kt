@@ -64,7 +64,6 @@ import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.composes.AreaDialog
 import org.technoserve.farmcollector.ui.composes.ConfirmDialog
 
-
 /**
  * This screen helps you to capture and visualize farm polygon.
  * When capturing, You are able to start, add point, clear map or remove a point on the map
@@ -72,10 +71,14 @@ import org.technoserve.farmcollector.ui.composes.ConfirmDialog
 
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
 const val ENTERED_AREA_OPTION = "ENTERED_AREA"
+
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
+fun SetPolygon(
+    navController: NavController,
+    viewModel: MapViewModel,
+) {
     val context = LocalContext.current as Activity
     var coordinates by remember { mutableStateOf(listOf<Pair<Double, Double>>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
@@ -91,12 +94,12 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     var viewSelectFarm by remember { mutableStateOf(false) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
 
-    val locationRequest = LocationRequest.create().apply {
-        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        interval = 1000 // Update interval in milliseconds
-        fastestInterval = 500 // Fastest update interval in milliseconds
-    }
-
+    val locationRequest =
+        LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 1000 // Update interval in milliseconds
+            fastestInterval = 500 // Fastest update interval in milliseconds
+        }
 
     val showAlertDialog = remember { mutableStateOf(false) }
 
@@ -105,7 +108,6 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
     val mapViewModel: MapViewModel = viewModel()
     // Remember the state for showing the dialog
     val showLocationDialog = remember { mutableStateOf(false) }
-
 
     LaunchedEffect(Unit) {
         mapViewModel.clearCoordinates()
@@ -136,36 +138,39 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             dismissButton = {
                 Button(onClick = {
                     showLocationDialog.value = false
-                    Toast.makeText(
-                        context,
-                        R.string.location_permission_denied_message,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast
+                        .makeText(
+                            context,
+                            R.string.location_permission_denied_message,
+                            Toast.LENGTH_SHORT,
+                        ).show()
                 }) {
                     Text(stringResource(id = R.string.cancel))
                 }
-            }
-
+            },
         )
     }
 
-
     if (!isCapturingCoordinates && farmInfo == null) {
-        fusedLocationClient.getCurrentLocation(locationRequest.priority,
-            object : CancellationToken() {
-                override fun onCanceledRequested(p0: OnTokenCanceledListener) =
-                    CancellationTokenSource().token
+        fusedLocationClient
+            .getCurrentLocation(
+                locationRequest.priority,
+                object : CancellationToken() {
+                    override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
 
-                override fun isCancellationRequested() = false
-            }).addOnSuccessListener { location: Location? ->
-            // update map camera position
-            if (location != null) {
-                accuracy = location.accuracy.toString()
-                if (viewModel.state.value.clusterItems.isEmpty()) {
-                    viewModel.addCoordinate(location.latitude, location.longitude)
+                    override fun isCancellationRequested() = false
+                },
+            ).addOnSuccessListener { location: Location? ->
+                // update map camera position
+                if (location != null) {
+                    accuracy = location.accuracy.toString()
+                    if (viewModel.state.value.clusterItems
+                            .isEmpty()
+                    ) {
+                        viewModel.addCoordinate(location.latitude, location.longitude)
+                    }
                 }
             }
-        }
     }
 
     fusedLocationClient.requestLocationUpdates(
@@ -176,7 +181,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 accuracy = location.accuracy.toString()
             }
         },
-        Looper.getMainLooper()
+        Looper.getMainLooper(),
     )
 
     // Display coordinates of a farm on map
@@ -212,7 +217,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 } else {
                     showAlertDialog.value = true
                 }
-            }
+            },
         )
     }
 
@@ -232,13 +237,13 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                 Button(
                     onClick = {
                         showAlertDialog.value = false
-                    }
+                    },
                 ) {
                     Text(text = stringResource(id = R.string.ok))
                     showConfirmDialog.value = false
                     mapViewModel.clearCoordinates()
                 }
-            }
+            },
         )
     }
 
@@ -247,31 +252,34 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         showDialog = mapViewModel.showDialog.collectAsState().value,
         onDismiss = { mapViewModel.dismissDialog() },
         onConfirm = { chosenArea ->
-            val chosenSize = when (chosenArea) {
-                CALCULATED_AREA_OPTION -> calculatedArea.toString()
-                ENTERED_AREA_OPTION -> enteredArea.toString()
-                else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
-            }
+            val chosenSize =
+                when (chosenArea) {
+                    CALCULATED_AREA_OPTION -> calculatedArea.toString()
+                    ENTERED_AREA_OPTION -> enteredArea.toString()
+                    else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
+                }
             sharedPref.edit().putString("plot_size", chosenSize).apply()
             coordinates = listOf() // Clear coordinates array when starting
             mapViewModel.clearCoordinates()
             navController.navigateUp()
         },
         calculatedArea = calculatedArea,
-        enteredArea = enteredArea
+        enteredArea = enteredArea,
     )
 
     // Confirm clear map
     if (showClearMapDialog.value) {
-        ConfirmDialog(stringResource(id = R.string.set_polygon),
+        ConfirmDialog(
+            stringResource(id = R.string.set_polygon),
             stringResource(id = R.string.clear_map),
             showClearMapDialog,
             fun() {
-                coordinates = listOf()// Clear coordinates array when starting
+                coordinates = listOf() // Clear coordinates array when starting
                 accuracy = ""
                 viewModel.clearCoordinates() // Clear google map
                 showClearMapDialog.value = false
-            })
+            },
+        )
     }
 
     val isDarkTheme = isSystemInDarkTheme()
@@ -283,11 +291,20 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
         verticalArrangement = Arrangement.Center,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(if (viewSelectFarm) 0.65f else if (accuracy.isNotEmpty()) .87f else .93f),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(
+                        if (viewSelectFarm) {
+                            0.65f
+                        } else if (accuracy.isNotEmpty()) {
+                            .87f
+                        } else {
+                            .93f
+                        },
+                    ),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Google map
             MapScreen(
@@ -298,70 +315,80 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
             )
         }
         Column(
-            modifier = Modifier
-                .background(backgroundColor)
-                .fillMaxWidth()
-                .fillMaxHeight()
+            modifier =
+                Modifier
+                    .background(backgroundColor)
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
         ) {
             if (!viewSelectFarm && accuracy.isNotEmpty()) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .padding(horizontal = 14.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .padding(horizontal = 14.dp),
                 ) {
-
                     Text(
                         modifier = Modifier.padding(horizontal = 2.dp),
                         color = Color.Black,
-                        text = stringResource(id = R.string.accuracy) + ": $accuracy m"
+                        text = stringResource(id = R.string.accuracy) + ": $accuracy m",
                     )
                 }
             }
 
             FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(bottom = 10.dp),
-                horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(bottom = 10.dp),
+                horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start,
             ) {
                 // Hiding some buttons depending on page usage. Viewing verse setting farm polygon
                 if (viewSelectFarm) {
                     Row {
                         if (farmInfo != null) {
                             Column(
-                                modifier = Modifier
-                                    .background(backgroundColor)
-                                    .padding(5.dp)
+                                modifier =
+                                    Modifier
+                                        .background(backgroundColor)
+                                        .padding(5.dp),
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.farm_info),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        fontSize = 18.sp, fontWeight = FontWeight.Bold
-                                    ),
-                                    modifier = Modifier.padding(5.dp)
+                                    style =
+                                        MaterialTheme.typography.bodySmall.copy(
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                    modifier = Modifier.padding(5.dp),
                                 )
                                 Column(
                                     content = { },
-                                    modifier = Modifier
-                                        .width(200.dp)
-                                        .background(Color.Black)
-                                        .height(2.dp)
+                                    modifier =
+                                        Modifier
+                                            .width(200.dp)
+                                            .background(Color.Black)
+                                            .height(2.dp),
                                 )
                                 Text(
                                     text = "${stringResource(id = R.string.farm_name)}: ${farmInfo.farmerName}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
-                                    modifier = Modifier.padding(top = 5.dp)
+                                    modifier = Modifier.padding(top = 5.dp),
                                 )
-                                Text(text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}",
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
+                                Text(
+                                    text = "${stringResource(id = R.string.member_id)}: ${farmInfo.memberId.ifEmpty { "N/A" }}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                )
                                 Text(
                                     text = "${stringResource(id = R.string.village)}: ${farmInfo.village}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                Text(text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
+                                Text(
+                                    text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
+                                )
                                 if (farmInfo.coordinates?.isEmpty() == true) {
                                     Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
                                     Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
@@ -369,7 +396,7 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                 Text(
                                     text = "${stringResource(id = R.string.size)}: ${farmInfo.size} ${
                                         stringResource(
-                                            id = R.string.ha
+                                            id = R.string.ha,
                                         )
                                     }",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
@@ -378,22 +405,26 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         }
                     }
                     Row {
-                        Button(shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier
-                                .width(120.dp)
-                                .fillMaxWidth(0.23f),
+                        Button(
+                            shape = RoundedCornerShape(10.dp),
+                            modifier =
+                                Modifier
+                                    .width(120.dp)
+                                    .fillMaxWidth(0.23f),
                             onClick = {
                                 viewModel.clearCoordinates()
                                 navController.navigateUp()
-                            }) {
+                            },
+                        ) {
                             Text(text = stringResource(id = R.string.close))
                         }
                         Button(
                             shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier
-                                .width(120.dp)
-                                .fillMaxWidth(0.23f)
-                                .padding(start = 10.dp),
+                            modifier =
+                                Modifier
+                                    .width(120.dp)
+                                    .fillMaxWidth(0.23f)
+                                    .padding(start = 10.dp),
                             onClick = {
                                 navController.navigate("updateFarm/${farmInfo?.id}")
                             },
@@ -402,8 +433,10 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                         }
                     }
                 } else {
-                    ElevatedButton(modifier = Modifier
-                        .fillMaxWidth(0.22f),
+                    ElevatedButton(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.22f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
@@ -418,103 +451,122 @@ fun SetPolygon(navController: NavController, viewModel: MapViewModel) {
                                     showConfirmDialog.value = true
                                 }
                             }
-                        }) {
+                        },
+                    ) {
                         Icon(
                             imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
                             contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
                             tint = Color.Black,
-                            modifier = Modifier.padding(4.dp)
+                            modifier = Modifier.padding(4.dp),
                         )
                     }
-                    ElevatedButton(modifier = Modifier
-                        .fillMaxWidth(0.28f),
+                    ElevatedButton(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.28f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
-                        //colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
+                        // colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
                         onClick = {
                             if (!isLocationEnabled(context)) {
                                 showLocationDialog.value = true
                             } else {
                                 if (context.hasLocationPermission() && isCapturingCoordinates) {
-                                    fusedLocationClient.getCurrentLocation(locationRequest.priority,
-                                        object : CancellationToken() {
-                                            override fun onCanceledRequested(p0: OnTokenCanceledListener) =
-                                                CancellationTokenSource().token
+                                    fusedLocationClient
+                                        .getCurrentLocation(
+                                            locationRequest.priority,
+                                            object : CancellationToken() {
+                                                override fun onCanceledRequested(p0: OnTokenCanceledListener) =
+                                                    CancellationTokenSource().token
 
-                                            override fun isCancellationRequested() = false
-                                        }).addOnSuccessListener { location: Location? ->
-                                        if (location == null) {
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.can_not_get_location),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        } else {
-                                            if (location.latitude.toString()
-                                                    .split(".")[1].length < 6 || location.longitude.toString()
-                                                    .split(".")[1].length < 6
-                                            ) {
-                                                Toast.makeText(
-                                                    context,
-                                                    context.getString(R.string.can_not_get_location),
-                                                    Toast.LENGTH_LONG
-                                                ).show()
+                                                override fun isCancellationRequested() = false
+                                            },
+                                        ).addOnSuccessListener { location: Location? ->
+                                            if (location == null) {
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        context.getString(R.string.can_not_get_location),
+                                                        Toast.LENGTH_LONG,
+                                                    ).show()
+                                            } else {
+                                                if (location.latitude
+                                                        .toString()
+                                                        .split(".")[1]
+                                                        .length < 6 ||
+                                                    location.longitude
+                                                        .toString()
+                                                        .split(".")[1]
+                                                        .length < 6
+                                                ) {
+                                                    Toast
+                                                        .makeText(
+                                                            context,
+                                                            context.getString(R.string.can_not_get_location),
+                                                            Toast.LENGTH_LONG,
+                                                        ).show()
 
-                                                return@addOnSuccessListener
-                                            }
+                                                    return@addOnSuccessListener
+                                                }
 
 //                                            update map camera position
-                                            val coordinate =
-                                                Pair(location.latitude, location.longitude)
-                                            accuracy = location.accuracy.toString()
+                                                val coordinate =
+                                                    Pair(location.latitude, location.longitude)
+                                                accuracy = location.accuracy.toString()
 
-                                            coordinates = coordinates + coordinate
-                                            viewModel.addMarker(coordinate)
+                                                coordinates = coordinates + coordinate
+                                                viewModel.addMarker(coordinate)
 
 //                                                add camera position
-                                            viewModel.addCoordinate(
-                                                location.latitude, location.longitude
-                                            )
+                                                viewModel.addCoordinate(
+                                                    location.latitude,
+                                                    location.longitude,
+                                                )
+                                            }
                                         }
-                                    }
                                 }
                             }
-                        }) {
+                        },
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = stringResource(id = R.string.add_point),
                             tint = Color.Black,
-                            modifier = Modifier.padding(4.dp)
+                            modifier = Modifier.padding(4.dp),
                         )
-
                     }
-                    ElevatedButton(modifier = Modifier
-                        .fillMaxWidth(0.22f),
+                    ElevatedButton(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.22f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         onClick = {
                             showClearMapDialog.value = true
-                        }) {
+                        },
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = stringResource(id = R.string.reset),
                             tint = Color.Black,
-                            modifier = Modifier.padding(4.dp)
+                            modifier = Modifier.padding(4.dp),
                         )
                     }
-                    ElevatedButton(modifier = Modifier.fillMaxWidth(0.28f),
+                    ElevatedButton(
+                        modifier = Modifier.fillMaxWidth(0.28f),
 //                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
                         colors = ButtonDefaults.buttonColors(Color.White),
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
                             coordinates = coordinates.dropLast(1)
-                            viewModel.removeLastCoordinate();
-                        }) {
+                            viewModel.removeLastCoordinate()
+                        },
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = stringResource(id = R.string.drop_point),
                             tint = Color.Black,
-                            modifier = Modifier.padding(4.dp)
+                            modifier = Modifier.padding(4.dp),
                         )
                     }
                 }

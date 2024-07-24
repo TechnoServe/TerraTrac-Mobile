@@ -112,8 +112,6 @@
     <string name="needs_update">Needs Update</string>
     <string name="no_update_needed">No Update Needed</string>
     <string name="no_results_found">No Result Found</string>
-
-
-
-
+    <string name="duplicate_farms">%1$d Duplicate farms exist</string>
+    <string name="farms_needing_update">%1$d farms need to be updated</string>
 </resources>

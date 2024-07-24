@@ -102,4 +102,17 @@
     <string name="select_file">Seleccionar archivo</string>
     <string name="import_successful">Importación exitosa</string>
     <string name="import_failed">Importación fallida</string>
+    <string name="template_downloaded">plantilla descargada con éxito</string>
+    <string name="template_download_failed">fallo en la descarga de la plantilla</string>
+    <string name="download_template">Descargar Plantilla</string>
+    <string name="select_file_type">Seleccionar Tipo de Archivo de Plantilla</string>
+    <string name="confirm_export">Está a punto de exportar %1$d granjas. %2$d granjas tienen datos incompletos. ¿Desea continuar?</string>
+    <string name="confirm_share">Está a punto de compartir %1$d granjas. %2$d granjas tienen datos incompletos. ¿Desea continuar?</string>
+    <string name="search">Buscar</string>
+    <string name="all">Todo</string>
+    <string name="needs_update">Necesita Actualización</string>
+    <string name="no_update_needed">No Necesita Actualización</string>
+    <string name="no_results_found">No se encontraron resultados</string>
+    <string name="duplicate_farms">%1$d granjas duplicadas existen</string>
+    <string name="farms_needing_update">%1$d granjas necesitan ser actualizadas</string>
 </resources>

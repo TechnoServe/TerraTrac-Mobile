@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,21 +22,24 @@ fun AreaDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
     calculatedArea: Double,
-    enteredArea: Double
+    enteredArea: Double,
 ) {
     if (showDialog) {
-        val calculatedAreaString = stringResource(
-            id = R.string.calculated_area,
-            String.format("%.6f", calculatedArea)
-        )
-        val enteredAreaString = stringResource(
-            id = R.string.entered_size,
-            String.format("%.2f", enteredArea)
-        )
-        val options = listOf(
-            CALCULATED_AREA_OPTION to calculatedAreaString,
-            ENTERED_AREA_OPTION to enteredAreaString
-        )
+        val calculatedAreaString =
+            stringResource(
+                id = R.string.calculated_area,
+                String.format("%.6f", calculatedArea),
+            )
+        val enteredAreaString =
+            stringResource(
+                id = R.string.entered_size,
+                String.format("%.2f", enteredArea),
+            )
+        val options =
+            listOf(
+                CALCULATED_AREA_OPTION to calculatedAreaString,
+                ENTERED_AREA_OPTION to enteredAreaString,
+            )
 
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -58,12 +60,10 @@ fun AreaDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss,modifier = Modifier.padding(top = 16.dp)) {
+                TextButton(onClick = onDismiss, modifier = Modifier.padding(top = 16.dp)) {
                     Text(stringResource(id = R.string.cancel))
                 }
-            }
+            },
         )
     }
 }
-
-

@@ -102,4 +102,17 @@
     <string name="select_file">Sélectionner le fichier</string>
     <string name="import_successful">Importation réussie</string>
     <string name="import_failed">Échec de l\'importation</string>
+    <string name="template_downloaded">modèle téléchargé avec succès</string>
+    <string name="template_download_failed">échec du téléchargement du modèle</string>
+    <string name="download_template">Télécharger le Modèle</string>
+    <string name="select_file_type">Sélectionner le Type de Fichier de Modèle</string>
+    <string name="confirm_export">Vous êtes sur le point d\'exporter %1$d fermes. %2$d fermes ont des données incomplètes. Voulez-vous continuer ?</string>
+    <string name="confirm_share">Vous êtes sur le point de partager %1$d fermes. %2$d fermes ont des données incomplètes. Voulez-vous continuer ?</string>
+    <string name="search">Rechercher</string>
+    <string name="all">Tout</string>
+    <string name="needs_update">Besoin de Mise à Jour</string>
+    <string name="no_update_needed">Aucune Mise à Jour Nécessaire</string>
+    <string name="no_results_found">Aucun résultat trouvé</string>
+    <string name="duplicate_farms">%1$d fermes en double existent</string>
+    <string name="farms_needing_update">%1$d fermes doivent être mises à jour</string>
 </resources>

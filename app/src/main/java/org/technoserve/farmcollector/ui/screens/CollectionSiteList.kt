@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,9 +51,10 @@ import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
 @Composable
 fun CollectionSiteList(navController: NavController) {
     val context = LocalContext.current
-    val farmViewModel: FarmViewModel = viewModel(
-        factory = FarmViewModelFactory(context.applicationContext as Application)
-    )
+    val farmViewModel: FarmViewModel =
+        viewModel(
+            factory = FarmViewModelFactory(context.applicationContext as Application),
+        )
     val selectedIds = remember { mutableStateListOf<Long>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
 
@@ -67,7 +69,6 @@ fun CollectionSiteList(navController: NavController) {
         selectedIds.removeAll(selectedIds)
         showDeleteDialog.value = false
     }
-
 
     fun refreshListItems() {
         // TODO: update saved predictions list when db gets updated
@@ -85,9 +86,10 @@ fun CollectionSiteList(navController: NavController) {
     }
     if (listItems.isNotEmpty()) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
         ) {
             item {
                 FarmListHeader(
@@ -95,36 +97,62 @@ fun CollectionSiteList(navController: NavController) {
                     onSearchQueryChanged = setSearchQuery,
                     onAddFarmClicked = { navController.navigate("addSite") },
                     onBackSearchClicked = { navController.navigate("siteList") },
-                    //  onBackClicked = { navController.navigateUp() }
                     onBackClicked = { navController.navigate("home") },
                     showAdd = true,
-                    showSearch = true
+                    showSearch = true,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            items(listItems.filter {
-                it.name.contains(searchQuery, ignoreCase = true)
-            }) { site ->
-                SiteCard(site = site, onCardClick = {
-                    // When a SiteCard is clicked, show the dialog
-                    navController.navigate("farmList/${site.siteId}")
+            // Filter the list based on the search query
+            val filteredList =
+                listItems.filter {
+                    it.name.contains(searchQuery, ignoreCase = true)
+                }
 
-                }, onDeleteClick = {
-                    // When the delete icon is clicked, invoke the onDelete function
-                    selectedIds.add(site.siteId)
-                    showDeleteDialog.value = true
-                }, farmViewModel)
-                Spacer(modifier = Modifier.height(16.dp))
+            // Display a message if no results are found
+            if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.no_results_found),
+                        modifier =
+                            Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            } else {
+                // Display the list of filtered items
+                items(filteredList) { site ->
+                    siteCard(
+                        site = site,
+                        onCardClick = {
+                            navController.navigate("farmList/${site.siteId}")
+                        },
+                        onDeleteClick = {
+                            selectedIds.add(site.siteId)
+                            showDeleteDialog.value = true
+                        },
+                        farmViewModel = farmViewModel,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
-        }
-        if (showDeleteDialog.value) {
-            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+
+            // Display delete dialog if showDeleteDialog is true
+            if (showDeleteDialog.value) {
+                item {
+                    DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+                }
+            }
         }
     } else {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             FarmListHeader(
                 title = stringResource(id = R.string.collection_site_list),
@@ -137,12 +165,13 @@ fun CollectionSiteList(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp, 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp, 8.dp),
                 painter = painterResource(id = R.drawable.no_data2),
-                contentDescription = null
+                contentDescription = null,
             )
         }
     }
@@ -150,18 +179,18 @@ fun CollectionSiteList(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SiteCard(
+fun siteCard(
     site: CollectionSite,
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    farmViewModel: FarmViewModel
+    farmViewModel: FarmViewModel,
 ) {
     val showDialog = remember { mutableStateOf(false) }
     if (showDialog.value) {
         UpdateCollectionDialog(
             site = site,
             showDialog = showDialog,
-            farmViewModel = farmViewModel
+            farmViewModel = farmViewModel,
         )
     }
     val isDarkTheme = isSystemInDarkTheme()
@@ -170,54 +199,62 @@ fun SiteCard(
     val iconColor = if (isDarkTheme) Color.White else Color.Black
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(top = 8.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ElevatedCard(
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 6.dp
-            ),
-            modifier = Modifier
-                .background(backgroundColor)
-                .fillMaxWidth() // 90% of the screen width
-                .padding(8.dp),
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = 6.dp,
+                ),
+            modifier =
+                Modifier
+                    .background(backgroundColor)
+                    .fillMaxWidth() // 90% of the screen width
+                    .padding(8.dp),
             onClick = {
                 onCardClick()
-            }
+            },
         ) {
             Column(
-                modifier = Modifier
-                    .background(backgroundColor)
-                    .padding(16.dp)
+                modifier =
+                    Modifier
+                        .background(backgroundColor)
+                        .padding(16.dp),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .weight(1.1f)
-                            .padding(bottom = 4.dp)
+                        modifier =
+                            Modifier
+                                .weight(1.1f)
+                                .padding(bottom = 4.dp),
                     ) {
                         Text(
                             text = site.name,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor
-                            ),
-                            modifier = Modifier
-                                .padding(bottom = 1.dp)
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textColor,
+                                ),
+                            modifier =
+                                Modifier
+                                    .padding(bottom = 1.dp),
                         )
                         Text(
                             text = "${stringResource(id = R.string.agent_name)}: ${site.agentName}",
                             style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                            modifier = Modifier
-                                .padding(bottom = 1.dp)
+                            modifier =
+                                Modifier
+                                    .padding(bottom = 1.dp),
                         )
                         if (site.phoneNumber.isNotEmpty()) {
                             Text(
@@ -231,14 +268,15 @@ fun SiteCard(
                         onClick = {
                             showDialog.value = true
                         },
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(4.dp)
+                        modifier =
+                            Modifier
+                                .size(24.dp)
+                                .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Update",
-                            tint = iconColor
+                            tint = iconColor,
                         )
                     }
                     Spacer(modifier = Modifier.padding(10.dp))
@@ -247,14 +285,15 @@ fun SiteCard(
                         onClick = {
                             onDeleteClick()
                         },
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(4.dp)
+                        modifier =
+                            Modifier
+                                .size(24.dp)
+                                .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
-                            tint = Color.Red
+                            tint = Color.Red,
                         )
                     }
                 }

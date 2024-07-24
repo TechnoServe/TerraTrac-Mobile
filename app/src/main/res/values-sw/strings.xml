@@ -102,4 +102,17 @@
     <string name="select_file">Chagua Faili</string>
     <string name="import_successful">Kuleta Kufanikiwa</string>
     <string name="import_failed">Kuleta Kushindwa</string>
+    <string name="template_downloaded">kiolezo kimepakuliwa kwa mafanikio</string>
+    <string name="template_download_failed">kupakua kiolezo kimeshindwa</string>
+    <string name="download_template">Pakua Kiolezo</string>
+    <string name="select_file_type">Chagua Aina ya Faili la Kiolezo</string>
+    <string name="confirm_export">Unakaribia kusafirisha mashamba %1$d. Mashamba %2$d yana data ambazo hazijakamilika. Unataka kuendelea?</string>
+    <string name="confirm_share">Unakaribia kushiriki mashamba %1$d. Mashamba %2$d yana data ambazo hazijakamilika. Unataka kuendelea?</string>
+    <string name="search">Tafuta</string>
+    <string name="all">Yote</string>
+    <string name="needs_update">Inahitaji Kusasishwa</string>
+    <string name="no_update_needed">Haihitaji Kusasishwa</string>
+    <string name="no_results_found">Hakuna Matokeo Yaliyopatikana</string>
+    <string name="duplicate_farms">%1$d Mashamba yaliyojirudia yapo</string>
+    <string name="farms_needing_update">%1$d mashamba yanahitaji kusasishwa</string>
 </resources>

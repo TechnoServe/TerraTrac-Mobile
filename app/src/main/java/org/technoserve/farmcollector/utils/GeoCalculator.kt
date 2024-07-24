@@ -1,13 +1,12 @@
 package org.technoserve.farmcollector.utils
 
 import android.annotation.SuppressLint
-import com.google.maps.android.SphericalUtil
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.SphericalUtil
 
 object GeoCalculator {
-
-    @SuppressLint("DefaultLocale")
     // The function to calculate the Area using the captured Polygons
+    @SuppressLint("DefaultLocale")
     fun calculateArea(polygon: List<Pair<Double, Double>>?): Double {
         if (polygon == null || polygon.size < 3) {
             return 0.0
