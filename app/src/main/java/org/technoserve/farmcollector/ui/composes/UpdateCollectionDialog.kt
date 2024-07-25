@@ -114,7 +114,7 @@ fun UpdateCollectionDialog(
                         onValueChange = { phoneNumber = it },
                         label = { Text(stringResource(id = R.string.phone_number)) },
                         supportingText = {
-                            if (!isValidPhoneNumber(phoneNumber) && phoneNumber.isNotBlank()) Text("Invalid Phone Number")
+                            if (!isValidPhoneNumber(phoneNumber) && phoneNumber.isNotBlank()) Text(stringResource(id = R.string.invalid_phone_number))
                         },
                         isError = phoneNumber.isNotBlank() && !isValidPhoneNumber(phoneNumber),
                         colors =
@@ -128,7 +128,7 @@ fun UpdateCollectionDialog(
                         onValueChange = { email = it },
                         label = { Text(stringResource(id = R.string.email)) },
                         supportingText = {
-                            if (email.isNotBlank() && !email.contains("@")) Text("Invalid Email")
+                            if (email.isNotBlank() && !email.contains("@")) Text(stringResource(id=R.string.error_invalid_email_address))
                         },
                         isError = email.isNotBlank() && !email.contains("@"),
                         colors =

@@ -154,7 +154,7 @@ fun SiteForm(navController: NavController) {
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(id = R.string.site_name) + " (*)",color = inputLabelColor ) },
-                supportingText = { if (!isValid && name.isBlank()) Text("Site Name should not be empty") },
+                supportingText = { if (!isValid && name.isBlank()) Text(stringResource(R.string.error_site_name_empty)) },
                 isError = !isValid && name.isBlank(),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
@@ -185,7 +185,7 @@ fun SiteForm(navController: NavController) {
             value = agentName,
             onValueChange = { agentName = it },
             label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && agentName.isBlank()) Text("Agent Name should not be empty") },
+            supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
             isError = !isValid && agentName.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
@@ -221,7 +221,7 @@ fun SiteForm(navController: NavController) {
             },
             label = { Text(stringResource(id = R.string.phone_number,),color = inputLabelColor) },
             supportingText = {
-                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text("Invalid Phone Number")
+                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(stringResource(R.string.error_invalid_phone_number, phoneNumber))
             },
             isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
             colors = TextFieldDefaults.textFieldColors(
@@ -260,7 +260,7 @@ fun SiteForm(navController: NavController) {
                         email
                     ).matches()
                 )
-                    Text("Invalid Email Address")
+                    Text(stringResource(R.string.error_invalid_email_address))
             },
             isError = !isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                 email
@@ -293,7 +293,7 @@ fun SiteForm(navController: NavController) {
             value = village,
             onValueChange = { village = it },
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
+            supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
@@ -319,7 +319,7 @@ fun SiteForm(navController: NavController) {
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
+            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,

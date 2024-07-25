@@ -119,4 +119,17 @@
     <string name="geojson_import_successful">Importation de GeoJSON réussie</string>
     <string name="csv_import_successful">Importation de CSV réussie</string>
     <string name="import_failed_with_error">Échec de l\'importation : %1$s</string>
+
+    <string name="error_site_name_empty">Le nom du site ne doit pas être vide</string>
+    <string name="error_agent_name_empty">Le nom de l\'agent ne doit pas être vide</string>
+    <string name="error_invalid_phone_number">Numéro de téléphone invalide</string>
+    <string name="error_invalid_email_address">Adresse e-mail invalide</string>
+    <string name="error_village_empty">Le village ne doit pas être vide</string>
+    <string name="error_district_empty">Le district ne doit pas être vide</string>
+    <string name="error_farmer_name_empty">Le nom du fermier ne doit pas être vide</string>
+    <string name="error_farm_size_empty">La taille de la ferme ne doit pas être vide</string>
+    <string name="error_latitude_decimal_places">La latitude doit avoir au moins 6 chiffres après la virgule</string>
+    <string name="error_longitude_decimal_places">La longitude doit avoir au moins 6 chiffres après la virgule</string>
+    <string name="error_polygon_points">Veuillez capturer au moins 4 points pour le polygone lorsque la taille est supérieure à 4 hectares.</string>
+
 </resources>

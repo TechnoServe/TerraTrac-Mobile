@@ -575,6 +575,8 @@ fun FarmList(
             showDeleteDialog.value = false
         }
     }
+
+    /*
     Column(
         modifier =
             Modifier
@@ -595,7 +597,7 @@ fun FarmList(
                 showFormatDialog = true
             },
             onSearchQueryChanged = setSearchQuery,
-            onImportClicked = { showImportDialog = true },
+            //onImportClicked = { showImportDialog = true },
             showAdd = true,
             showExport = listItems.isNotEmpty(),
             showShare = listItems.isNotEmpty(),
@@ -710,6 +712,119 @@ fun FarmList(
             }
         }
     }
+    */
+    if (listItems.isNotEmpty() || searchQuery.isNotEmpty()) {
+        val filteredList = listItems.filter {
+            it.farmerName.contains(searchQuery, ignoreCase = true)
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            item {
+                FarmListHeaderPlots(
+                    title = stringResource(id = R.string.farm_list),
+                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+                    onBackClicked = { navController.navigate("siteList") },
+                    onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+                    onExportClicked = {
+                        action = Action.Export
+                        showFormatDialog = true
+                    },
+                    onShareClicked = {
+                        action = Action.Share
+                        showFormatDialog = true
+                    },
+                    onSearchQueryChanged = setSearchQuery,
+                    showAdd = true,
+                    showExport = listItems.isNotEmpty(),
+                    showShare = listItems.isNotEmpty(),
+                    showSearch = listItems.isNotEmpty()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (filteredList.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_results_found),
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            } else {
+                items(filteredList) { farm ->
+                    FarmCard(
+                        farm = farm,
+                        onCardClick = {
+                            navController.currentBackStackEntry?.arguments?.apply {
+                                putSerializable("coordinates", farm.coordinates?.let { ArrayList(it) })
+                                putSerializable("farmData", Pair(farm, "view"))
+                            }
+                            navController.navigate(route = "setPolygon")
+                        },
+                        onDeleteClick = {
+                            selectedIds.add(farm.id)
+                            showDeleteDialog.value = true
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+
+        if (showDeleteDialog.value) {
+            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            FarmListHeaderPlots(
+                title = stringResource(id = R.string.farm_list),
+                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+                onBackClicked = { navController.navigateUp() },
+                onExportClicked = {
+                    action = Action.Export
+                    showFormatDialog = true
+                },
+                onShareClicked = {
+                    action = Action.Share
+                    showFormatDialog = true
+                },
+                onSearchQueryChanged = setSearchQuery,
+                showAdd = true,
+                showExport = listItems.isNotEmpty(),
+                showShare = listItems.isNotEmpty(),
+                showSearch = listItems.isNotEmpty(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Image(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+                    .padding(16.dp, 8.dp),
+                painter = painterResource(id = R.drawable.no_data2),
+                contentDescription = null
+            )
+        }
+    }
+
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -998,7 +1113,7 @@ fun FarmListHeaderPlots(
     onBackClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
-    onImportClicked: () -> Unit,
+    // onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
@@ -1037,13 +1152,13 @@ fun FarmListHeaderPlots(
                 }
                 Spacer(modifier = Modifier.width(1.dp))
             }
-            IconButton(onClick = onImportClicked, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.import_icon),
-                    contentDescription = "Import",
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+//            IconButton(onClick = onImportClicked, modifier = Modifier.size(36.dp)) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.import_icon),
+//                    contentDescription = "Import",
+//                    modifier = Modifier.size(24.dp),
+//                )
+//            }
             Spacer(modifier = Modifier.width(1.dp))
             if (showAdd) {
                 IconButton(onClick = {
@@ -1422,7 +1537,7 @@ fun UpdateFarmForm(
                     Toast
                         .makeText(
                             context,
-                            "Please capture at least 4 points for the polygon when the size is greater than 4 hectares.",
+                            R.string.error_polygon_points,
                             Toast.LENGTH_SHORT,
                         ).show()
                     return

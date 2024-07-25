@@ -119,4 +119,18 @@
     <string name="geojson_import_successful">Uagizaji wa GeoJSON umefanikiwa</string>
     <string name="csv_import_successful">Uagizaji wa CSV umefanikiwa</string>
     <string name="import_failed_with_error">Uagizaji umeshindwa: %1$s</string>
+
+    <string name="error_site_name_empty">Jina la Tovuti halipaswi kuwa tupu</string>
+    <string name="error_agent_name_empty">Jina la Wakala halipaswi kuwa tupu</string>
+    <string name="error_invalid_phone_number">Nambari ya Simu Batili</string>
+    <string name="error_invalid_email_address">Anwani ya Barua pepe Batili</string>
+    <string name="error_village_empty">Kijiji hakipaswi kuwa tupu</string>
+    <string name="error_district_empty">Wilaya haipaswi kuwa tupu</string>
+    <string name="error_farmer_name_empty">Jina la Mkulima halipaswi kuwa tupu</string>
+    <string name="error_farm_size_empty">Ukubwa wa Shamba haupaswi kuwa tupu</string>
+    <string name="error_latitude_decimal_places">Latitudo lazima iwe na angalau nafasi 6 za desimali</string>
+    <string name="error_longitude_decimal_places">Longitudo lazima iwe na angalau nafasi 6 za desimali</string>
+    <string name="error_polygon_points">Tafadhali kamata angalau pointi 4 kwa poligoni wakati ukubwa ni zaidi ya hekta 4.</string>
+
+    <!-- Oromo -->
 </resources>

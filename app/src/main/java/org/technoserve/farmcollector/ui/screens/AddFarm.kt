@@ -453,7 +453,7 @@ fun FarmForm(
             value = farmerName,
             onValueChange = { farmerName = it },
             label = { Text(stringResource(id = R.string.farm_name) + " (*)",color = inputLabelColor)},
-            supportingText = { if (!isValid && farmerName.isBlank()) Text("Farmer Name should not be empty") },
+            supportingText = { if (!isValid && farmerName.isBlank()) Text(stringResource(R.string.error_farmer_name_empty) + " (*)") },
             isError = !isValid && farmerName.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
@@ -501,7 +501,7 @@ fun FarmForm(
             value = village,
             onValueChange = { village = it },
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
+            supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
@@ -525,7 +525,7 @@ fun FarmForm(
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district) + " (*)", color =inputLabelColor) },
-            supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
+            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
@@ -560,7 +560,7 @@ fun FarmForm(
                 ),
 
                 label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
-                supportingText = { if (!isValid && size.isBlank()) Text("Farm Size should not be empty") },
+                supportingText = { if (!isValid && size.isBlank()) Text(stringResource(R.string.error_farm_size_empty)) },
                 isError = !isValid && size.isBlank(),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
@@ -632,14 +632,14 @@ fun FarmForm(
                         if (it.split(".").last().length >= 6) latitude = it
                         else Toast.makeText(
                             context,
-                            "Latitude must have at least 6 decimal places",
+                            R.string.error_latitude_decimal_places,
                             Toast.LENGTH_SHORT
                         ).show()
                     },
                     label = { Text(stringResource(id = R.string.latitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && latitude.split(".").last().length < 6) Text(
-                            "Latitude must have at least 6 decimal places"
+                            stringResource(R.string.error_latitude_decimal_places)
                         )
                     },
                     isError = !isValid && latitude.split(".").last().length < 6,
@@ -658,14 +658,14 @@ fun FarmForm(
                         if (it.split(".").last().length >= 6) longitude = it
                         else Toast.makeText(
                             context,
-                            "Longitude must have at least 6 decimal places",
+                            R.string.error_longitude_decimal_places,
                             Toast.LENGTH_SHORT
                         ).show()
                     },
                     label = { Text(stringResource(id = R.string.longitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && longitude.split(".").last().length < 6) Text(
-                            "Longitude must have at least 6 decimal places"
+                            stringResource(R.string.error_longitude_decimal_places) + ""
                         )
                     },
                     isError = !isValid && longitude.split(".").last().length < 6,

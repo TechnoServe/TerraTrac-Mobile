@@ -422,7 +422,7 @@ fun SetPolygon(
                             shape = RoundedCornerShape(10.dp),
                             modifier =
                                 Modifier
-                                    .width(120.dp)
+                                    .width(150.dp)
                                     .fillMaxWidth(0.23f)
                                     .padding(start = 10.dp),
                             onClick = {
