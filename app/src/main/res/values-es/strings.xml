@@ -131,4 +131,5 @@
     <string name="error_latitude_decimal_places">La latitud debe tener al menos 6 decimales</string>
     <string name="error_longitude_decimal_places">La longitud debe tener al menos 6 decimales</string>
     <string name="error_polygon_points">Por favor, capture al menos 4 puntos para el polígono cuando el tamaño sea superior a 4 hectáreas.</string>
+    <string name="error_farm_size_invalid">Tamaño de granja inválido</string>
 </resources>

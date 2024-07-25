@@ -131,4 +131,5 @@
     <string name="error_latitude_decimal_places">ኬኮር በብዛት 6 የመጠን ቁጥር መኖር አለበት</string>
     <string name="error_longitude_decimal_places">ኬኮር በብዛት 6 የመጠን ቁጥር መኖር አለበት</string>
     <string name="error_polygon_points">እንዲሁም ከ 4 ሂክታር በላይ ሲሆን እንዲሁ ብዙ ቅርፅ ማጠናቀቅ አለበት ፡፡</string>
+    <string name="error_farm_size_invalid">የግብርኛ መስክ መጠን የተሳሳተ</string>
 </resources>

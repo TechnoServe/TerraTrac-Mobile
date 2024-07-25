@@ -247,6 +247,22 @@ fun SetPolygon(
         )
     }
 
+//    fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
+//        // Split the string on the decimal point
+//        val parts = value.split(".")
+//        if (parts.size == 2) {
+//            // Truncate the decimal part to the specified number of places
+//            val truncatedDecimalPart = parts[1].take(decimalPlaces)
+//            return if (truncatedDecimalPart.isEmpty()) {
+//                parts[0] // If no decimal places, return the integer part only
+//            } else {
+//                "${parts[0]}.$truncatedDecimalPart" // Combine integer and truncated decimal part
+//            }
+//        }
+//        return value // No decimal point found, return original value
+//    }
+
+
     // Display AreaDialog if needed
     AreaDialog(
         showDialog = mapViewModel.showDialog.collectAsState().value,
@@ -259,6 +275,10 @@ fun SetPolygon(
                     else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
                 }
             sharedPref.edit().putString("plot_size", chosenSize).apply()
+            // Assuming chosenSize is a Double or String representing the size
+//            val originalSize = chosenSize.toString()
+//            val truncatedSize = truncateToDecimalPlaces(originalSize, 6)
+//            sharedPref.edit().putString("plot_size", truncatedSize).apply()
             coordinates = listOf() // Clear coordinates array when starting
             mapViewModel.clearCoordinates()
             navController.navigateUp()

@@ -1294,7 +1294,7 @@ fun FarmCard(
                                 .padding(bottom = 4.dp),
                     )
                     Text(
-                        text = "${stringResource(id = R.string.size)}: ${farm.size} ${
+                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
                             stringResource(id = R.string.ha)
                         }",
                         style = MaterialTheme.typography.bodySmall.copy(color = textColor),

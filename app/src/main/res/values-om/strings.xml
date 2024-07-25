@@ -131,4 +131,6 @@
     <string name="error_latitude_decimal_places">Bal\'inni kaabaa miilxirraa 6 akka ta\'u qaba</string>
     <string name="error_longitude_decimal_places">Bal\'inni kibbaa miilxirraa 6 akka ta\'u qaba</string>
     <string name="error_polygon_points">Giddugaleessa meetiraa 4 ta\'u yoo xiqqaate foorisaaniirra seenuu qaba.</string>
+    <string name="error_farm_size_invalid">Gatii Dirree Dogoggoraa</string>
+
 </resources>

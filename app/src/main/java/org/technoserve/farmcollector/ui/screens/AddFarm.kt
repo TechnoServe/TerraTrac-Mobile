@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.location.LocationManager
 import android.os.Looper
@@ -88,10 +89,13 @@ import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
 import java.util.UUID
+import java.util.regex.Pattern
 import javax.inject.Inject
 
 
@@ -124,6 +128,48 @@ fun AddFarm(navController: NavController, siteId: Long) {
         FarmForm(navController, siteId, coordinatesData)
     }
 }
+
+// Function to read and format stored value
+fun readStoredValue(sharedPref: SharedPreferences): String {
+    val storedValue = sharedPref.getString("plot_size", "") ?: ""
+    return formatInput(storedValue)
+}
+
+// Function to format input value to 6 decimal places without scientific notation
+fun formatInput(input: String): String {
+    return try {
+        val number = BigDecimal(input)
+        val scale = number.scale()
+        val decimalPlaces = scale - number.precision()
+
+        when {
+           decimalPlaces > 3 -> {
+                // Format to 6 decimal places without trailing zeros if more than 3 decimal places
+               BigDecimal(input).setScale(6, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
+            }
+            decimalPlaces == 0 -> {
+                // No decimal part, return the number as is
+                input
+            }
+            else -> {
+                // Set the precision to 6 decimal places without rounding
+                val formattedNumber = number.setScale(6, RoundingMode.DOWN)
+                // If 3 or fewer decimal places, return as is without trailing zeros
+                formattedNumber.stripTrailingZeros().toPlainString()
+            }
+        }
+    } catch (e: NumberFormatException) {
+        "" // Return an empty string if the input is invalid
+    }
+}
+fun validateSize(size: String): Boolean {
+    return try {
+        size.isNotBlank() || size.toFloatOrNull() != null || size.matches(Regex("^[0-9]*\\.?[0-9]*$")) || size.toFloat() > 0
+    } catch (e: NumberFormatException) {
+        false
+    }
+}
+
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -158,11 +204,16 @@ fun FarmForm(
     )
 
     val mapViewModel: MapViewModel = viewModel()
-    var size by rememberSaveable {
-        mutableStateOf(
-            sharedPref.getString("plot_size", "") ?: ""
-        )
-    }
+//    var size by rememberSaveable {
+//        mutableStateOf(
+//            sharedPref.getString("plot_size", "") ?: ""
+//        )
+//    }
+    // Read initial value from SharedPreferences
+    var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
+    var isValidSize by remember { mutableStateOf(true) }
+    // Regex pattern to check for scientific notation
+    val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
 
     val file = context.createImageFile()
     val uri = FileProvider.getUriForFile(
@@ -347,6 +398,11 @@ fun FarmForm(
             isValid = false
             // You can display an error message for this field if needed
         }
+//
+//        if (size.isBlank() || size.toFloatOrNull() == null || !size.matches(Regex("^[0-9]*\\.?[0-9]*$")) || size.toFloatOrNull() == null || size.toFloat() <= 0) {
+//            isValid = false
+//            // You can display an error message for this field if needed
+//        }
 
         if (selectedUnit.isBlank()) {
             isValid = false
@@ -548,20 +604,46 @@ fun FarmForm(
             TextField(
                 singleLine = true,
                 value = size,
-                onValueChange = {
-                    size = it
+                onValueChange = { inputValue ->
+                    val formattedValue = when {
+                        validateSize(inputValue) -> {
+                            inputValue
+                        }
+                        // Check if the input is in scientific notation
+                        scientificNotationPattern.matcher(inputValue).matches() -> {
+                             formatInput(inputValue)
+                        }
+                        else -> {
+                            formatInput(inputValue)
+                        }
+                    }
+                    // Update the size state with the formatted value
+                    size = formattedValue
+                    // Save to SharedPreferences or perform other actions
                     with(sharedPref.edit()) {
-                        putString("plot_size", size)
+                        putString("plot_size", formattedValue)
                         apply()
                     }
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = KeyboardType.Number
                 ),
-
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
-                supportingText = { if (!isValid && size.isBlank()) Text(stringResource(R.string.error_farm_size_empty)) },
-                isError = !isValid && size.isBlank(),
+                label = {
+                    Text(
+                        stringResource(id = R.string.size_in_hectares) + " (*)",
+                        color = inputLabelColor
+                    )
+                },
+                supportingText = {
+                    if (!isValidSize) {
+                        if (size.isBlank()) {
+                            Text(stringResource(R.string.error_farm_size_empty))
+                        } else {
+                            Text(stringResource(R.string.error_farm_size_invalid))
+                        }
+                    }
+                },
+                isError = !isValidSize,
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
@@ -572,11 +654,8 @@ fun FarmForm(
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
-                    .weight(1f)
                     .padding(bottom = 16.dp)
             )
-
-            //AreaInputField( farmViewModel = farmViewModel)
             Spacer(modifier = Modifier.width(16.dp))
             // Size measure
             ExposedDropdownMenuBox(
@@ -628,13 +707,31 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = latitude,
+//                    onValueChange = {
+//                        if (it.split(".").last().length >= 6) latitude = it
+//                        else Toast.makeText(
+//                            context,
+//                            R.string.error_latitude_decimal_places,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    },
                     onValueChange = {
-                        if (it.split(".").last().length >= 6) latitude = it
-                        else Toast.makeText(
-                            context,
-                            R.string.error_latitude_decimal_places,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val parts = it.split(".")
+                        if (parts.size == 2 && parts.last().length == 5 ) {
+                            val decimalPlaces = parts.last().length
+                            val requiredZeros = 6 - decimalPlaces
+                            // Append the required number of zeros
+                            val formattedLatitude = it.padEnd(it.length + requiredZeros, '0')
+                            latitude = formattedLatitude
+                        } else if (parts.size == 2 && parts.last().length >= 6) {
+                            latitude = it
+                        } else {
+                            Toast.makeText(
+                                context,
+                                R.string.error_latitude_decimal_places,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     label = { Text(stringResource(id = R.string.latitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
@@ -654,13 +751,32 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = longitude,
+//                    onValueChange = {
+//                        if (it.split(".").last().length >= 6) longitude = it
+//                        else Toast.makeText(
+//                            context,
+//                            R.string.error_longitude_decimal_places,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    },
                     onValueChange = {
-                        if (it.split(".").last().length >= 6) longitude = it
-                        else Toast.makeText(
-                            context,
-                            R.string.error_longitude_decimal_places,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val parts = it.split(".")
+                        if (parts.size == 2) {
+                            val decimalPlaces = parts.last().length
+                            val formattedLongitude = if (decimalPlaces == 5 ) {
+                                // Append the required number of zeros to the decimal part
+                                it.padEnd(it.length + (6 - decimalPlaces), '0')
+                            } else {
+                                it
+                            }
+                            longitude = formattedLongitude
+                        } else {
+                            Toast.makeText(
+                                context,
+                                R.string.error_longitude_decimal_places,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     label = { Text(stringResource(id = R.string.longitude) + " (*)",color = inputLabelColor) },
                     supportingText = {

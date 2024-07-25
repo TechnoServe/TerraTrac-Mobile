@@ -131,6 +131,5 @@
     <string name="error_latitude_decimal_places">Latitudo lazima iwe na angalau nafasi 6 za desimali</string>
     <string name="error_longitude_decimal_places">Longitudo lazima iwe na angalau nafasi 6 za desimali</string>
     <string name="error_polygon_points">Tafadhali kamata angalau pointi 4 kwa poligoni wakati ukubwa ni zaidi ya hekta 4.</string>
-
-    <!-- Oromo -->
+    <string name="error_farm_size_invalid">Ukubwa wa Shamba si Sahihi</string>
 </resources>

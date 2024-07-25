@@ -319,7 +319,7 @@ fun SiteForm(navController: NavController) {
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_village_empty)) },
+            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
