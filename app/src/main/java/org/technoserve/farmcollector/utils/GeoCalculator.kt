@@ -25,7 +25,7 @@ object GeoCalculator {
 //        // Format the result to 6 decimal places
 //        return String.format("%.6f", areaInHectares).toDouble()
         // Format the result to 6 decimal places and ensure the correct format
-        return String.format("%.6f", areaInHectares).replace(',', '.').toDouble()
+        return String.format("%.9f", areaInHectares).replace(',', '.').toDouble()
 //
 //        // Round the result to 5 decimal places
 //        val roundedAreaInHectares = BigDecimal(areaInHectares).setScale(5, RoundingMode.HALF_UP).toDouble()

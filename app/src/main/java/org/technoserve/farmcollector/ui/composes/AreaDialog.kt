@@ -28,7 +28,7 @@ fun AreaDialog(
         val calculatedAreaString =
             stringResource(
                 id = R.string.calculated_area,
-                String.format("%.6f", calculatedArea),
+                String.format("%.9f", calculatedArea),
             )
         val enteredAreaString =
             stringResource(

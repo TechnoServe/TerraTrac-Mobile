@@ -274,11 +274,11 @@ fun SetPolygon(
                     ENTERED_AREA_OPTION -> enteredArea.toString()
                     else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
                 }
-            sharedPref.edit().putString("plot_size", chosenSize).apply()
+            //sharedPref.edit().putString("plot_size", chosenSize).apply()
             // Assuming chosenSize is a Double or String representing the size
-//            val originalSize = chosenSize.toString()
-//            val truncatedSize = truncateToDecimalPlaces(originalSize, 6)
-//            sharedPref.edit().putString("plot_size", truncatedSize).apply()
+            val originalSize = chosenSize.toString()
+            val truncatedSize = truncateToDecimalPlaces(formatInput(chosenSize), 9)
+            sharedPref.edit().putString("plot_size", truncatedSize).apply()
             coordinates = listOf() // Clear coordinates array when starting
             mapViewModel.clearCoordinates()
             navController.navigateUp()

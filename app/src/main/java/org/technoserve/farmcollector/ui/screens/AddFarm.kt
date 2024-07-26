@@ -128,11 +128,26 @@ fun AddFarm(navController: NavController, siteId: Long) {
         FarmForm(navController, siteId, coordinatesData)
     }
 }
+// Helper function to truncate a string representation of a number to a specific number of decimal places
+fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
+    val dotIndex = value.indexOf('.')
+    return if (dotIndex == -1 || dotIndex + decimalPlaces + 1 > value.length) {
+        // If there's no decimal point or the length is already less than required, return the original value
+        value
+    } else {
+        // Truncate the value after the specified number of decimal places
+        value.substring(0, dotIndex + decimalPlaces + 1)
+    }
+}
 
 // Function to read and format stored value
 fun readStoredValue(sharedPref: SharedPreferences): String {
     val storedValue = sharedPref.getString("plot_size", "") ?: ""
-    return formatInput(storedValue)
+
+    // Truncate the value to 4 decimal places without rounding
+    val formattedValue = truncateToDecimalPlaces(storedValue, 9)
+
+    return formattedValue
 }
 
 // Function to format input value to 6 decimal places without scientific notation
@@ -145,7 +160,10 @@ fun formatInput(input: String): String {
         when {
            decimalPlaces > 3 -> {
                 // Format to 6 decimal places without trailing zeros if more than 3 decimal places
-               BigDecimal(input).setScale(6, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
+               BigDecimal(input).setScale(9, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
+
+               //truncateToDecimalPlaces(input,9)
+
             }
             decimalPlaces == 0 -> {
                 // No decimal part, return the number as is
@@ -153,22 +171,22 @@ fun formatInput(input: String): String {
             }
             else -> {
                 // Set the precision to 6 decimal places without rounding
-                val formattedNumber = number.setScale(6, RoundingMode.DOWN)
+                val formattedNumber = number.setScale(9, RoundingMode.DOWN)
                 // If 3 or fewer decimal places, return as is without trailing zeros
                 formattedNumber.stripTrailingZeros().toPlainString()
+//                truncateToDecimalPlaces(input,9)
             }
         }
     } catch (e: NumberFormatException) {
-        "" // Return an empty string if the input is invalid
+        input // Return an empty string if the input is invalid
     }
 }
 fun validateSize(size: String): Boolean {
-    return try {
-        size.isNotBlank() || size.toFloatOrNull() != null || size.matches(Regex("^[0-9]*\\.?[0-9]*$")) || size.toFloat() > 0
-    } catch (e: NumberFormatException) {
-        false
-    }
+    // Check if the input matches the allowed pattern: digits and at most one dot
+    val regex = Regex("^[0-9]*\\.?[0-9]*$")
+    return size.matches(regex) && size.toFloatOrNull() != null && size.toFloat() > 0 && size.isNotBlank()
 }
+
 
 
 @SuppressLint("MissingPermission")
@@ -187,10 +205,6 @@ fun FarmForm(
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
 
-    // var size by rememberSaveable { mutableStateOf("") }
-    //var size by remember { mutableStateOf("") }
-    // var area by remember { mutableStateOf(0.0) }
-
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
@@ -204,14 +218,10 @@ fun FarmForm(
     )
 
     val mapViewModel: MapViewModel = viewModel()
-//    var size by rememberSaveable {
-//        mutableStateOf(
-//            sharedPref.getString("plot_size", "") ?: ""
-//        )
-//    }
     // Read initial value from SharedPreferences
     var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
     var isValidSize by remember { mutableStateOf(true) }
+    var isFormSubmitted by remember { mutableStateOf(false) }
     // Regex pattern to check for scientific notation
     val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
 
@@ -393,16 +403,10 @@ fun FarmForm(
             // You can display an error message for this field if needed
         }
 
-
-        if (size.isBlank() || size.toFloatOrNull() == null) {
+        if (size.isBlank() || size.toFloatOrNull() == null || size.toFloat() <= 0) {
             isValid = false
             // You can display an error message for this field if needed
         }
-//
-//        if (size.isBlank() || size.toFloatOrNull() == null || !size.matches(Regex("^[0-9]*\\.?[0-9]*$")) || size.toFloatOrNull() == null || size.toFloat() <= 0) {
-//            isValid = false
-//            // You can display an error message for this field if needed
-//        }
 
         if (selectedUnit.isBlank()) {
             isValid = false
@@ -603,22 +607,21 @@ fun FarmForm(
         ) {
             TextField(
                 singleLine = true,
-                value = size,
+                value = truncateToDecimalPlaces(size,9),
                 onValueChange = { inputValue ->
                     val formattedValue = when {
-                        validateSize(inputValue) -> {
-                            inputValue
-                        }
+                        validateSize(inputValue) -> inputValue
                         // Check if the input is in scientific notation
                         scientificNotationPattern.matcher(inputValue).matches() -> {
-                             formatInput(inputValue)
+                            truncateToDecimalPlaces(formatInput(inputValue),9)
                         }
-                        else -> {
-                            formatInput(inputValue)
-                        }
+                        else -> inputValue
                     }
+
                     // Update the size state with the formatted value
                     size = formattedValue
+                    isValidSize = validateSize(formattedValue)
+
                     // Save to SharedPreferences or perform other actions
                     with(sharedPref.edit()) {
                         putString("plot_size", formattedValue)
@@ -630,20 +633,21 @@ fun FarmForm(
                 ),
                 label = {
                     Text(
-                        stringResource(id = R.string.size_in_hectares) + " (*)",
+                        text = stringResource(id = R.string.size_in_hectares) + " (*)",
                         color = inputLabelColor
                     )
                 },
                 supportingText = {
-                    if (!isValidSize) {
-                        if (size.isBlank()) {
+                    when {
+                        isFormSubmitted && size.isBlank() -> {
                             Text(stringResource(R.string.error_farm_size_empty))
-                        } else {
+                        }
+                        isFormSubmitted && !isValidSize -> {
                             Text(stringResource(R.string.error_farm_size_invalid))
                         }
                     }
                 },
-                isError = !isValidSize,
+                isError = isFormSubmitted && (!isValidSize || size.isBlank()),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
@@ -653,16 +657,13 @@ fun FarmForm(
                     errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
-                    .focusRequester(focusRequester3)
-                    .padding(bottom = 16.dp)
+                    .weight(1f)
+                    .padding(end = 16.dp)
             )
-            Spacer(modifier = Modifier.width(16.dp))
             // Size measure
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = {
-                    expanded = !expanded
-                },
+                onExpandedChange = { expanded = !expanded },
                 modifier = Modifier.weight(1f)
             ) {
                 TextField(
@@ -680,13 +681,11 @@ fun FarmForm(
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = {
-                        expanded = false
-                    }
+                    onDismissRequest = { expanded = false }
                 ) {
                     items.forEach { selectionOption ->
                         DropdownMenuItem(
-                            { Text(text = selectionOption) },
+                            text = { Text(text = selectionOption) },
                             onClick = {
                                 selectedUnit = selectionOption
                                 expanded = false
@@ -871,6 +870,7 @@ fun FarmForm(
         }
         Button(
             onClick = {
+                isFormSubmitted = true
 //                Finding the center of the polygon captured
                 if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
                     val center = coordinatesData.toLatLngList().getCenterOfPolygon()
