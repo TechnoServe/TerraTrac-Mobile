@@ -666,6 +666,7 @@ fun FarmForm(
                     errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
+                    .focusRequester(focusRequester3)
                     .weight(1f)
                     .padding(end = 16.dp)
             )
