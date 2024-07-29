@@ -63,6 +63,7 @@ import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.composes.AreaDialog
 import org.technoserve.farmcollector.ui.composes.ConfirmDialog
+import org.technoserve.farmcollector.utils.convertSize
 
 /**
  * This screen helps you to capture and visualize farm polygon.
@@ -197,6 +198,8 @@ fun SetPolygon(
     }
 
     val enteredArea = sharedPref.getString("plot_size", "0.0")?.toDoubleOrNull() ?: 0.0
+    val selectedUnit = sharedPref.getString("selectedUnit", "Ha")?:"Ha"
+    val enteredAreaConverted= convertSize(enteredArea,selectedUnit)
     val calculatedArea = mapViewModel.calculateArea(coordinates)
     if (showConfirmDialog.value) {
         ConfirmDialog(
@@ -213,7 +216,8 @@ fun SetPolygon(
                         set("coordinates", coordinates)
                     }
 
-                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                   // mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
                 } else {
                     showAlertDialog.value = true
                 }
@@ -271,20 +275,26 @@ fun SetPolygon(
             val chosenSize =
                 when (chosenArea) {
                     CALCULATED_AREA_OPTION -> calculatedArea.toString()
-                    ENTERED_AREA_OPTION -> enteredArea.toString()
+                    //ENTERED_AREA_OPTION -> enteredArea.toString()
+                    ENTERED_AREA_OPTION -> enteredAreaConverted.toString()
+
                     else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
                 }
             //sharedPref.edit().putString("plot_size", chosenSize).apply()
             // Assuming chosenSize is a Double or String representing the size
-            val originalSize = chosenSize.toString()
+            //val originalSize = chosenSize.toString()
             val truncatedSize = truncateToDecimalPlaces(formatInput(chosenSize), 9)
             sharedPref.edit().putString("plot_size", truncatedSize).apply()
+            if (sharedPref.contains("selectedUnit")) {
+                sharedPref.edit().remove("selectedUnit").apply()
+            }
             coordinates = listOf() // Clear coordinates array when starting
             mapViewModel.clearCoordinates()
             navController.navigateUp()
         },
         calculatedArea = calculatedArea,
-        enteredArea = enteredArea,
+        //enteredArea = enteredArea,
+        enteredArea = enteredAreaConverted
     )
 
     // Confirm clear map
@@ -414,7 +424,7 @@ fun SetPolygon(
                                     Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
                                 }
                                 Text(
-                                    text = "${stringResource(id = R.string.size)}: ${farmInfo.size} ${
+                                    text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo.size.toString()),9)} ${
                                         stringResource(
                                             id = R.string.ha,
                                         )

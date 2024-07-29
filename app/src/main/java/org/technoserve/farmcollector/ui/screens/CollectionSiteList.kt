@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.FarmViewModel
@@ -84,6 +88,19 @@ fun CollectionSiteList(navController: NavController) {
             restoreState = true
         }
     }
+
+    // State to manage the loading status
+    val isLoading = remember { mutableStateOf(true) }
+
+    // Simulate a network request or data loading
+    LaunchedEffect(Unit) {
+        // Simulate a delay for loading
+        delay(500) // Adjust the delay as needed
+        // After loading data, set isLoading to false
+        isLoading.value = false
+    }
+/*
+
     if (listItems.isNotEmpty()) {
         LazyColumn(
             modifier =
@@ -173,6 +190,98 @@ fun CollectionSiteList(navController: NavController) {
                 painter = painterResource(id = R.drawable.no_data2),
                 contentDescription = null,
             )
+        }
+    }
+    */
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+    ) {
+        FarmListHeader(
+            title = stringResource(id = R.string.collection_site_list),
+            onSearchQueryChanged = setSearchQuery,
+            onAddFarmClicked = { navController.navigate("addSite") },
+            onBackSearchClicked = { navController.navigate("siteList") },
+            onBackClicked = { navController.navigate("home") },
+            showAdd = true,
+            showSearch = true,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Show loader while data is loading
+        if (isLoading.value) {
+            // Show loader while data is loading
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }  else {
+            if (listItems.isNotEmpty()) {
+                // Show list of items after loading is complete
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    // Filter the list based on the search query
+                    val filteredList = listItems.filter {
+                        it.name.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    // Display a message if no results are found
+                    if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.no_results_found),
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    } else {
+                        // Display the list of filtered items
+                        items(filteredList) { site ->
+                            siteCard(
+                                site = site,
+                                onCardClick = {
+                                    navController.navigate("farmList/${site.siteId}")
+                                },
+                                onDeleteClick = {
+                                    selectedIds.add(site.siteId)
+                                    showDeleteDialog.value = true
+                                },
+                                farmViewModel = farmViewModel,
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
+            }
+
+            else {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Image(
+                        modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                            .padding(16.dp, 8.dp),
+                        painter = painterResource(id = R.drawable.no_data2),
+                        contentDescription = null,
+                    )
+                }
+        }
+
+        // Display delete dialog if showDeleteDialog is true
+        if (showDeleteDialog.value) {
+            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
     }
 }

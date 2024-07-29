@@ -78,6 +78,11 @@ class MainActivity : ComponentActivity() {
         if (sharedPref.contains("plot_size")) {
             sharedPref.edit().remove("plot_size").apply()
         }
+        // remove selected unit from shared preferences if it exists
+        // remove selected unit from shared preferences if it exists
+        if (sharedPref.contains("selectedUnit")) {
+            sharedPref.edit().remove("selectedUnit").apply()
+        }
 
         // Start the service when the activity is created
 //        startSyncService()

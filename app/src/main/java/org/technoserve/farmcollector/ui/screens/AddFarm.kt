@@ -209,7 +209,7 @@ fun FarmForm(
     var longitude by rememberSaveable { mutableStateOf("") }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
-    var selectedUnit by remember { mutableStateOf(items[0]) }
+//    var selectedUnit by remember { mutableStateOf(items[0]) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -220,6 +220,7 @@ fun FarmForm(
     val mapViewModel: MapViewModel = viewModel()
     // Read initial value from SharedPreferences
     var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
+    var selectedUnit by rememberSaveable { mutableStateOf(sharedPref.getString("selectedUnit", items[0]) ?: items[0]) }
     var isValidSize by remember { mutableStateOf(true) }
     var isFormSubmitted by remember { mutableStateOf(false) }
     // Regex pattern to check for scientific notation
@@ -233,6 +234,12 @@ fun FarmForm(
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }
+
+    // Function to update the selected unit
+    fun updateSelectedUnit(newUnit: String) {
+        selectedUnit = newUnit
+        sharedPref.edit().putString("selectedUnit", newUnit).apply()
+    }
 
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -285,9 +292,11 @@ fun FarmForm(
             if (event == Lifecycle.Event.ON_RESUME) {
                 // Update the value from SharedPreferences when the screen is resumed
                 size = sharedPref.getString("plot_size", "") ?: ""
+                selectedUnit = sharedPref.getString("selectedUnit", "Ha") ?: "Ha"
 //                delete plot_size from sharedPreference
                 with(sharedPref.edit()) {
                     remove("plot_size")
+                    remove("selectedUnit")
                     apply()
                 }
             }
@@ -687,7 +696,8 @@ fun FarmForm(
                         DropdownMenuItem(
                             text = { Text(text = selectionOption) },
                             onClick = {
-                                selectedUnit = selectionOption
+                                //selectedUnit = selectionOption
+                                updateSelectedUnit(selectionOption)
                                 expanded = false
                             }
                         )

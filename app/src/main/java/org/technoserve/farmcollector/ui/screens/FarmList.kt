@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -100,6 +101,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
@@ -118,6 +120,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Objects
+import java.util.regex.Pattern
 
 // data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
@@ -259,15 +262,29 @@ fun FarmList(
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
 
+
+    // State to manage the loading status
+    val isLoading = remember { mutableStateOf(true) }
+
+    // Simulate a network request or data loading
+    LaunchedEffect(Unit) {
+        // Simulate a delay for loading
+        delay(2000) // Adjust the delay as needed
+        // After loading data, set isLoading to false
+        isLoading.value = false
+    }
+
     fun createFileForSharing(): File? {
         // Get the current date and time
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val getSiteById = cwsListItems.find { it.siteId == siteID }
         val siteName = getSiteById?.name ?: "SiteName"
-        val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+        val filename =
+            if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         // Get the Downloads directory
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadsDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, filename)
 
         try {
@@ -279,28 +296,50 @@ fun FarmList(
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
+//                        val reversedCoordinates =
+//                            matches
+//                                .map { match ->
+//                                    val (lat, lon) = match.destructured
+//                                    "[$lon, $lat]"
+//                                }.toList() // Convert Sequence to List for easy handling
+//                                .let { coordinates ->
+//                                    if (coordinates.isNotEmpty()) {
+//                                        if (coordinates.size == 1) {
+//                                            // Single point, return without additional brackets
+//                                            coordinates.first()
+//                                        } else {
+//                                            // Multiple points, add enclosing brackets
+//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                        }
+//                                    } else {
+//                                        "" // Return an empty string if there are no coordinates
+//                                    }
+//                                }
+
+
                         val reversedCoordinates =
                             matches
                                 .map { match ->
                                     val (lat, lon) = match.destructured
                                     "[$lon, $lat]"
-                                }.toList() // Convert Sequence to List for easy handling
+                                }.toList()
                                 .let { coordinates ->
                                     if (coordinates.isNotEmpty()) {
-                                        if (coordinates.size == 1) {
-                                            // Single point, return without additional brackets
-                                            coordinates.first()
-                                        } else {
-                                            // Multiple points, add enclosing brackets
-                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
-                                        }
+                                        // Always include brackets, even for a single point
+                                        coordinates.joinToString(", ", prefix = "[", postfix = "]")
                                     } else {
-                                        "" // Return an empty string if there are no coordinates
+                                        val lon = farm.longitude ?: "0.0"
+                                        val lat = farm.latitude ?: "0.0"
+                                        "[$lon, $lat]"
                                     }
                                 }
-                        val line = "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${Date(
-                            farm.createdAt,
-                        )},${Date(farm.updatedAt)}\n"
+
+                        val line =
+                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                Date(
+                                    farm.createdAt,
+                                )
+                            },${Date(farm.updatedAt)}\n"
                         writer.write(line)
                     }
                 } else {
@@ -316,8 +355,10 @@ fun FarmList(
                                             val (lat, lon) = match.destructured
                                             "[$lon, $lat]"
                                         }.joinToString(", ", prefix = "[", postfix = "]")
-                                val latitude = farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-                                val longitude = farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                val latitude =
+                                    farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                val longitude =
+                                    farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
 
                                 val feature =
                                     """
@@ -380,23 +421,44 @@ fun FarmList(
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
+//                            val reversedCoordinates =
+//                                matches
+//                                    .map { match ->
+//                                        val (lat, lon) = match.destructured
+//                                        "[$lon, $lat]"
+//                                    }.toList() // Convert Sequence to List for easy handling
+//                                    .let { coordinates ->
+//                                        if (coordinates.isNotEmpty()) {
+//                                            if (coordinates.size == 1) {
+//                                                // Single point, return without additional brackets
+//                                                coordinates.first()
+//                                            } else {
+//                                                // Multiple points, add enclosing brackets
+//                                                coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                            }
+//                                        } else {
+//                                            "" // Return an empty string if here are no coordinates
+//                                        }
+//                                    }
+
                             val reversedCoordinates =
                                 matches
                                     .map { match ->
                                         val (lat, lon) = match.destructured
                                         "[$lon, $lat]"
-                                    }.toList() // Convert Sequence to List for easy handling
+                                    }.toList()
                                     .let { coordinates ->
                                         if (coordinates.isNotEmpty()) {
-                                            if (coordinates.size == 1) {
-                                                // Single point, return without additional brackets
-                                                coordinates.first()
-                                            } else {
-                                                // Multiple points, add enclosing brackets
-                                                coordinates.joinToString(", ", prefix = "[", postfix = "]")
-                                            }
+                                            // Always include brackets, even for a single point
+                                            coordinates.joinToString(
+                                                ", ",
+                                                prefix = "[",
+                                                postfix = "]"
+                                            )
                                         } else {
-                                            "" // Return an empty string if here are no coordinates
+                                            val lon = farm.longitude ?: "0.0"
+                                            val lat = farm.latitude ?: "0.0"
+                                            "[$lon, $lat]"
                                         }
                                     }
 
@@ -420,8 +482,10 @@ fun FarmList(
                                                 "[$lon, $lat]"
                                             }.joinToString(", ", prefix = "[", postfix = "]")
                                     // Ensure latitude and longitude are not null
-                                    val latitude = farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
-                                    val longitude = farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                    val latitude =
+                                        farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
+                                    val longitude =
+                                        farm.longitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
 
                                     val feature =
                                         """
@@ -470,7 +534,8 @@ fun FarmList(
                 result.data?.data?.let { uri ->
                     val context = activity?.applicationContext
                     if (context != null && createFile(context, uri)) {
-                        Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             }
@@ -484,8 +549,10 @@ fun FarmList(
                 type = mimeType
                 val getSiteById = cwsListItems.find { it.siteId == siteID }
                 val siteName = getSiteById?.name ?: "SiteName"
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val filename = if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+                val timestamp =
+                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val filename =
+                    if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
                 putExtra(Intent.EXTRA_TITLE, filename)
             }
         createDocumentLauncher.launch(intent)
@@ -550,6 +617,7 @@ fun FarmList(
                             shareFile(file)
                         }
                     }
+
                     else -> {}
                 }
             },
@@ -559,7 +627,11 @@ fun FarmList(
     if (showImportDialog) {
         println("site ID am Using: $siteId")
         // ImportFileDialog( siteId,onDismiss = { showImportDialog = false ; refreshTrigger = !refreshTrigger},navController = navController)
-        ImportFileDialog(siteId, onDismiss = { showImportDialog = false }, navController = navController)
+        ImportFileDialog(
+            siteId,
+            onDismiss = { showImportDialog = false },
+            navController = navController
+        )
     }
 
     fun onDelete() {
@@ -713,6 +785,7 @@ fun FarmList(
         }
     }
     */
+    /*
     if (listItems.isNotEmpty() || searchQuery.isNotEmpty()) {
         val filteredList = listItems.filter {
             it.farmerName.contains(searchQuery, ignoreCase = true)
@@ -825,6 +898,114 @@ fun FarmList(
         }
     }
 
+     */
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        FarmListHeaderPlots(
+            title = stringResource(id = R.string.farm_list),
+            onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+            onBackClicked = { navController.navigate("siteList") },
+            onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+            onExportClicked = {
+                action = Action.Export
+                showFormatDialog = true
+            },
+            onShareClicked = {
+                action = Action.Share
+                showFormatDialog = true
+            },
+            onSearchQueryChanged = setSearchQuery,
+            showAdd = true,
+            showExport = listItems.isNotEmpty(),
+            showShare = listItems.isNotEmpty(),
+            showSearch = listItems.isNotEmpty()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (isLoading.value) {
+            // Show loader while data is loading
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            if (listItems.isNotEmpty() || searchQuery.isNotEmpty()) {
+                // Show the list only when loading is complete
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    val filteredList = listItems.filter {
+                        it.farmerName.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    if (filteredList.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.no_results_found),
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                    } else {
+                        items(filteredList) { farm ->
+                            FarmCard(
+                                farm = farm,
+                                onCardClick = {
+                                    navController.currentBackStackEntry?.arguments?.apply {
+                                        putSerializable(
+                                            "coordinates",
+                                            farm.coordinates?.let { ArrayList(it) })
+                                        putSerializable("farmData", Pair(farm, "view"))
+                                    }
+                                    navController.navigate(route = "setPolygon")
+                                },
+                                onDeleteClick = {
+                                    selectedIds.add(farm.id)
+                                    showDeleteDialog.value = true
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
+            }
+            else {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Image(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                            .padding(16.dp, 8.dp),
+                        painter = painterResource(id = R.drawable.no_data2),
+                        contentDescription = null
+                    )
+                }
+        }
+
+        if (showDeleteDialog.value) {
+            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+        }
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -1167,6 +1348,9 @@ fun FarmListHeaderPlots(
                     if (sharedPref.contains("plot_size")) {
                         sharedPref.edit().remove("plot_size").apply()
                     }
+                    if (sharedPref.contains("selectedUnit")) {
+                        sharedPref.edit().remove("selectedUnit").apply()
+                    }
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
                 }, modifier = Modifier.size(36.dp)) {
@@ -1446,6 +1630,8 @@ fun UpdateFarmForm(
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var selectedUnit by remember { mutableStateOf(items[0]) }
 
+    val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
+
     LaunchedEffect(Unit) {
         if (!isLocationEnabled(context)) {
             showLocationDialog.value = true
@@ -1718,10 +1904,24 @@ fun UpdateFarmForm(
         ) {
             TextField(
                 singleLine = true,
-                value = size,
+                value = truncateToDecimalPlaces(size,9),
                 onValueChange = {
                     size = it
                 },
+//                value =  truncateToDecimalPlaces(formatInput(size),9),
+//                onValueChange = { inputValue ->
+//                    val formattedValue = when {
+//                        validateSize(inputValue) -> inputValue
+//                        // Check if the input is in scientific notation
+//                        scientificNotationPattern.matcher(inputValue).matches() -> {
+//                            truncateToDecimalPlaces(formatInput(inputValue),9)
+//                        }
+//                        else -> inputValue
+//                    }
+//
+//                    // Update the size state with the formatted value
+//                    size = formattedValue
+//                },
                 keyboardOptions =
                     KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number,
