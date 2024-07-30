@@ -181,7 +181,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         state.value = state.value.copy(clusterItems = currentClusterItems)
     }
 
-    fun addCoordinates(coordinates: List<Pair<Double, Double>>) {
+    fun addCoordinates(coordinates: List<Pair<Double?, Double?>>) {
         // Add coordinates on the map, this list of of LatLong form a polygons
         if (coordinates.isEmpty()) {
             return  // Return early without performing any further actions
@@ -192,7 +192,8 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
         val polygonOptions = polygonOptions {
             coordinates.forEach { (latitude, longitude) ->
-                add(LatLng(latitude, longitude))
+                if (latitude!= null && longitude!= null)
+                    add(LatLng(latitude, longitude))
             }
             fillColor(POLYGON_FILL_COLOR)
         }

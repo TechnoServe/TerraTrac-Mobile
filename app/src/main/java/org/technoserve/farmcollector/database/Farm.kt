@@ -27,54 +27,38 @@ import  java.util.UUID
 data class Farm(
     @ColumnInfo(name = "siteId")
     var siteId: Long,
-
     @ColumnInfo(name = "remote_id")
     var remoteId: UUID = UUID.randomUUID(),
-
     @ColumnInfo(name = "farmerPhoto")
     var farmerPhoto: String,
-
     @ColumnInfo(name = "farmerName")
     var farmerName: String,
-
     @ColumnInfo(name = "memberId")
     var memberId: String,
-
     @ColumnInfo(name = "village")
     var village: String,
-
     @ColumnInfo(name = "district")
     var district: String,
-
     @ColumnInfo(name = "purchases")
     var purchases: Float,
-
     @ColumnInfo(name = "size")
     var size: Float,
-
     @ColumnInfo(name = "latitude")
     var latitude: String,
-
     @ColumnInfo(name = "longitude")
     var longitude: String,
-
     @ColumnInfo(name = "coordinates")
-    var coordinates: List<Pair<Double, Double>>?,
-
+    var coordinates: List<Pair<Double?, Double?>>?,
     @ColumnInfo(name = "synced")
     val synced: Boolean = false,
-
     @ColumnInfo(name = "scheduledForSync")
     val scheduledForSync: Boolean = false,
-
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
     val createdAt: Long,
-
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
     var updatedAt: Long,
-
     @ColumnInfo(name = "needsUpdate")
     var needsUpdate: Boolean = false
 
@@ -95,8 +79,6 @@ data class Farm(
         return id.hashCode()
     }
 }
-
-
 data class FarmDto(
     val remote_id: UUID,
     val farmer_name: String,
@@ -105,60 +87,58 @@ data class FarmDto(
     val farm_size: Float,
     val latitude: String,
     val longitude: String,
-    val polygon: List<Pair<Double, Double>>,
+    val polygon: List<Pair<Double?, Double?>>,
     val device_id: String,
     val collection_site: Long,
-    val agent_name: String
+    val agent_name: String,
 )
 
-fun List<Farm>.toDtoList(deviceId: String, farmDao: FarmDAO): List<FarmDto> {
-    return this.map { farm ->
+
+fun List<Farm>.toDtoList(
+    deviceId: String,
+    farmDao: FarmDAO,
+): List<FarmDto> =
+    this.map { farm ->
         val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
         val agentName = collectionSite?.agentName ?: "Unknown"
 
-        FarmDto(
-            remote_id = farm.remoteId,
-            farmer_name = farm.farmerName,
-            farm_village = farm.village,
-            farm_district = farm.district,
-            farm_size = farm.size,
-            latitude = farm.latitude,
-            longitude = farm.longitude,
-            polygon = farm.coordinates ?: emptyList(),
-            device_id = deviceId,
-            collection_site = farm.siteId,
-            agent_name = agentName
-        )
+        farm.remoteId?.let {
+            FarmDto(
+                remote_id = it,
+                farmer_name = farm.farmerName,
+                farm_village = farm.village,
+                farm_district = farm.district,
+                farm_size = farm.size,
+                latitude = farm.latitude,
+                longitude = farm.longitude,
+                polygon = farm.coordinates ?: emptyList(),
+                device_id = deviceId,
+                collection_site = farm.siteId,
+                agent_name = agentName,
+            )
+        }!!
     }
-}
 
 @Entity(tableName = "CollectionSites")
 data class CollectionSite(
     @ColumnInfo(name = "name")
     var name: String,
-
     @ColumnInfo(name = "agentName")
     var agentName: String,
-
     @ColumnInfo(name = "phoneNumber")
     var phoneNumber: String,
-
     @ColumnInfo(name = "email")
     var email: String,
-
     @ColumnInfo(name = "village")
     var village: String,
-
     @ColumnInfo(name = "district")
     var district: String,
-
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
     val createdAt: Long,
-
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
-    var updatedAt: Long
+    var updatedAt: Long,
 ) {
     @PrimaryKey(autoGenerate = true)
     var siteId: Long = 0L
