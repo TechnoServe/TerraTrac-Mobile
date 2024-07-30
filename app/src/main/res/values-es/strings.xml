@@ -37,7 +37,7 @@
     <string name="unit">Unidad</string>
     <string name="agent_name">Nombre del agente</string>
     <string name="phone_number">Número de teléfono</string>
-    <string name="email">Email</string>
+    <string name="email">correo electrónico</string>
     <string name="member_id">ID de miembro</string>
     <string name="get_started">Comenzar</string>
     <string name="invalid_phone_number">Número de teléfono no válido</string>

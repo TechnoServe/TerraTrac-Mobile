@@ -37,7 +37,7 @@ data class Farm(
     @ColumnInfo(name = "district")
     var district: String,
     @ColumnInfo(name = "purchases")
-    var purchases: Float,
+    var purchases: Float?,
     @ColumnInfo(name = "size")
     var size: Float,
     @ColumnInfo(name = "latitude")
