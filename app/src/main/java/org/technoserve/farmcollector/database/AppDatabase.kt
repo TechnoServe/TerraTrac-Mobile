@@ -51,7 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
         private var INSTANCE: AppDatabase? = null
 
         // Define a migration from version 15 to 16
-        private val MIGRATION_15_16 = object : Migration(15, 16) {
+        private val MIGRATION_13_16 = object : Migration(13, 16) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Add new temporary column with NULL support
                 db.execSQL("ALTER TABLE Farms ADD COLUMN purchases_tmp REAL")
@@ -76,7 +76,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "farm_collector_database"
                     )
-                        .addMigrations(MIGRATION_15_16)
+                        .addMigrations(MIGRATION_13_16)
                         .build()
 
                     INSTANCE = instance
