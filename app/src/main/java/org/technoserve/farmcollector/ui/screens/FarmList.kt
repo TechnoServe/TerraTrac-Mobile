@@ -193,7 +193,7 @@ fun ConfirmationDialog(
     fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
         val incompleteFarms =
             farms.filter { farm ->
-                farm.farmerName.isEmpty() || farm.district.isEmpty()|| farm.village.isEmpty() || farm.coordinates.isNullOrEmpty() || farm.latitude.isEmpty() || farm.longitude.isEmpty() || farm.size.isNaN() || farm.remoteId.toString().isEmpty()
+                farm.farmerName.isEmpty() || farm.district.isEmpty()|| farm.village.isEmpty() || farm.latitude.isEmpty() || farm.longitude.isEmpty() || farm.size.isNaN() || farm.remoteId.toString().isEmpty()
             }
         return Pair(farms.size, incompleteFarms)
     }

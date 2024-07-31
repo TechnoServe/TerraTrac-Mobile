@@ -7,6 +7,7 @@ val languages = listOf(
     Language("fr", "French"),
     Language("es", "Spanish"),
     Language("am", "Amharic"),
-    Language("om", "Oromo")
+    Language("om", "Oromo"),
+    Language("sw", "Swahili")
 )
 
