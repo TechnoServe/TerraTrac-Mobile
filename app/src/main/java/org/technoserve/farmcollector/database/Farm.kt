@@ -46,9 +46,9 @@ data class Farm(
     var longitude: String,
     @ColumnInfo(name = "coordinates")
     var coordinates: List<Pair<Double?, Double?>>?,
-    @ColumnInfo(name = "synced")
+    @ColumnInfo(name = "synced", defaultValue = "0")
     val synced: Boolean = false,
-    @ColumnInfo(name = "scheduledForSync")
+    @ColumnInfo(name = "scheduledForSync",defaultValue = "0")
     val scheduledForSync: Boolean = false,
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
@@ -56,7 +56,7 @@ data class Farm(
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
     var updatedAt: Long,
-    @ColumnInfo(name = "needsUpdate")
+    @ColumnInfo(name = "needsUpdate",defaultValue = "0")
     var needsUpdate: Boolean = false,
 ) {
     @PrimaryKey(autoGenerate = true)
