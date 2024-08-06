@@ -10,38 +10,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import org.technoserve.farmcollector.database.converters.BitmapConverter
 import org.technoserve.farmcollector.database.converters.DateConverter
 
-//@Database(entities = [Farm::class, CollectionSite::class], version = 15, exportSchema = true)
-//@TypeConverters(BitmapConverter::class, DateConverter::class)
-//abstract class AppDatabase : RoomDatabase() {
-//    abstract fun farmsDAO(): FarmDAO
-//
-//    companion object {
-//        private var INSTANCE: AppDatabase? = null
-//
-//        fun getInstance(context: Context): AppDatabase {
-//            synchronized(this) {
-//                var instance = INSTANCE
-//
-//                if (instance == null) {
-//                    instance =
-//                        Room
-//                            .databaseBuilder(
-//                                context.applicationContext,
-//                                AppDatabase::class.java,
-//                                "farm_collector_database",
-//                            ).fallbackToDestructiveMigration()
-//                            .build()
-//
-//                    INSTANCE = instance
-//                }
-//
-//                return instance
-//            }
-//        }
-//    }
-//}
-
-
 @Database(entities = [Farm::class, CollectionSite::class], version = 19, exportSchema = true)
 @TypeConverters(BitmapConverter::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {

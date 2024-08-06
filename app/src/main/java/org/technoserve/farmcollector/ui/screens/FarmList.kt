@@ -919,6 +919,7 @@ fun FarmList(
                 showFormatDialog = true
             },
             onSearchQueryChanged = setSearchQuery,
+            onImportClicked = { showImportDialog = true },
             showAdd = true,
             showExport = listItems.isNotEmpty(),
             showShare = listItems.isNotEmpty(),
@@ -1294,7 +1295,7 @@ fun FarmListHeaderPlots(
     onBackClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
-    // onImportClicked: () -> Unit,
+    onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
@@ -1333,13 +1334,13 @@ fun FarmListHeaderPlots(
                 }
                 Spacer(modifier = Modifier.width(1.dp))
             }
-//            IconButton(onClick = onImportClicked, modifier = Modifier.size(36.dp)) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.import_icon),
-//                    contentDescription = "Import",
-//                    modifier = Modifier.size(24.dp),
-//                )
-//            }
+            IconButton(onClick = onImportClicked, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    painter = painterResource(id = R.drawable.upload),
+                    contentDescription = "Import",
+                    modifier = Modifier.size(24.dp),
+                )
+            }
             Spacer(modifier = Modifier.width(1.dp))
             if (showAdd) {
                 IconButton(onClick = {
@@ -1354,7 +1355,7 @@ fun FarmListHeaderPlots(
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
                 }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(36.dp))
                 }
                 Spacer(modifier = Modifier.width(1.dp))
             }
@@ -1362,7 +1363,7 @@ fun FarmListHeaderPlots(
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
                 }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(36.dp))
                 }
             }
         },
