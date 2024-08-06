@@ -10,6 +10,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
+import android.os.Parcel
+import android.os.Parcelable
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -122,6 +125,8 @@ import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
 
+import androidx.lifecycle.viewModelScope
+
 // data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
 
@@ -129,6 +134,57 @@ enum class Action {
     Export,
     Share,
 }
+
+data class ParcelablePair(val first: Double, val second: Double) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readDouble(),
+        parcel.readDouble()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeDouble(first)
+        parcel.writeDouble(second)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<ParcelablePair> {
+        override fun createFromParcel(parcel: Parcel): ParcelablePair {
+            return ParcelablePair(parcel)
+        }
+
+        override fun newArray(size: Int): Array<ParcelablePair?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
+
+data class ParcelableFarmData(val farm: Farm, val view: String) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readParcelable(Farm::class.java.classLoader)!!,
+        parcel.readString()!!
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeParcelable(farm, flags)
+        parcel.writeString(view)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<ParcelableFarmData> {
+        override fun createFromParcel(parcel: Parcel): ParcelableFarmData {
+            return ParcelableFarmData(parcel)
+        }
+
+        override fun newArray(size: Int): Array<ParcelableFarmData?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
+
 
 @Composable
 fun isSystemInDarkTheme(): Boolean {
@@ -634,18 +690,26 @@ fun FarmList(
         )
     }
 
+//    fun onDelete() {
+//        selectedFarm.value?.let { farm ->
+//            val toDelete =
+//                mutableListOf<Long>().apply {
+//                    addAll(selectedIds)
+//                    add(farm.id)
+//                }
+//            farmViewModel.deleteList(toDelete)
+//            farmViewModel.deleteFarm(farm)
+//            selectedFarm.value = null
+//            showDeleteDialog.value = false
+//        }
+//    }
+
     fun onDelete() {
-        selectedFarm.value?.let { farm ->
-            val toDelete =
-                mutableListOf<Long>().apply {
-                    addAll(selectedIds)
-                    add(farm.id)
-                }
-            farmViewModel.deleteList(toDelete)
-            farmViewModel.deleteFarm(farm)
-            selectedFarm.value = null
-            showDeleteDialog.value = false
-        }
+        val toDelete = mutableListOf<Long>()
+        toDelete.addAll(selectedIds)
+        farmViewModel.deleteList(toDelete)
+        selectedIds.removeAll(selectedIds)
+        showDeleteDialog.value = false
     }
 
     /*
@@ -971,12 +1035,29 @@ fun FarmList(
                         items(filteredList) { farm ->
                             FarmCard(
                                 farm = farm,
+//                                onCardClick = {
+//                                    navController.currentBackStackEntry?.arguments?.apply {
+//                                        putSerializable(
+//                                            "coordinates",
+//                                            farm.coordinates?.let { ArrayList(it) })
+//                                        putSerializable("farmData", Pair(farm, "view"))
+//                                    }
+//                                    navController.navigate(route = "setPolygon")
+//                                },
+//
                                 onCardClick = {
                                     navController.currentBackStackEntry?.arguments?.apply {
-                                        putSerializable(
+                                        putParcelableArrayList(
                                             "coordinates",
-                                            farm.coordinates?.let { ArrayList(it) })
-                                        putSerializable("farmData", Pair(farm, "view"))
+                                            farm.coordinates?.map { it.first?.let { it1 ->
+                                                it.second?.let { it2 ->
+                                                    ParcelablePair(
+                                                        it1, it2
+                                                    )
+                                                }
+                                            } }?.let { ArrayList(it) }
+                                        )
+                                        putParcelable("farmData", ParcelableFarmData(farm, "view"))
                                     }
                                     navController.navigate(route = "setPolygon")
                                 },
@@ -1669,12 +1750,21 @@ fun UpdateFarmForm(
         )
     }
 
+//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
+//        coordinates =
+//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+//                "coordinates",
+//            )
+//    }
+
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-        coordinates =
-            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-                "coordinates",
-            )
+        val parcelableCoordinates = navController.currentBackStackEntry!!
+            .savedStateHandle
+            .get<List<ParcelablePair>>("coordinates")
+
+        coordinates = parcelableCoordinates?.map { Pair(it.first, it.second) }
     }
+
 
     val fillForm = stringResource(id = R.string.fill_form)
 

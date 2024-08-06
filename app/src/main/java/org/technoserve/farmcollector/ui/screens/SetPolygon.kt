@@ -87,10 +87,14 @@ fun SetPolygon(
     val showConfirmDialog = remember { mutableStateOf(false) }
     val showClearMapDialog = remember { mutableStateOf(false) }
     //  Getting farm details such as polygon or single pair of lat and long if shared from farm list
-    val farmData =
-        navController.previousBackStackEntry?.arguments?.getSerializable("farmData") as? Pair<Farm, String>
+//    val farmData =
+//        navController.previousBackStackEntry?.arguments?.getSerializable("farmData") as? Pair<Farm, String>
+
+    val farmData = navController.previousBackStackEntry?.arguments?.getParcelable<ParcelableFarmData>("farmData")
+
 //    cast farmData string to Farm object
-    val farmInfo = farmData?.first
+    //val farmInfo = farmData?.first
+    val farmInfo = farmData?.farm
     var accuracy by remember { mutableStateOf("") }
     var viewSelectFarm by remember { mutableStateOf(false) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
@@ -212,11 +216,14 @@ fun SetPolygon(
                 if (coordinates.size >= 3) {
                     mapViewModel.clearCoordinates()
                     mapViewModel.addCoordinates(coordinates)
-                    navController.previousBackStackEntry?.savedStateHandle?.apply {
-                        set("coordinates", coordinates)
-                    }
+//                    navController.previousBackStackEntry?.savedStateHandle?.apply {
+//                        set("coordinates", coordinates)
+//                    }
 
-                   // mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
+                    val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
+                    navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
+
+                    // mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
                     mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
                 } else {
                     showAlertDialog.value = true
@@ -419,10 +426,10 @@ fun SetPolygon(
                                     text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                if (farmInfo.coordinates?.isEmpty() == true) {
+                                //if (farmInfo.coordinates?.isEmpty() == true) {
                                     Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
                                     Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
-                                }
+                                //}
                                 Text(
                                     text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo.size.toString()),9)} ${
                                         stringResource(

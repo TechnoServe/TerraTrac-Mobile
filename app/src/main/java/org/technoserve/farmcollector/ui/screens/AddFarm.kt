@@ -104,12 +104,20 @@ private const val REQUEST_CHECK_SETTINGS = 1000
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
+//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
+//        coordinatesData =
+//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+//                "coordinates"
+//            )
+//    }
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-        coordinatesData =
-            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-                "coordinates"
-            )
+        val parcelableCoordinates = navController.currentBackStackEntry!!
+            .savedStateHandle
+            .get<List<ParcelablePair>>("coordinates")
+
+        coordinatesData = parcelableCoordinates?.map { Pair(it.first, it.second) }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
