@@ -27,6 +27,7 @@ data class ImportResult(
     val importedFarms: List<Farm>,
     val duplicateFarms: List<String> = emptyList(),
     val farmsNeedingUpdate: List<Farm> = emptyList(),
+    val invalidFarms: List<String> = emptyList()
 )
 
 data class FarmAddResult(
@@ -34,6 +35,13 @@ data class FarmAddResult(
     val message: String,
     val farm: Farm,
 )
+
+data class ParsedFarms(
+    val validFarms: List<Farm>,
+    val invalidFarms: List<String>
+)
+
+
 
 class FarmViewModel(
     application: Application,
@@ -150,11 +158,18 @@ class FarmViewModel(
         return dateFormatter.parse(dateString).time
     }
 
+//    private suspend fun parseGeoJson(
+//        geoJsonString: String,
+//        siteId: Long,
+//    ): List<Farm> {
+//        val farms = mutableListOf<Farm>()
+
     private suspend fun parseGeoJson(
         geoJsonString: String,
         siteId: Long,
-    ): List<Farm> {
-        val farms = mutableListOf<Farm>()
+    ): ParsedFarms {
+        val validFarms = mutableListOf<Farm>()
+        val invalidFarms = mutableListOf<String>()
 
         try {
             val geoJson = JSONObject(geoJsonString)
@@ -240,14 +255,19 @@ class FarmViewModel(
                         )
                     }
                 if (newFarm != null) {
-                    farms.add(newFarm)
+//                    farms.add(newFarm)
+                    validFarms.add(newFarm)
+                }
+                else {
+                    invalidFarms.add(feature.toString())
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-        return farms
+        // return farms
+        return ParsedFarms(validFarms, invalidFarms)
     }
 
     fun parseCoordinates(coordinatesString: String): List<Pair<Double, Double>> {
@@ -309,6 +329,7 @@ class FarmViewModel(
             val importedFarms = mutableListOf<Farm>()
             val duplicateFarms = mutableListOf<String>()
             val farmsNeedingUpdate = mutableListOf<Farm>()
+            val invalidFarms = mutableListOf<String>()
             try {
                 // Check file extension before proceeding
                 val fileName =
@@ -333,7 +354,11 @@ class FarmViewModel(
                     content.append(firstLine)
                     reader.lines().forEach { content.append(it) }
                     reader.close()
-                    val newFarms = parseGeoJson(content.toString(), siteId)
+                    // val newFarms = parseGeoJson(content.toString(), siteId)
+                    val parsedFarms = parseGeoJson(content.toString(), siteId)
+                    val newFarms = parsedFarms.validFarms
+                    val GeojsoninvalidFarms = parsedFarms.invalidFarms.toString()
+                    invalidFarms.add(GeojsoninvalidFarms)
                     println("Parsed farms from GeoJSON: $newFarms")
                     for (newFarm in newFarms) {
                         if (!repository.isFarmDuplicateBoolean(newFarm)) {
@@ -490,6 +515,10 @@ class FarmViewModel(
                             }
                         } else {
                             println("Line does not contain enough data: $line")
+                            val invalidFarm =
+                                "Record of ${values.getOrNull(1)} is not inserted"
+                            invalidFarms.add(invalidFarm)
+//                            Toast.makeText(context, "Record of ${values.getOrNull(1)} is not inserted", Toast.LENGTH_LONG).show()
                         }
                         line = reader.readLine()
                     }
@@ -516,6 +545,14 @@ class FarmViewModel(
                     Toast.makeText(context, duplicateFarmsMessage, Toast.LENGTH_LONG).show()
                 }
             }
+
+            // Show a toast message for invalid farms
+            withContext(Dispatchers.Main) {
+                if (invalidFarms.isNotEmpty()) {
+                    val invalidFarmsMessage = context.getString(R.string.invalid_farms, invalidFarms.size)
+                    Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
+                }
+            }
             // Show a toast message for farms that needs updates
             withContext(Dispatchers.Main) {
                 if (farmsNeedingUpdate.isNotEmpty()) {
@@ -538,6 +575,7 @@ class FarmViewModel(
                 importedFarms,
                 duplicateFarms,
                 farmsNeedingUpdate,
+                invalidFarms
             )
         }
 

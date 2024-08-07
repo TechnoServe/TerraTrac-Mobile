@@ -1400,29 +1400,29 @@ fun FarmListHeaderPlots(
         },
         actions = {
             if (showExport) {
-                IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onExportClicked, modifier = Modifier.size(24.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.save),
                         contentDescription = "Export",
                         modifier = Modifier.size(24.dp),
                     )
                 }
-                Spacer(modifier = Modifier.width(1.dp))
+                Spacer(modifier = Modifier.width(2.dp))
             }
             if (showShare) {
-                IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onShareClicked, modifier = Modifier.size(24.dp)) {
                     Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
                 }
-                Spacer(modifier = Modifier.width(1.dp))
+                Spacer(modifier = Modifier.width(2.dp))
             }
-            IconButton(onClick = onImportClicked, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = onImportClicked, modifier = Modifier.size(24.dp)) {
                 Icon(
                     painter = painterResource(id = R.drawable.upload),
                     contentDescription = "Import",
                     modifier = Modifier.size(24.dp),
                 )
             }
-            Spacer(modifier = Modifier.width(1.dp))
+            Spacer(modifier = Modifier.width(2.dp))
             if (showAdd) {
                 IconButton(onClick = {
                     // Remove plot_size from shared preferences
@@ -1435,16 +1435,16 @@ fun FarmListHeaderPlots(
                     }
                     // Call the onAddFarmClicked lambda
                     onAddFarmClicked()
-                }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(36.dp))
+                }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
                 }
-                Spacer(modifier = Modifier.width(1.dp))
+                Spacer(modifier = Modifier.width(2.dp))
             }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
-                }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(36.dp))
+                }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
                 }
             }
         },

@@ -131,4 +131,5 @@
     <string name="error_longitude_decimal_places">Longitude must have at least 6 decimal places</string>
     <string name="error_polygon_points">Please capture at least 4 points for the polygon when the size is greater than 4 hectares.</string>
     <string name="error_farm_size_invalid">Invalid Farm Size</string>
+    <string name="invalid_farms">%1$d Invalid farm Records were not Imported</string>
 </resources>
