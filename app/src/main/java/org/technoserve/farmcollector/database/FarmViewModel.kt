@@ -366,8 +366,12 @@ class FarmViewModel(
                             addFarm(newFarm, newFarm.siteId)
                             importedFarms.add(newFarm)
                         }
-                        val existingFarm =
-                            newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
+//                        val existingFarm =
+//                            newFarm.remoteId?.let { repository.getFarmByRemoteId(it) }
+                        val existingFarm = newFarm.remoteId?.let {
+                            repository.getFarmByDetails(newFarm)
+                        }
+
                         if (existingFarm != null) {
                             if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
                                 // Farm needs an update
@@ -488,8 +492,11 @@ class FarmViewModel(
                                 importedFarms.add(newFarm)
                             }
 
-                            val existingFarm =
-                                newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
+//                            val existingFarm =
+//                                newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
+                            val existingFarm = newFarm.remoteId?.let {
+                                repository.getFarmByDetails(newFarm)
+                            }
                             if (existingFarm != null) {
                                 if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
                                     // Farm needs an update

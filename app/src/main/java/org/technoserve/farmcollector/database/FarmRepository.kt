@@ -83,18 +83,47 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteListSite(ids)
     }
 
+//    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
+//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) } != null
+//    }
+//
+//    suspend fun isFarmDuplicate(farm: Farm): Farm? {
+//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) }
+//    }
+//
+//    // Function to fetch a farm by remote ID
+//    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
+//        return farmDAO.getFarmByRemoteId(remoteId)
+//    }
+
     suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
-        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) } != null
+        return farmDAO.getFarmByDetails(
+            farm.remoteId,
+            farm.farmerName,
+            farm.village,
+            farm.district
+        ) != null
     }
 
     suspend fun isFarmDuplicate(farm: Farm): Farm? {
-        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) }
+        return farmDAO.getFarmByDetails(
+            farm.remoteId,
+            farm.farmerName,
+            farm.village,
+            farm.district
+        )
     }
 
-    // Function to fetch a farm by remote ID
-    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
-        return farmDAO.getFarmByRemoteId(remoteId)
+    // Function to fetch a farm by remote ID, farmer name, and address
+    suspend fun getFarmByDetails(farm: Farm): Farm? {
+        return farmDAO.getFarmByDetails(
+            farm.remoteId,
+            farm.farmerName,
+            farm.village,
+            farm.district
+        )
     }
+
 
 //    suspend fun deleteFarmByRemoteId(remoteId: UUID) {
 //        farmDAO.deleteFarmByRemoteId(remoteId)
