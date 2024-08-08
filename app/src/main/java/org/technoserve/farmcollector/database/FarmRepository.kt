@@ -63,6 +63,11 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.delete(farm)
     }
 
+    suspend fun deleteFarmById(farm: Farm) {
+        farmDAO.deleteFarmByRemoteId(farm.remoteId)
+    }
+
+
     suspend fun deleteAllFarms() {
         farmDAO.deleteAll()
     }
@@ -137,6 +142,30 @@ class FarmRepository(private val farmDAO: FarmDAO) {
                 existingFarm.village != newFarm.village ||
                 existingFarm.district != newFarm.district
     }
+
+    fun isDuplicateFarm(existingFarm: Farm, newFarm: Farm): Boolean {
+        return existingFarm.farmerName == newFarm.farmerName &&
+                existingFarm.size == newFarm.size &&
+                existingFarm.village == newFarm.village &&
+                existingFarm.district == newFarm.district
+    }
+
+
+    fun farmNeedsUpdateImport(newFarm: Farm): Boolean {
+        return newFarm.farmerName.isEmpty() ||
+                newFarm.district.isEmpty() ||
+                newFarm.village.isEmpty() ||
+                newFarm.latitude == "0.0" ||
+                newFarm.longitude == "0.0" ||
+                newFarm.size == 0.0f ||
+                newFarm.remoteId.toString().isEmpty() ||
+                newFarm.coordinates.isNullOrEmpty()
+    }
+
+
+
+
+
 
 //    suspend fun importFarms(farms: List<Farm>): ImportResult {
 //        val nonDuplicateFarms = mutableListOf<Farm>()

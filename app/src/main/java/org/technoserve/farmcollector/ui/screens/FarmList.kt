@@ -249,7 +249,13 @@ fun ConfirmationDialog(
     fun validateFarms(farms: List<Farm>): Pair<Int, List<Farm>> {
         val incompleteFarms =
             farms.filter { farm ->
-                farm.farmerName.isEmpty() || farm.district.isEmpty()|| farm.village.isEmpty() || farm.latitude.isEmpty() || farm.longitude.isEmpty() || farm.size.isNaN() || farm.remoteId.toString().isEmpty()
+                farm.farmerName.isEmpty() ||
+                        farm.district.isEmpty()||
+                        farm.village.isEmpty() ||
+                        farm.latitude == "0.0" ||
+                        farm.longitude == "0.0" ||
+                        farm.size == 0.0f ||
+                        farm.remoteId.toString().isEmpty()
             }
         return Pair(farms.size, incompleteFarms)
     }
@@ -313,7 +319,7 @@ fun FarmList(
         listOf(
             stringResource(id = R.string.all),
             stringResource(id = R.string.needs_update),
-            stringResource(id = R.string.no_update_needed),
+//            stringResource(id = R.string.no_update_needed),
         )
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
@@ -690,279 +696,29 @@ fun FarmList(
         )
     }
 
-//    fun onDelete() {
-//        selectedFarm.value?.let { farm ->
-//            val toDelete =
-//                mutableListOf<Long>().apply {
-//                    addAll(selectedIds)
-//                    add(farm.id)
-//                }
-//            farmViewModel.deleteList(toDelete)
-//            farmViewModel.deleteFarm(farm)
-//            selectedFarm.value = null
-//            showDeleteDialog.value = false
-//        }
-//    }
-
     fun onDelete() {
-        val toDelete = mutableListOf<Long>()
-        toDelete.addAll(selectedIds)
-        farmViewModel.deleteList(toDelete)
-        selectedIds.removeAll(selectedIds)
-        showDeleteDialog.value = false
-    }
-
-    /*
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-    ) {
-        FarmListHeaderPlots(
-            title = stringResource(id = R.string.farm_list),
-            onAddFarmClicked = { navController.navigate("addFarm/$siteId") },
-            onBackClicked = { navController.navigate("siteList") },
-            onBackSearchClicked = { navController.navigate("farmList/$siteId") },
-            onExportClicked = {
-                action = Action.Export
-                showFormatDialog = true
-            },
-            onShareClicked = {
-                action = Action.Share
-                showFormatDialog = true
-            },
-            onSearchQueryChanged = setSearchQuery,
-            //onImportClicked = { showImportDialog = true },
-            showAdd = true,
-            showExport = listItems.isNotEmpty(),
-            showShare = listItems.isNotEmpty(),
-            showSearch = listItems.isNotEmpty(),
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TabRow(
-            // selectedTabIndex = selectedTabIndex,
-            selectedTabIndex = pagerState.currentPage,
-            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    text = { Text(title) },
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f),
-        ) { page ->
-            val filteredListItems =
-                when (page) {
-                    1 -> listItems.filter { it.needsUpdate }
-                    2 -> listItems.filter { !it.needsUpdate }
-                    else -> listItems
-                }.filter {
-                    it.farmerName.contains(searchQuery, ignoreCase = true)
+        selectedFarm.value?.let { farm ->
+            val toDelete =
+                mutableListOf<Long>().apply {
+                    addAll(selectedIds)
+                    add(farm.id)
                 }
-
-            // Display the list or any other UI elements here based on listItems
-            if (searchQuery.isNotEmpty() && filteredListItems.isEmpty()) {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top,
-                ) {
-                    Text(
-                        text = stringResource(R.string.no_results_found),
-                        modifier =
-                            Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            } else {
-                if (filteredListItems.isNotEmpty()) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        items(filteredListItems) { farm ->
-                            FarmCard(
-                                farm = farm,
-                                onCardClick = {
-                                    Bundle().apply {
-                                        putSerializable(
-                                            "coordinates",
-                                            farm.coordinates?.let { ArrayList(it) },
-                                        )
-                                    }
-
-                                    navController.currentBackStackEntry?.arguments?.apply {
-                                        putSerializable("farmData", Pair(farm, "view"))
-                                    }
-                                    navController.navigate(route = "setPolygon")
-                                },
-                                onDeleteClick = {
-                                    selectedIds.add(farm.id)
-                                    selectedFarm.value = farm
-                                    showDeleteDialog.value = true
-                                },
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        Image(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(16.dp, 8.dp),
-                            painter = painterResource(id = R.drawable.no_data2),
-                            contentDescription = null,
-                        )
-                    }
-                }
-
-                if (showDeleteDialog.value) {
-                    DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-                }
-            }
-        }
-    }
-    */
-    /*
-    if (listItems.isNotEmpty() || searchQuery.isNotEmpty()) {
-        val filteredList = listItems.filter {
-            it.farmerName.contains(searchQuery, ignoreCase = true)
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            item {
-                FarmListHeaderPlots(
-                    title = stringResource(id = R.string.farm_list),
-                    onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                    onBackClicked = { navController.navigate("siteList") },
-                    onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-                    onExportClicked = {
-                        action = Action.Export
-                        showFormatDialog = true
-                    },
-                    onShareClicked = {
-                        action = Action.Share
-                        showFormatDialog = true
-                    },
-                    onSearchQueryChanged = setSearchQuery,
-                    showAdd = true,
-                    showExport = listItems.isNotEmpty(),
-                    showShare = listItems.isNotEmpty(),
-                    showSearch = listItems.isNotEmpty()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            if (filteredList.isEmpty()) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_results_found),
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
-            } else {
-                items(filteredList) { farm ->
-                    FarmCard(
-                        farm = farm,
-                        onCardClick = {
-                            navController.currentBackStackEntry?.arguments?.apply {
-                                putSerializable("coordinates", farm.coordinates?.let { ArrayList(it) })
-                                putSerializable("farmData", Pair(farm, "view"))
-                            }
-                            navController.navigate(route = "setPolygon")
-                        },
-                        onDeleteClick = {
-                            selectedIds.add(farm.id)
-                            showDeleteDialog.value = true
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-        }
-
-        if (showDeleteDialog.value) {
-            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            FarmListHeaderPlots(
-                title = stringResource(id = R.string.farm_list),
-                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-                onBackClicked = { navController.navigateUp() },
-                onExportClicked = {
-                    action = Action.Export
-                    showFormatDialog = true
-                },
-                onShareClicked = {
-                    action = Action.Share
-                    showFormatDialog = true
-                },
-                onSearchQueryChanged = setSearchQuery,
-                showAdd = true,
-                showExport = listItems.isNotEmpty(),
-                showShare = listItems.isNotEmpty(),
-                showSearch = listItems.isNotEmpty(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp, 8.dp),
-                painter = painterResource(id = R.drawable.no_data2),
-                contentDescription = null
-            )
+            farmViewModel.deleteList(toDelete)
+            selectedIds.removeAll(selectedIds)
+            farmViewModel.deleteFarmById(farm)
+            selectedFarm.value = null
+            selectedIds.removeAll(selectedIds)
+            showDeleteDialog.value = false
         }
     }
 
-     */
+//    fun onDelete() {
+//        val toDelete = mutableListOf<Long>()
+//        toDelete.addAll(selectedIds)
+//        farmViewModel.deleteList(toDelete)
+//        selectedIds.removeAll(selectedIds)
+//        showDeleteDialog.value = false
+//    }
 
     Column(
         modifier = Modifier
@@ -983,7 +739,7 @@ fun FarmList(
                 showFormatDialog = true
             },
             onSearchQueryChanged = setSearchQuery,
-//            onImportClicked = { showImportDialog = true },
+            onImportClicked = { showImportDialog = true },
             showAdd = true,
             showExport = listItems.isNotEmpty(),
             showShare = listItems.isNotEmpty(),
@@ -1002,86 +758,128 @@ fun FarmList(
                 CircularProgressIndicator()
             }
         } else {
-            if (listItems.isNotEmpty() || searchQuery.isNotEmpty()) {
-                // Show the list only when loading is complete
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
+            val hasData = listItems.isNotEmpty() // Check if there's data available
+
+            if (hasData) {
+                // Only show the TabRow and HorizontalPager if there is data
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ) {
-                    val filteredList = listItems.filter {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            text = { Text(title) },
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.weight(1f),
+                ) { page ->
+                    val filteredListItems = when (page) {
+                        1 -> listItems.filter { it.needsUpdate }
+                        else -> listItems
+                    }.filter {
                         it.farmerName.contains(searchQuery, ignoreCase = true)
                     }
+                    if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
+                        // Show the list only when loading is complete
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            val filteredList = filteredListItems.filter {
+                                it.farmerName.contains(searchQuery, ignoreCase = true)
+                            }
 
-                    if (filteredList.isEmpty()) {
-                        item {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Top,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.no_results_found),
-                                    modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
+                            if (filteredList.isEmpty()) {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Top,
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.no_results_found),
+                                            modifier = Modifier
+                                                .padding(16.dp)
+                                                .fillMaxWidth(),
+                                            textAlign = TextAlign.Center,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                    }
+                                }
+                            } else {
+                                items(filteredList) { farm ->
+                                    FarmCard(
+                                        farm = farm,
+                                        onCardClick = {
+                                            navController.currentBackStackEntry?.arguments?.apply {
+                                                putParcelableArrayList(
+                                                    "coordinates",
+                                                    farm.coordinates?.map {
+                                                        it.first?.let { it1 ->
+                                                            it.second?.let { it2 ->
+                                                                ParcelablePair(
+                                                                    it1, it2
+                                                                )
+                                                            }
+                                                        }
+                                                    }?.let { ArrayList(it) }
+                                                )
+                                                putParcelable(
+                                                    "farmData",
+                                                    ParcelableFarmData(farm, "view")
+                                                )
+                                            }
+                                            navController.navigate(route = "setPolygon")
+                                        },
+                                        onDeleteClick = {
+                                            selectedIds.add(farm.id)
+                                            selectedFarm.value = farm
+                                            showDeleteDialog.value = true
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
                             }
                         }
                     } else {
-                        items(filteredList) { farm ->
-                            FarmCard(
-                                farm = farm,
-//                                onCardClick = {
-//                                    navController.currentBackStackEntry?.arguments?.apply {
-//                                        putSerializable(
-//                                            "coordinates",
-//                                            farm.coordinates?.let { ArrayList(it) })
-//                                        putSerializable("farmData", Pair(farm, "view"))
-//                                    }
-//                                    navController.navigate(route = "setPolygon")
-//                                },
-//
-                                onCardClick = {
-                                    navController.currentBackStackEntry?.arguments?.apply {
-                                        putParcelableArrayList(
-                                            "coordinates",
-                                            farm.coordinates?.map { it.first?.let { it1 ->
-                                                it.second?.let { it2 ->
-                                                    ParcelablePair(
-                                                        it1, it2
-                                                    )
-                                                }
-                                            } }?.let { ArrayList(it) }
-                                        )
-                                        putParcelable("farmData", ParcelableFarmData(farm, "view"))
-                                    }
-                                    navController.navigate(route = "setPolygon")
-                                },
-                                onDeleteClick = {
-                                    selectedIds.add(farm.id)
-                                    showDeleteDialog.value = true
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp, 8.dp),
+                            painter = painterResource(id = R.drawable.no_data2),
+                            contentDescription = null
+                        )
                     }
                 }
+            } else {
+                // Display a message or image indicating no data available
+                Spacer(modifier = Modifier.height(8.dp))
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp, 8.dp),
+                    painter = painterResource(id = R.drawable.no_data2),
+                    contentDescription = null
+                )
             }
-            else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp, 8.dp),
-                        painter = painterResource(id = R.drawable.no_data2),
-                        contentDescription = null
-                    )
-                }
         }
 
         if (showDeleteDialog.value) {
@@ -1089,7 +887,6 @@ fun FarmList(
         }
     }
 }
-
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun ImportFileDialog(
@@ -1376,7 +1173,7 @@ fun FarmListHeaderPlots(
     onBackClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
-//    onImportClicked: () -> Unit,
+    onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
@@ -1415,13 +1212,13 @@ fun FarmListHeaderPlots(
                 }
                 Spacer(modifier = Modifier.width(2.dp))
             }
-//            IconButton(onClick = onImportClicked, modifier = Modifier.size(24.dp)) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.upload),
-//                    contentDescription = "Import",
-//                    modifier = Modifier.size(24.dp),
-//                )
-//            }
+            IconButton(onClick = onImportClicked, modifier = Modifier.size(24.dp)) {
+                Icon(
+                    painter = painterResource(id = R.drawable.icons8_import_file_48),
+                    contentDescription = "Import",
+                    modifier = Modifier.size(24.dp),
+                )
+            }
             Spacer(modifier = Modifier.width(2.dp))
             if (showAdd) {
                 IconButton(onClick = {
@@ -1500,46 +1297,148 @@ fun FarmListHeaderPlots(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun FarmCard(
+//    farm: Farm,
+//    onCardClick: () -> Unit,
+//    onDeleteClick: () -> Unit,
+//) {
+//    println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
+//    val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
+//    val isDarkTheme = isSystemInDarkTheme()
+//    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+//    val textColor = if (isDarkTheme) Color.White else Color.Black
+//
+//    Column(
+//        modifier =
+//            Modifier
+//                .fillMaxSize()
+//                .padding(top = 8.dp),
+//        verticalArrangement = Arrangement.Center,
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//    ) {
+//        ElevatedCard(
+//            elevation =
+//                CardDefaults.cardElevation(
+//                    defaultElevation = 6.dp,
+//                ),
+//            modifier =
+//                Modifier
+//                    .background(backgroundColor)
+//                    .fillMaxWidth() // 90% of the screen width
+//                    .padding(8.dp)
+//                    .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
+//            onClick = {
+//                onCardClick()
+//            },
+//        ) {
+//            Column(
+//                modifier =
+//                    Modifier
+//                        .background(backgroundColor)
+//                        .padding(16.dp),
+//            ) {
+//                Row(
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.fillMaxWidth(),
+//                ) {
+//                    Text(
+//                        text = farm.farmerName,
+//                        style =
+//                            MaterialTheme.typography.bodySmall.copy(
+//                                fontSize = 18.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                color = textColor,
+//                            ),
+//                        modifier =
+//                            Modifier
+//                                .weight(1.1f)
+//                                .padding(bottom = 4.dp),
+//                    )
+//                    Text(
+//                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
+//                            stringResource(id = R.string.ha)
+//                        }",
+//                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
+//                        modifier =
+//                            Modifier
+//                                .weight(0.9f)
+//                                .padding(bottom = 4.dp),
+//                    )
+//                    IconButton(
+//                        onClick = {
+//                            onDeleteClick()
+//                        },
+//                        modifier =
+//                            Modifier
+//                                .size(24.dp)
+//                                .padding(4.dp),
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Delete,
+//                            contentDescription = "Delete",
+//                            tint = Color.Red,
+//                        )
+//                    }
+//                }
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.fillMaxWidth(),
+//                ) {
+//                    Text(
+//                        text = "${stringResource(id = R.string.village)}: ${farm.village}",
+//                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
+//                        modifier = Modifier.weight(1f),
+//                    )
+//                    Text(
+//                        text = "${stringResource(id = R.string.district)}: ${farm.district}",
+//                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
+//                        modifier = Modifier.weight(1f),
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
+
 @Composable
 fun FarmCard(
     farm: Farm,
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-    println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
-    val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
 
     Column(
         modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(top = 8.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(top = 8.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ElevatedCard(
             elevation =
-                CardDefaults.cardElevation(
-                    defaultElevation = 6.dp,
-                ),
+            CardDefaults.cardElevation(
+                defaultElevation = 6.dp,
+            ),
             modifier =
-                Modifier
-                    .background(backgroundColor)
-                    .fillMaxWidth() // 90% of the screen width
-                    .padding(8.dp)
-                    .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
+            Modifier
+                .background(backgroundColor)
+                .fillMaxWidth()
+                .padding(8.dp),
             onClick = {
                 onCardClick()
             },
         ) {
             Column(
                 modifier =
-                    Modifier
-                        .background(backgroundColor)
-                        .padding(16.dp),
+                Modifier
+                    .background(backgroundColor)
+                    .padding(16.dp),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1549,15 +1448,15 @@ fun FarmCard(
                     Text(
                         text = farm.farmerName,
                         style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor,
-                            ),
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textColor,
+                        ),
                         modifier =
-                            Modifier
-                                .weight(1.1f)
-                                .padding(bottom = 4.dp),
+                        Modifier
+                            .weight(1.1f)
+                            .padding(bottom = 4.dp),
                     )
                     Text(
                         text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
@@ -1565,18 +1464,18 @@ fun FarmCard(
                         }",
                         style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                         modifier =
-                            Modifier
-                                .weight(0.9f)
-                                .padding(bottom = 4.dp),
+                        Modifier
+                            .weight(0.9f)
+                            .padding(bottom = 4.dp),
                     )
                     IconButton(
                         onClick = {
                             onDeleteClick()
                         },
                         modifier =
-                            Modifier
-                                .size(24.dp)
-                                .padding(4.dp),
+                        Modifier
+                            .size(24.dp)
+                            .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
@@ -1600,10 +1499,22 @@ fun FarmCard(
                         modifier = Modifier.weight(1f),
                     )
                 }
+
+                // Show the label if the farm needs an update
+                if (farm.needsUpdate) {
+                    Text(
+                        text = stringResource(id = R.string.needs_update),
+                        color = Color.Blue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,  // Adjust font size
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
         }
     }
 }
+
 
 fun OutputStream.writeCsv(farms: List<Farm>) {
     val writer = bufferedWriter()

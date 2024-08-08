@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
@@ -112,6 +114,12 @@ class FarmViewModel(
     fun deleteFarm(farm: Farm) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteFarm(farm)
+        }
+    }
+
+    fun deleteFarmById(farm: Farm) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteFarmById(farm)
         }
     }
 
@@ -317,6 +325,17 @@ class FarmViewModel(
         return result
     }
 
+    fun showCustomToast(context: Context, message: String, duration: Long) {
+        val toast = Toast.makeText(context, message, Toast.LENGTH_LONG)
+        toast.show()
+
+        // Dismiss the toast after the desired duration
+        Handler(Looper.getMainLooper()).postDelayed({
+            toast.cancel()
+        }, duration)
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.N)
     suspend fun importFile(
         context: Context,
@@ -372,23 +391,37 @@ class FarmViewModel(
                             repository.getFarmByDetails(newFarm)
                         }
 
-                        if (existingFarm != null) {
-                            if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-                                // Farm needs an update
-                                println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                                farmsNeedingUpdate.add(newFarm)
-                            } else {
+//                        if (existingFarm != null) {
+//                            if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+//                                // Farm needs an update
+//                                println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+//                                farmsNeedingUpdate.add(newFarm)
+//                            } else {
+//                                // Farm is a duplicate but does not need an update
+//                                val duplicateMessage =
+//                                    "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+//                                println(duplicateMessage)
+//                                duplicateFarms.add(duplicateMessage)
+//                            }
+//                        } else {
+//                            // Handle case where farm exists in the system but not in the repository
+//                            val unknownFarmMessage =
+//                                "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+//                            println(unknownFarmMessage)
+//                        }
+
+                        if (repository.farmNeedsUpdateImport(newFarm)) {
+                            // Farm needs an update
+                            println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                            farmsNeedingUpdate.add(newFarm)
+                        } else {
+                            if (existingFarm?.let { repository.isDuplicateFarm(it, newFarm) } == true) {
                                 // Farm is a duplicate but does not need an update
                                 val duplicateMessage =
                                     "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
                                 println(duplicateMessage)
                                 duplicateFarms.add(duplicateMessage)
                             }
-                        } else {
-                            // Handle case where farm exists in the system but not in the repository
-                            val unknownFarmMessage =
-                                "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-                            println(unknownFarmMessage)
                         }
                     }
                     message = context.getString(R.string.geojson_import_successful)
@@ -497,28 +530,42 @@ class FarmViewModel(
                             val existingFarm = newFarm.remoteId?.let {
                                 repository.getFarmByDetails(newFarm)
                             }
-                            if (existingFarm != null) {
-                                if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-                                    // Farm needs an update
-                                    println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-                                    farmsNeedingUpdate.add(newFarm)
-                                } else {
+//                            if (existingFarm != null) {
+//                                if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
+//                                    // Farm needs an update
+//                                    println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+//                                    farmsNeedingUpdate.add(newFarm)
+//                                } else {
+//                                    // Farm is a duplicate but does not need an update
+//                                    val duplicateMessage =
+//                                        "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
+//                                    println(duplicateMessage)
+//                                    duplicateFarms.add(duplicateMessage)
+//                                }
+//                            } else {
+//                                // Handle case where farm exists in the system but not in the repository
+//                                val unknownFarmMessage =
+//                                    "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
+//                                println(unknownFarmMessage)
+//
+////                            // Remove farm from repository
+////                            runBlocking {
+////                                newFarm.remoteId?.let { repository.deleteFarmByRemoteId(it) }
+////                            }
+//                            }
+
+                            if (repository.farmNeedsUpdateImport(newFarm)) {
+                                // Farm needs an update
+                                println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
+                                farmsNeedingUpdate.add(newFarm)
+                            } else {
+                                if (existingFarm?.let { repository.isDuplicateFarm(it, newFarm) } == true) {
                                     // Farm is a duplicate but does not need an update
                                     val duplicateMessage =
                                         "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
                                     println(duplicateMessage)
                                     duplicateFarms.add(duplicateMessage)
                                 }
-                            } else {
-                                // Handle case where farm exists in the system but not in the repository
-                                val unknownFarmMessage =
-                                    "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-                                println(unknownFarmMessage)
-
-//                            // Remove farm from repository
-//                            runBlocking {
-//                                newFarm.remoteId?.let { repository.deleteFarmByRemoteId(it) }
-//                            }
                             }
                         } else {
                             println("Line does not contain enough data: $line")
@@ -556,8 +603,24 @@ class FarmViewModel(
             // Show a toast message for invalid farms
             withContext(Dispatchers.Main) {
                 if (invalidFarms.isNotEmpty()) {
-                    val invalidFarmsMessage = context.getString(R.string.invalid_farms, invalidFarms.size)
-                    Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
+                    // Extract farmer names from invalid farm messages
+                    val farmerNames = invalidFarms.joinToString(separator = ", ") {
+                        // Extract the farmer's name from the string format "Record of [farmer_name] is not inserted"
+                        it.substringAfter("Record of ").substringBefore(" is not inserted")
+                    }
+
+                    // Construct the toast message
+                    val invalidFarmsMessage = context.getString(
+                        R.string.invalid_farms_with_names,
+                        invalidFarms.size,
+                        farmerNames
+                    )
+//                    val invalidFarmsMessage = context.getString(R.string.invalid_farms, invalidFarms.size)
+//                    Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
+                    // Show the toast message
+                   // Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
+                    // Show a custom duration toast
+                    showCustomToast(context, invalidFarmsMessage, 5000)
                 }
             }
             // Show a toast message for farms that needs updates
