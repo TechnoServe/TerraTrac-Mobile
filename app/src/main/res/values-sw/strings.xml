@@ -112,6 +112,7 @@
     <string name="all">Yote</string>
     <string name="needs_update">Inahitaji Kusasishwa</string>
     <string name="no_update_needed">Haihitaji Kusasishwa</string>
+
     <string name="no_results_found">Hakuna Matokeo Yaliyopatikana</string>
     <string name="duplicate_farms">%1$d Mashamba yaliyojirudia yapo</string>
     <string name="farms_needing_update">%1$d mashamba yanahitaji kusasishwa</string>
@@ -119,7 +120,6 @@
     <string name="geojson_import_successful">Uagizaji wa GeoJSON umefanikiwa</string>
     <string name="csv_import_successful">Uagizaji wa CSV umefanikiwa</string>
     <string name="import_failed_with_error">Uagizaji umeshindwa: %1$s</string>
-
     <string name="error_site_name_empty">Jina la Tovuti halipaswi kuwa tupu</string>
     <string name="error_agent_name_empty">Jina la Wakala halipaswi kuwa tupu</string>
     <string name="error_invalid_phone_number">Nambari ya Simu Batili</string>
@@ -133,4 +133,6 @@
     <string name="error_polygon_points">Tafadhali kamata angalau pointi 4 kwa poligoni wakati ukubwa ni zaidi ya hekta 4.</string>
     <string name="error_farm_size_invalid">Ukubwa wa Shamba si Sahihi</string>
     <string name="invalid_farms">%1$d Rekodi za mashamba zisizo sahihi hazijaingizwa</string>
+    <string name="invalid_farms_with_names">%1$d rekodi za mashamba zisizo sahihi hazikuletewa. Wakulima: %2$s</string>
+
 </resources>

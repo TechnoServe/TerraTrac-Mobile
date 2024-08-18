@@ -112,6 +112,7 @@
     <string name="all">Hundumaa</string>
     <string name="needs_update">Haaromsa Barbaachisa</string>
     <string name="no_update_needed">Haaromsi Hin Barbaachisu</string>
+
     <string name="no_results_found">Arganno hin argamne</string>
     <string name="duplicate_farms">%1$d daangaa lamaan wal fakkaatan jiru</string>
     <string name="farms_needing_update">%1$d daangaan haalaan qabame</string>
@@ -119,7 +120,6 @@
     <string name="geojson_import_successful">Galchi GeoJSON milkaa\'aa ta\'eera</string>
     <string name="csv_import_successful">Galchi CSV milkaa\'aa ta\'eera</string>
     <string name="import_failed_with_error">Galchi harkifataa: %1$s</string>
-
     <string name="error_site_name_empty">Maqaan bakka hojii hin duwwaa ta\'uu qaba</string>
     <string name="error_agent_name_empty">Maqaan agntii hin duwwaa ta\'uu qaba</string>
     <string name="error_invalid_phone_number">Lakkofsa bilbilaa dogoggora</string>
@@ -133,5 +133,7 @@
     <string name="error_polygon_points">Giddugaleessa meetiraa 4 ta\'u yoo xiqqaate foorisaaniirra seenuu qaba.</string>
     <string name="error_farm_size_invalid">Gatii Dirree Dogoggoraa</string>
     <string name="invalid_farms">%1$d Waraqaa qabeenya beeyladaa dogoggoraa hin galmoofne</string>
+    <string name="invalid_farms_with_names">%1$d qabeenya ispoortii dogongoraa hin taasifamne. Barsiisota: %2$s</string>
+
 
 </resources>

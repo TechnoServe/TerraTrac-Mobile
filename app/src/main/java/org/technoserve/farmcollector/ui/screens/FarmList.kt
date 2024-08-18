@@ -1171,22 +1171,24 @@ fun FarmListHeaderPlots(
     title: String,
     onAddFarmClicked: () -> Unit,
     onBackClicked: () -> Unit,
+    onBackSearchClicked: () -> Unit,
     onExportClicked: () -> Unit,
     onShareClicked: () -> Unit,
     onImportClicked: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
     showExport: Boolean,
     showShare: Boolean,
     showSearch: Boolean,
-//    searchResultsEmpty: Boolean
 ) {
     val context = LocalContext.current as Activity
 
     // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
+
+    // State for tracking if import has been completed
+    var isImportDisabled by remember { mutableStateOf(false) }
 
     TopAppBar(
         title = { Text(text = title, fontSize = 18.sp) },
@@ -1212,7 +1214,16 @@ fun FarmListHeaderPlots(
                 }
                 Spacer(modifier = Modifier.width(2.dp))
             }
-            IconButton(onClick = onImportClicked, modifier = Modifier.size(24.dp)) {
+            IconButton(
+                onClick = {
+                    if (!isImportDisabled) {
+                        onImportClicked()
+                        isImportDisabled = true // Disable the import icon after importing
+                    }
+                },
+                modifier = Modifier.size(24.dp),
+                enabled = !isImportDisabled // Disable the button if import is completed
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.icons8_import_file_48),
                     contentDescription = "Import",
@@ -1277,15 +1288,6 @@ fun FarmListHeaderPlots(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-//                trailingIcon = {
-//                    IconButton(onClick = {
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.Close, contentDescription = "Close")
-//                    }
-//                },
                 singleLine = true,
                 colors =
                     TextFieldDefaults.outlinedTextFieldColors(
@@ -1295,112 +1297,6 @@ fun FarmListHeaderPlots(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun FarmCard(
-//    farm: Farm,
-//    onCardClick: () -> Unit,
-//    onDeleteClick: () -> Unit,
-//) {
-//    println("farm card needs update ${farm.farmerName} ${farm.needsUpdate}")
-//    val indicatorColor = if (farm.needsUpdate) Color.Red else Color.Transparent
-//    val isDarkTheme = isSystemInDarkTheme()
-//    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-//    val textColor = if (isDarkTheme) Color.White else Color.Black
-//
-//    Column(
-//        modifier =
-//            Modifier
-//                .fillMaxSize()
-//                .padding(top = 8.dp),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//    ) {
-//        ElevatedCard(
-//            elevation =
-//                CardDefaults.cardElevation(
-//                    defaultElevation = 6.dp,
-//                ),
-//            modifier =
-//                Modifier
-//                    .background(backgroundColor)
-//                    .fillMaxWidth() // 90% of the screen width
-//                    .padding(8.dp)
-//                    .border(2.dp, indicatorColor, RoundedCornerShape(8.dp)),
-//            onClick = {
-//                onCardClick()
-//            },
-//        ) {
-//            Column(
-//                modifier =
-//                    Modifier
-//                        .background(backgroundColor)
-//                        .padding(16.dp),
-//            ) {
-//                Row(
-//                    horizontalArrangement = Arrangement.SpaceBetween,
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    modifier = Modifier.fillMaxWidth(),
-//                ) {
-//                    Text(
-//                        text = farm.farmerName,
-//                        style =
-//                            MaterialTheme.typography.bodySmall.copy(
-//                                fontSize = 18.sp,
-//                                fontWeight = FontWeight.Bold,
-//                                color = textColor,
-//                            ),
-//                        modifier =
-//                            Modifier
-//                                .weight(1.1f)
-//                                .padding(bottom = 4.dp),
-//                    )
-//                    Text(
-//                        text = "${stringResource(id = R.string.size)}: ${formatInput(farm.size.toString())} ${
-//                            stringResource(id = R.string.ha)
-//                        }",
-//                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-//                        modifier =
-//                            Modifier
-//                                .weight(0.9f)
-//                                .padding(bottom = 4.dp),
-//                    )
-//                    IconButton(
-//                        onClick = {
-//                            onDeleteClick()
-//                        },
-//                        modifier =
-//                            Modifier
-//                                .size(24.dp)
-//                                .padding(4.dp),
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.Delete,
-//                            contentDescription = "Delete",
-//                            tint = Color.Red,
-//                        )
-//                    }
-//                }
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    modifier = Modifier.fillMaxWidth(),
-//                ) {
-//                    Text(
-//                        text = "${stringResource(id = R.string.village)}: ${farm.village}",
-//                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-//                        modifier = Modifier.weight(1f),
-//                    )
-//                    Text(
-//                        text = "${stringResource(id = R.string.district)}: ${farm.district}",
-//                        style = MaterialTheme.typography.bodySmall.copy(color = textColor),
-//                        modifier = Modifier.weight(1f),
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
 
 @Composable
 fun FarmCard(

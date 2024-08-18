@@ -112,6 +112,7 @@
     <string name="all">ሁሉም</string>
     <string name="needs_update">አሻሻል ያስፈልጋል</string>
     <string name="no_update_needed">አሻሻል አያስፈልግም</string>
+
     <string name="no_results_found">ምንም ውጤት አልተገኘም</string>
     <string name="duplicate_farms">%1$d ተመሳሳይ እርሻዎች አሉ</string>
     <string name="farms_needing_update">%1$d እርሻዎች መታደስ ያስፈልጋቸዋል</string>
@@ -119,7 +120,6 @@
     <string name="geojson_import_successful">የGeoJSON እንቅስቃሴ ተሳክቷል</string>
     <string name="csv_import_successful">የCSV እንቅስቃሴ ተሳክቷል</string>
     <string name="import_failed_with_error">እንቅስቃሴ አልተሳካም፡ %1$s</string>
-
     <string name="error_site_name_empty">የጣቢያ ስም ባዶ ሊሆን አይችልም</string>
     <string name="error_agent_name_empty">የወኪል ስም ባዶ ሊሆን አይችልም</string>
     <string name="error_invalid_phone_number">የስልክ ቁጥር አልተሳለችም</string>
@@ -133,5 +133,7 @@
     <string name="error_polygon_points">እንዲሁም ከ 4 ሂክታር በላይ ሲሆን እንዲሁ ብዙ ቅርፅ ማጠናቀቅ አለበት ፡፡</string>
     <string name="error_farm_size_invalid">የግብርኛ መስክ መጠን የተሳሳተ</string>
     <string name="invalid_farms">%1$d የማይገባው እርሻ መዝግቦች አልተገቡም</string>
+    <string name="invalid_farms_with_names">%1$d ተገቢ ያልሆኑ እርሻ ቅጽበቶች አልተሰጡም። ግለሰቦች፡ %2$s</string>
+
 
 </resources>

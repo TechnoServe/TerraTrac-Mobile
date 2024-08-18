@@ -112,6 +112,7 @@
     <string name="all">Todo</string>
     <string name="needs_update">Necesita Actualización</string>
     <string name="no_update_needed">No Necesita Actualización</string>
+
     <string name="no_results_found">No se encontraron resultados</string>
     <string name="duplicate_farms">%1$d granjas duplicadas existen</string>
     <string name="farms_needing_update">%1$d granjas necesitan ser actualizadas</string>
@@ -119,7 +120,6 @@
     <string name="geojson_import_successful">Importación de GeoJSON exitosa</string>
     <string name="csv_import_successful">Importación de CSV exitosa</string>
     <string name="import_failed_with_error">Error en la importación: %1$s</string>
-
     <string name="error_site_name_empty">El nombre del sitio no debe estar vacío</string>
     <string name="error_agent_name_empty">El nombre del agente no debe estar vacío</string>
     <string name="error_invalid_phone_number">Número de teléfono no válido</string>
@@ -133,4 +133,6 @@
     <string name="error_polygon_points">Por favor, capture al menos 4 puntos para el polígono cuando el tamaño sea superior a 4 hectáreas.</string>
     <string name="error_farm_size_invalid">Tamaño de granja inválido</string>
     <string name="invalid_farms">%1$d Registros de granjas inválidos no fueron importados</string>
+    <string name="invalid_farms_with_names">%1$d registros de granjas inválidos no fueron importados. Agricultores: %2$s</string>
+
 </resources>
