@@ -17,7 +17,6 @@ android {
         targetSdk 34
         versionCode 40
         versionName "2.20"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
@@ -25,11 +24,38 @@ android {
     }
 
     buildTypes {
+        def debugBaseUrl = project.rootProject.file("local.properties").with { propertiesFile ->
+            if (propertiesFile.exists()) {
+                def properties = new Properties()
+                properties.load(propertiesFile.newInputStream())
+                properties.getProperty("BASE_URL", "default_debug_url")
+            } else {
+                "default_debug_url"
+            }
+        }
+
+        def releaseBaseUrl = project.rootProject.file("local.properties").with { propertiesFile ->
+            if (propertiesFile.exists()) {
+                def properties = new Properties()
+                properties.load(propertiesFile.newInputStream())
+                properties.getProperty("BASE_URL", "default_release_url")
+            } else {
+                "default_release_url"
+            }
+        }
+
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard'
+            buildConfigField "String", "BASE_URL", "\"$debugBaseUrl\""
+        }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            buildConfigField "String", "BASE_URL", "\"$releaseBaseUrl\""
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -40,6 +66,7 @@ android {
     buildFeatures {
         compose true
         viewBinding true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.3.2'

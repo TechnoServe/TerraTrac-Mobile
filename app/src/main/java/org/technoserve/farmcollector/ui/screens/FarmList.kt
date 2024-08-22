@@ -969,10 +969,10 @@ fun ImportFileDialog(
                         .padding(8.dp)
                         .fillMaxWidth(),
             ) {
-                Text(
-                    text = stringResource(R.string.select_file_type),
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
+//                Text(
+//                    text = stringResource(R.string.select_file_type),
+//                    modifier = Modifier.padding(bottom = 8.dp),
+//                )
                 Box(
                     modifier =
                         Modifier
@@ -1028,6 +1028,8 @@ fun ImportFileDialog(
         },
     )
 }
+
+
 
 @Composable
 fun DeleteAllDialogPresenter(

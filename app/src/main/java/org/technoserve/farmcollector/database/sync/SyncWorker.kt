@@ -22,6 +22,7 @@ import org.technoserve.farmcollector.database.remote.ApiService
 import org.technoserve.farmcollector.database.toDtoList
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import org.technoserve.farmcollector.BuildConfig
 
 class SyncWorker(
     context: Context,
@@ -56,7 +57,8 @@ class SyncWorker(
         val retrofit =
             Retrofit
                 .Builder()
-                .baseUrl("https://8e00-154-72-7-234.ngrok-free.app")
+                .baseUrl(BuildConfig.BASE_URL)
+//                .baseUrl("https://8e00-154-72-7-234.ngrok-free.app")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
