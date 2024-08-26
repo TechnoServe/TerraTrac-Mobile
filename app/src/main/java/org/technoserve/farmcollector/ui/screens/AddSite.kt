@@ -55,9 +55,12 @@ fun AddSite(navController: NavController) {
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_site),
+            onSearchQueryChanged = {},
             onAddFarmClicked = { /* Handle adding a farm here */ },
+            onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
-            showAdd = false
+            showAdd = false,
+            showSearch = false
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)
@@ -87,11 +90,36 @@ fun SiteForm(navController: NavController) {
     }
 
     fun validateForm(): Boolean {
-        isValid = // You can display an error message for this field if needed
-            !(name.isBlank() || agentName.isBlank() || village.isBlank() || district.isBlank())
+        isValid = true  // Reset isValid to true before starting validation
+
+        if (name.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if (agentName.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+        if (village.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if (district.isBlank()) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
+        if (email.isNotBlank() && !email.contains("@")) {
+            isValid = false
+            // You can display an error message for this field if needed
+        }
+
 
         return isValid
     }
+
 
     val scrollState = rememberScrollState()
     val fillForm = stringResource(id = R.string.fill_form)
@@ -103,10 +131,16 @@ fun SiteForm(navController: NavController) {
     val (focusRequester5) = FocusRequester.createRefs()
     val (focusRequester6) = FocusRequester.createRefs()
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -119,11 +153,16 @@ fun SiteForm(navController: NavController) {
                 ),
                 value = name,
                 onValueChange = { name = it },
-                label = { Text(stringResource(id = R.string.site_name) + " (*)") },
-                supportingText = { if (!isValid && name.isBlank()) Text("Site Name should not be empty") },
+                label = { Text(stringResource(id = R.string.site_name) + " (*)",color = inputLabelColor ) },
+                supportingText = { if (!isValid && name.isBlank()) Text(stringResource(R.string.error_site_name_empty)) },
                 isError = !isValid && name.isBlank(),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -145,11 +184,16 @@ fun SiteForm(navController: NavController) {
             ),
             value = agentName,
             onValueChange = { agentName = it },
-            label = { Text(stringResource(id = R.string.agent_name) + " (*)") },
-            supportingText = { if (!isValid && agentName.isBlank()) Text("Agent Name should not be empty") },
+            label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
+            supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
             isError = !isValid && agentName.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -172,14 +216,21 @@ fun SiteForm(navController: NavController) {
                 onDone = { focusRequester3.requestFocus() }
             ),
             value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text(stringResource(id = R.string.phone_number)) },
+            onValueChange = { phoneNumber = it
+                isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
+            },
+            label = { Text(stringResource(id = R.string.phone_number,),color = inputLabelColor) },
             supportingText = {
-                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text("Invalid Phone Number")
+                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(stringResource(R.string.error_invalid_phone_number, phoneNumber))
             },
             isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -203,19 +254,24 @@ fun SiteForm(navController: NavController) {
             ),
             value = email,
             onValueChange = { email = it },
-            label = { Text(stringResource(id = R.string.email)) },
+            label = { Text(stringResource(id = R.string.email),color = inputLabelColor) },
             supportingText = {
                 if (!isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                         email
                     ).matches()
                 )
-                    Text("Invalid Email Address")
+                    Text(stringResource(R.string.error_invalid_email_address))
             },
             isError = !isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                 email
             ).matches(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -236,11 +292,16 @@ fun SiteForm(navController: NavController) {
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village) + " (*)") },
-            supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
+            label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
+            supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -257,11 +318,16 @@ fun SiteForm(navController: NavController) {
             singleLine = true,
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district) + " (*)") },
-            supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
+            label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
+            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -270,7 +336,7 @@ fun SiteForm(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (validateForm()) {
+                if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
                     addSite(
                         farmViewModel,
                         name,
@@ -282,8 +348,10 @@ fun SiteForm(navController: NavController) {
                     )
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
-//                    context.finish()
+                    // context.finish()  // Uncomment if you want to finish the activity
                     navController.navigate("siteList")
+                    // Show toast indicating success
+                    Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
                 }

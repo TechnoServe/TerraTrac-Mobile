@@ -4,19 +4,19 @@ plugins {
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'dagger.hilt.android.plugin'
     id 'kotlin-kapt'
+    id 'kotlin-parcelize'
 }
 
 android {
     namespace 'org.technoserve.farmcollector'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "org.technoserve.farmcollector"
         minSdk 21
-        targetSdk 33
-        versionCode 18
-        versionName "2.08"
-
+        targetSdk 34
+        versionCode 40
+        versionName "2.20"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
@@ -24,11 +24,38 @@ android {
     }
 
     buildTypes {
+        def debugBaseUrl = project.rootProject.file("local.properties").with { propertiesFile ->
+            if (propertiesFile.exists()) {
+                def properties = new Properties()
+                properties.load(propertiesFile.newInputStream())
+                properties.getProperty("BASE_URL", "default_debug_url")
+            } else {
+                "default_debug_url"
+            }
+        }
+
+        def releaseBaseUrl = project.rootProject.file("local.properties").with { propertiesFile ->
+            if (propertiesFile.exists()) {
+                def properties = new Properties()
+                properties.load(propertiesFile.newInputStream())
+                properties.getProperty("BASE_URL", "default_release_url")
+            } else {
+                "default_release_url"
+            }
+        }
+
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard'
+            buildConfigField "String", "BASE_URL", "\"$debugBaseUrl\""
+        }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            buildConfigField "String", "BASE_URL", "\"$releaseBaseUrl\""
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -39,6 +66,7 @@ android {
     buildFeatures {
         compose true
         viewBinding true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.3.2'
@@ -46,6 +74,11 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+    bundle {
+        language {
+            enableSplit = false
         }
     }
 }
@@ -59,10 +92,24 @@ dependencies {
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.ui:ui-tooling-preview'
-    implementation 'androidx.compose.material3:material3'
-    implementation 'com.google.android.gms:play-services-ads-identifier:18.1.0'
+//    implementation 'androidx.compose.material3:material3'
+    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
 
-    def room_version = "2.3.0"
+    implementation 'com.google.android.gms:play-services-ads-identifier:18.1.0'
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+
+    // camera dependencies
+
+    implementation 'androidx.camera:camera-core:1.3.4'
+    implementation 'androidx.camera:camera-lifecycle:1.3.4'
+    implementation 'androidx.camera:camera-view:1.3.4'
+    implementation ("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
+    implementation "androidx.camera:camera-camera2:1.3.4"
+    implementation 'androidx.media3:media3-exoplayer:1.3.1'
+    implementation "androidx.compose.foundation:foundation:1.6.8"
+
+    def room_version = "2.6.1"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
@@ -105,4 +152,10 @@ dependencies {
     implementation("androidx.appcompat:appcompat-resources:$appcompat_version")
 
     implementation("com.google.code.gson:gson:2.10")
+
+    //retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation 'com.opencsv:opencsv:5.5.2'
 }

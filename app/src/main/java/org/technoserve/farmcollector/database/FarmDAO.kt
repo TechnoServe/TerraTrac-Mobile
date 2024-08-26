@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import java.util.UUID
 
 @Dao
 interface FarmDAO {
@@ -15,6 +16,10 @@ interface FarmDAO {
     @Transaction
     @Query("SELECT * FROM Farms WHERE siteId = :siteId ORDER BY createdAt DESC")
     fun getAll(siteId: Long): LiveData<List<Farm>>
+
+    @Transaction
+    @Query("SELECT * FROM Farms WHERE siteId = :siteId ORDER BY createdAt DESC")
+    fun getAllSync(siteId: Long): List<Farm>
 
     @Transaction
     @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
@@ -26,6 +31,10 @@ interface FarmDAO {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(farm: Farm)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(farms: List<Farm>)
+
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertSite(site: CollectionSite)
@@ -49,13 +58,19 @@ interface FarmDAO {
     fun update(farm: Farm)
 
     @Delete
-    fun delete(farm: Farm)
+    suspend fun delete(farm: Farm)
 
     @Query("DELETE FROM Farms")
     fun deleteAll()
 
     @Query("UPDATE Farms SET synced=1 WHERE id = :id")
     fun updateSyncStatus(id: Long)
+
+    @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId LIMIT 1")
+    fun getCollectionSiteById(siteId: Long): CollectionSite?
+
+    @Update
+    suspend fun updateFarmSyncStatus(farm: Farm)
 
     @Query("UPDATE Farms SET scheduledForSync=1 WHERE id IN (:ids)")
     fun updateSyncListStatus(ids: List<Long>)
@@ -65,5 +80,29 @@ interface FarmDAO {
 
     @Query("DELETE FROM CollectionSites WHERE siteId IN (:ids)")
     fun deleteListSite(ids: List<Long>)
+
+    @Query("SELECT * FROM Farms WHERE synced = 0")
+    suspend fun getUnsyncedFarms(): List<Farm>
+
+    @Query("SELECT * FROM Farms WHERE remote_id=:remoteId LIMIT 1")
+    suspend fun getFarmByRemoteId(remoteId: UUID): Farm?
+
+    @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
+    suspend fun getFarmBySiteId(siteId: Long): Farm?
+
+    @Query("DELETE FROM farms WHERE remote_id = :remoteId")
+    suspend fun deleteFarmByRemoteId(remoteId: UUID)
+
+    @Query("SELECT * FROM farms WHERE remote_id = :remoteId OR (farmerName = :farmerName AND village = :village AND district = :district) LIMIT 1")
+    suspend fun getFarmByDetails(remoteId: UUID, farmerName: String, village: String, district: String): Farm?
+
+    @Transaction
+    suspend fun insertAllIfNotExists(farms: List<Farm>) {
+        farms.forEach { farm ->
+            if (farm.remoteId?.let { getFarmByRemoteId(it) } == null) {
+                insertAll(listOf(farm))
+            }
+        }
+    }
 
 }

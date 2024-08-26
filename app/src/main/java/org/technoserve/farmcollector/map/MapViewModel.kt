@@ -3,19 +3,23 @@ package org.technoserve.farmcollector.map
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MarkerInfoWindow
-import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.ktx.model.polygonOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.technoserve.farmcollector.utils.GeoCalculator
+import org.technoserve.farmcollector.utils.convertSize
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,6 +34,88 @@ class MapViewModel @Inject constructor() : ViewModel() {
             onMapTypeChange = {}
         )
     )
+
+    // Properties for coordinates and areas
+    private val _coordinates = MutableLiveData<List<Pair<Double, Double>>>()
+    val coordinates: LiveData<List<Pair<Double, Double>>>
+        get() = _coordinates
+
+    private val _calculatedArea = MutableLiveData<Double>()
+    val calculatedArea: LiveData<Double>
+        get() = _calculatedArea
+
+    private val _size = MutableStateFlow("")
+    val size: StateFlow<String> = _size.asStateFlow()
+
+    private val _showDialog = MutableStateFlow(false)
+    val showDialog: StateFlow<Boolean> = _showDialog.asStateFlow()
+
+    // Property to store user's choice (0 for calculated, 1 for entered)
+    private val _userChoice = MutableLiveData<Int>()
+    val userChoice: LiveData<Int>
+        get() = _userChoice
+
+    // Method to set coordinates and calculated area
+    fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double {
+        _coordinates.value = coordinates
+        val area = GeoCalculator.calculateArea(coordinates)
+        _calculatedArea.value = area
+        return area
+    }
+
+    // Method to set entered area
+    fun setSize(size: String) {
+        _size.value = size
+    }
+
+    // Method to update the size
+    fun updateSize(newSize: String) {
+        _size.value = newSize
+    }
+
+    // Method to handle user's choice
+    fun setUserChoice(choice: Int) {
+        _userChoice.value = choice
+    }
+
+    // Method to show dialog for choosing area
+    fun showAreaDialog(calculatedArea: String, enteredArea: String) {
+        val areaNum = enteredArea.toDoubleOrNull()
+        if (areaNum != null) {
+            _calculatedArea.value = calculatedArea.toDoubleOrNull()
+            _size.value = enteredArea
+            _showDialog.value = true
+        } else {
+            _size.value = "Invalid input."
+        }
+    }
+
+    fun dismissDialog() {
+        _showDialog.value = false
+    }
+
+    fun updateSizeWithChoice(choice: String) {
+        _size.value = choice
+        _showDialog.value = false
+    }
+    // Method to retrieve the size input
+    fun getSizeInput(): Double? {
+        return _size.value.toDoubleOrNull()
+    }
+
+    // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
+    fun saveSize(selectedUnit: String, coordinatesData: List<Pair<Double, Double>>?): Number {
+        val currentSize = size.value.toFloatOrNull() ?: 0.0f
+        val finalSize = if (currentSize < 4f) {
+            convertSize(currentSize.toDouble(), selectedUnit)
+        } else {
+            calculateArea(coordinatesData)
+        }
+        updateSize(finalSize.toString())
+        return finalSize
+    }
+
+
 
     @SuppressLint("MissingPermission")
     fun getDeviceLocation(
@@ -74,18 +160,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
         return LatLngBounds(LatLng(0.0, 0.0), LatLng(0.0, 0.0))
     }
 
-    @Composable
-    fun addMarker(latitude: Double, longitude: Double) {
-        MarkerInfoWindow(
-            state = rememberMarkerState(position = LatLng(latitude, longitude)),
-            snippet = "Some stuff",
-            onClick = {
-                true
-            },
-            draggable = true
-        )
-    }
-
     companion object {
         private val POLYGON_FILL_COLOR = Color.parseColor("#ABF44336")
     }
@@ -104,7 +178,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         state.value = state.value.copy(clusterItems = currentClusterItems)
     }
 
-    fun addCoordinates(coordinates: List<Pair<Double, Double>>) {
+    fun addCoordinates(coordinates: List<Pair<Double?, Double?>>) {
         // Add coordinates on the map, this list of of LatLong form a polygons
         if (coordinates.isEmpty()) {
             return  // Return early without performing any further actions
@@ -115,6 +189,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
         val polygonOptions = polygonOptions {
             coordinates.forEach { (latitude, longitude) ->
+                if (latitude!= null && longitude!= null)
                 add(LatLng(latitude, longitude))
             }
             fillColor(POLYGON_FILL_COLOR)

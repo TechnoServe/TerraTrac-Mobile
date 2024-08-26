@@ -1,10 +1,12 @@
 package org.technoserve.farmcollector.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.location.LocationManager
 import android.os.Looper
@@ -38,6 +40,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,15 +56,20 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -73,25 +83,41 @@ import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.map.getCenterOfPolygon
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
+import java.util.UUID
+import java.util.regex.Pattern
 import javax.inject.Inject
+
+
+private const val REQUEST_CHECK_SETTINGS = 1000
 
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
+//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
+//        coordinatesData =
+//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
+//                "coordinates"
+//            )
+//    }
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-        coordinatesData =
-            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-                "coordinates"
-            )
+        val parcelableCoordinates = navController.currentBackStackEntry!!
+            .savedStateHandle
+            .get<List<ParcelablePair>>("coordinates")
+
+        coordinatesData = parcelableCoordinates?.map { Pair(it.first, it.second) }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,14 +125,77 @@ fun AddFarm(navController: NavController, siteId: Long) {
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_farm),
+            onSearchQueryChanged = {},
             onAddFarmClicked = { /* Handle adding a farm here */ },
+            onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
-            showAdd = false
+            showAdd = false,
+            showSearch = false
         )
         Spacer(modifier = Modifier.height(16.dp))
         FarmForm(navController, siteId, coordinatesData)
     }
 }
+// Helper function to truncate a string representation of a number to a specific number of decimal places
+fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
+    val dotIndex = value.indexOf('.')
+    return if (dotIndex == -1 || dotIndex + decimalPlaces + 1 > value.length) {
+        // If there's no decimal point or the length is already less than required, return the original value
+        value
+    } else {
+        // Truncate the value after the specified number of decimal places
+        value.substring(0, dotIndex + decimalPlaces + 1)
+    }
+}
+
+// Function to read and format stored value
+fun readStoredValue(sharedPref: SharedPreferences): String {
+    val storedValue = sharedPref.getString("plot_size", "") ?: ""
+
+    // Truncate the value to 4 decimal places without rounding
+    val formattedValue = truncateToDecimalPlaces(storedValue, 9)
+
+    return formattedValue
+}
+
+// Function to format input value to 6 decimal places without scientific notation
+fun formatInput(input: String): String {
+    return try {
+        val number = BigDecimal(input)
+        val scale = number.scale()
+        val decimalPlaces = scale - number.precision()
+
+        when {
+           decimalPlaces > 3 -> {
+                // Format to 6 decimal places without trailing zeros if more than 3 decimal places
+               BigDecimal(input).setScale(9, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
+
+               //truncateToDecimalPlaces(input,9)
+
+            }
+            decimalPlaces == 0 -> {
+                // No decimal part, return the number as is
+                input
+            }
+            else -> {
+                // Set the precision to 6 decimal places without rounding
+                val formattedNumber = number.setScale(9, RoundingMode.DOWN)
+                // If 3 or fewer decimal places, return as is without trailing zeros
+                formattedNumber.stripTrailingZeros().toPlainString()
+//                truncateToDecimalPlaces(input,9)
+            }
+        }
+    } catch (e: NumberFormatException) {
+        input // Return an empty string if the input is invalid
+    }
+}
+fun validateSize(size: String): Boolean {
+    // Check if the input matches the allowed pattern: digits and at most one dot
+    val regex = Regex("^[0-9]*\\.?[0-9]*$")
+    return size.matches(regex) && size.toFloatOrNull() != null && size.toFloat() > 0 && size.isNotBlank()
+}
+
+
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -123,18 +212,28 @@ fun FarmForm(
     var farmerPhoto by rememberSaveable { mutableStateOf("") }
     var village by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
-    var size by rememberSaveable { mutableStateOf("") }
+
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
-    var selectedUnit by remember { mutableStateOf(items[0]) }
+//    var selectedUnit by remember { mutableStateOf(items[0]) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
+
+    val mapViewModel: MapViewModel = viewModel()
+    // Read initial value from SharedPreferences
+    var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
+    var selectedUnit by rememberSaveable { mutableStateOf(sharedPref.getString("selectedUnit", items[0]) ?: items[0]) }
+    var isValidSize by remember { mutableStateOf(true) }
+    var isFormSubmitted by remember { mutableStateOf(false) }
+    // Regex pattern to check for scientific notation
+    val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
+
     val file = context.createImageFile()
     val uri = FileProvider.getUriForFile(
         Objects.requireNonNull(context),
@@ -142,6 +241,80 @@ fun FarmForm(
     )
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
+    val showLocationDialogNew = remember { mutableStateOf(false) }
+
+    // Function to update the selected unit
+    fun updateSelectedUnit(newUnit: String) {
+        selectedUnit = newUnit
+        sharedPref.edit().putString("selectedUnit", newUnit).apply()
+    }
+
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                // Access location services
+            } else {
+                // Handle the denied permission
+                Toast.makeText(
+                    context,
+                    "Location permission is required to access this feature.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    fun fetchLocationAndNavigate() {
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 10000 // Update interval in milliseconds
+            fastestInterval = 5000 // Fastest update interval in milliseconds
+        }
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    locationResult.lastLocation?.let { lastLocation ->
+                        // Handle the new location
+                        latitude = "${lastLocation.latitude}"
+                        longitude = "${lastLocation.longitude}"
+
+                        // Navigate to 'setPolygon' if conditions are met
+                        navController.currentBackStackEntry?.arguments?.putParcelable(
+                            "farmData",
+                            null
+                        )
+                        navController.navigate("setPolygon")
+                        mapViewModel.clearCoordinates()
+                    }
+                }
+            },
+            Looper.getMainLooper()
+        )
+    }
+
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Update the value from SharedPreferences when the screen is resumed
+                size = sharedPref.getString("plot_size", "") ?: ""
+                selectedUnit = sharedPref.getString("selectedUnit", "Ha") ?: "Ha"
+//                delete plot_size from sharedPreference
+                with(sharedPref.edit()) {
+                    remove("plot_size")
+                    remove("selectedUnit")
+                    apply()
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     if (showLocationDialog.value) {
         AlertDialog(
@@ -157,7 +330,14 @@ fun FarmForm(
                 }
             },
             dismissButton = {
-                Button(onClick = { showLocationDialog.value = false }) {
+                Button(onClick = {
+                    showLocationDialog.value = false
+                    Toast.makeText(
+                        context,
+                        R.string.location_permission_denied_message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }) {
                     Text(stringResource(id = R.string.no))
                 }
             }
@@ -165,20 +345,17 @@ fun FarmForm(
     }
 
     fun saveFarm() {
-//        convert selectedUnit to hectares
+        // convert selectedUnit to hectares
         val sizeInHa = convertSize(size.toDouble(), selectedUnit)
-
-//        save unit in sharedPreference
-        with(sharedPref.edit()) {
-            putString("unit", selectedUnit)
-            apply()
-        }
-
         // Add farm
+        // Generating a UUID for a new farm before saving it
+        val newUUID = UUID.randomUUID()
+
         addFarm(
             farmViewModel,
             siteId,
-            "",
+            remote_id = newUUID,
+            farmerPhoto,
             farmerName,
             memberId,
             village,
@@ -189,7 +366,6 @@ fun FarmForm(
             longitude,
             coordinates = coordinatesData?.plus(coordinatesData.first())
         )
-
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
 //                    context.finish()
@@ -197,17 +373,17 @@ fun FarmForm(
     }
 
 
+
     if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDialog.value = false },
-            title = { Text(text = "Add Farm") },
+            title = { Text(text = stringResource(id = R.string.add_farm)) },
             text = {
                 Column {
                     Text(text = stringResource(id = R.string.confirm_add_farm))
                 }
             },
-
             confirmButton = {
                 TextButton(onClick = {
                     saveFarm()
@@ -228,6 +404,7 @@ fun FarmForm(
     }
 
     fun validateForm(): Boolean {
+        isValid = true
         if (farmerName.isBlank()) {
             isValid = false
             // You can display an error message for this field if needed
@@ -243,7 +420,7 @@ fun FarmForm(
             // You can display an error message for this field if needed
         }
 
-        if (size.isBlank() || size.toFloatOrNull() == null) {
+        if (size.isBlank() || size.toFloatOrNull() == null || size.toFloat() <= 0) {
             isValid = false
             // You can display an error message for this field if needed
         }
@@ -265,6 +442,8 @@ fun FarmForm(
     val permissionGranted = stringResource(id = R.string.permission_granted)
     val permissionDenied = stringResource(id = R.string.permission_denied)
     val fillForm = stringResource(id = R.string.fill_form)
+
+    val showPermissionRequest = remember { mutableStateOf(false) }
 
     var imageInputStream: InputStream? = null
     val resultLauncher =
@@ -327,10 +506,18 @@ fun FarmForm(
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
     val (focusRequester3) = FocusRequester.createRefs()
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val buttonColor = if (isDarkTheme) Color.Black else Color.White
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -342,11 +529,16 @@ fun FarmForm(
             ),
             value = farmerName,
             onValueChange = { farmerName = it },
-            label = { Text(stringResource(id = R.string.farm_name) + " (*)") },
-            supportingText = { if (!isValid && farmerName.isBlank()) Text("Farmer Name should not be empty") },
+            label = { Text(stringResource(id = R.string.farm_name) + " (*)",color = inputLabelColor)},
+            supportingText = { if (!isValid && farmerName.isBlank()) Text(stringResource(R.string.error_farmer_name_empty) + " (*)") },
             isError = !isValid && farmerName.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -366,7 +558,7 @@ fun FarmForm(
             ),
             value = memberId,
             onValueChange = { memberId = it },
-            label = { Text(stringResource(id = R.string.member_id)) },
+            label = { Text(stringResource(id = R.string.member_id),color = inputLabelColor) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -385,11 +577,16 @@ fun FarmForm(
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village) + " (*)") },
-            supportingText = { if (!isValid && village.isBlank()) Text("Village should not be empty") },
+            label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
+            supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester1)
@@ -404,11 +601,16 @@ fun FarmForm(
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district) + " (*)") },
-            supportingText = { if (!isValid && district.isBlank()) Text("District should not be empty") },
+            label = { Text(stringResource(id = R.string.district) + " (*)", color =inputLabelColor) },
+            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
                 .focusRequester(focusRequester2)
@@ -422,31 +624,64 @@ fun FarmForm(
         ) {
             TextField(
                 singleLine = true,
-                value = size,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number,
-                ),
-                onValueChange = {
-                    size = it
+                value = truncateToDecimalPlaces(size,9),
+                onValueChange = { inputValue ->
+                    val formattedValue = when {
+                        validateSize(inputValue) -> inputValue
+                        // Check if the input is in scientific notation
+                        scientificNotationPattern.matcher(inputValue).matches() -> {
+                            truncateToDecimalPlaces(formatInput(inputValue),9)
+                        }
+                        else -> inputValue
+                    }
+
+                    // Update the size state with the formatted value
+                    size = formattedValue
+                    isValidSize = validateSize(formattedValue)
+
+                    // Save to SharedPreferences or perform other actions
+                    with(sharedPref.edit()) {
+                        putString("plot_size", formattedValue)
+                        apply()
+                    }
                 },
-                label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)") },
-                supportingText = { if (!isValid && size.isBlank()) Text("Farm Size should not be empty") },
-                isError = !isValid && size.isBlank(),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number
+                ),
+                label = {
+                    Text(
+                        text = stringResource(id = R.string.size_in_hectares) + " (*)",
+                        color = inputLabelColor
+                    )
+                },
+                supportingText = {
+                    when {
+                        isFormSubmitted && size.isBlank() -> {
+                            Text(stringResource(R.string.error_farm_size_empty))
+                        }
+                        isFormSubmitted && !isValidSize -> {
+                            Text(stringResource(R.string.error_farm_size_invalid))
+                        }
+                    }
+                },
+                isError = isFormSubmitted && (!isValidSize || size.isBlank()),
                 colors = TextFieldDefaults.textFieldColors(
                     errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
                 ),
                 modifier = Modifier
                     .focusRequester(focusRequester3)
                     .weight(1f)
-                    .padding(bottom = 16.dp)
+                    .padding(end = 16.dp)
             )
-            Spacer(modifier = Modifier.width(16.dp))
             // Size measure
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = {
-                    expanded = !expanded
-                },
+                onExpandedChange = { expanded = !expanded },
                 modifier = Modifier.weight(1f)
             ) {
                 TextField(
@@ -464,15 +699,14 @@ fun FarmForm(
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = {
-                        expanded = false
-                    }
+                    onDismissRequest = { expanded = false }
                 ) {
                     items.forEach { selectionOption ->
                         DropdownMenuItem(
-                            { Text(text = selectionOption) },
+                            text = { Text(text = selectionOption) },
                             onClick = {
-                                selectedUnit = selectionOption
+                                //selectedUnit = selectionOption
+                                updateSelectedUnit(selectionOption)
                                 expanded = false
                             }
                         )
@@ -481,19 +715,9 @@ fun FarmForm(
             }
         }
 
-//        TextField(
-//            value = purchases,
-//            keyboardOptions = KeyboardOptions.Default.copy(
-//                keyboardType = KeyboardType.Number,
-//            ),
-//            onValueChange = { purchases = it },
-//            label = { Text(stringResource(id = R.string.harvested_this_year_in_kgs)) },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(bottom = 16.dp)
-//        )
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
-        if ((size.toFloatOrNull() ?: 0f) < 4f) {
+//        if ((size.toFloatOrNull() ?: 0f) < 4f) {
+        if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -501,18 +725,36 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = latitude,
+//                    onValueChange = {
+//                        if (it.split(".").last().length >= 6) latitude = it
+//                        else Toast.makeText(
+//                            context,
+//                            R.string.error_latitude_decimal_places,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    },
                     onValueChange = {
-                        if (it.split(".").last().length >= 6) latitude = it
-                        else Toast.makeText(
-                            context,
-                            "Latitude must have at least 6 decimal places",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val parts = it.split(".")
+                        if (parts.size == 2 && parts.last().length == 5 ) {
+                            val decimalPlaces = parts.last().length
+                            val requiredZeros = 6 - decimalPlaces
+                            // Append the required number of zeros
+                            val formattedLatitude = it.padEnd(it.length + requiredZeros, '0')
+                            latitude = formattedLatitude
+                        } else if (parts.size == 2 && parts.last().length >= 6) {
+                            latitude = it
+                        } else {
+                            Toast.makeText(
+                                context,
+                                R.string.error_latitude_decimal_places,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
-                    label = { Text(stringResource(id = R.string.latitude) + " (*)") },
+                    label = { Text(stringResource(id = R.string.latitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && latitude.split(".").last().length < 6) Text(
-                            "Latitude must have at least 6 decimal places"
+                            stringResource(R.string.error_latitude_decimal_places)
                         )
                     },
                     isError = !isValid && latitude.split(".").last().length < 6,
@@ -527,18 +769,37 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = longitude,
+//                    onValueChange = {
+//                        if (it.split(".").last().length >= 6) longitude = it
+//                        else Toast.makeText(
+//                            context,
+//                            R.string.error_longitude_decimal_places,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    },
                     onValueChange = {
-                        if (it.split(".").last().length >= 6) longitude = it
-                        else Toast.makeText(
-                            context,
-                            "Longitude must have at least 6 decimal places",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val parts = it.split(".")
+                        if (parts.size == 2) {
+                            val decimalPlaces = parts.last().length
+                            val formattedLongitude = if (decimalPlaces == 5 ) {
+                                // Append the required number of zeros to the decimal part
+                                it.padEnd(it.length + (6 - decimalPlaces), '0')
+                            } else {
+                                it
+                            }
+                            longitude = formattedLongitude
+                        } else {
+                            Toast.makeText(
+                                context,
+                                R.string.error_longitude_decimal_places,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
-                    label = { Text(stringResource(id = R.string.longitude) + " (*)") },
+                    label = { Text(stringResource(id = R.string.longitude) + " (*)",color = inputLabelColor) },
                     supportingText = {
                         if (!isValid && longitude.split(".").last().length < 6) Text(
-                            "Longitude must have at least 6 decimal places"
+                            stringResource(R.string.error_longitude_decimal_places) + ""
                         )
                     },
                     isError = !isValid && longitude.split(".").last().length < 6,
@@ -551,11 +812,30 @@ fun FarmForm(
                 )
             }
         }
+        if (showPermissionRequest.value) {
+            LocationPermissionRequest(
+                onLocationEnabled = {
+                    showLocationDialog.value = true
+                },
+                onPermissionsGranted = {
+                    showPermissionRequest.value = false
+                },
+                onPermissionsDenied = {
+                    // Handle permissions denied
+                    // Show a message or take appropriate action
+                },
+                showLocationDialogNew = showLocationDialogNew,
+                hasToShowDialog = showLocationDialogNew.value
+            )
+        }
+
+        // Button to trigger the location permission request
         Button(
             onClick = {
-                // Simulate collecting latitude and longitude
-                if (context.hasLocationPermission() && ((size.toFloatOrNull() ?: 0f) < 4f)) {
-                    if (isLocationEnabled(context)) {
+//                val enteredSize = size.toFloatOrNull() ?: 0f
+                val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+                if (isLocationEnabled(context) && context.hasLocationPermission()) {
+                    if (enteredSize < 4f) {
                         val locationRequest = LocationRequest.create().apply {
                             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                             interval = 10000 // Update interval in milliseconds
@@ -576,82 +856,40 @@ fun FarmForm(
                             Looper.getMainLooper()
                         )
                     } else {
-                        showLocationDialog.value = true
+                        navController.currentBackStackEntry?.arguments?.putParcelable(
+                            "farmData",
+                            null
+                        )
+                        navController.navigate("setPolygon")
+                        mapViewModel.clearCoordinates()
                     }
                 } else {
-                    navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
-                    navController.navigate("setPolygon")
+                    showPermissionRequest.value = true
+                    showLocationDialog.value = true
                 }
             },
             modifier = Modifier
+                .background(buttonColor)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
                 .height(50.dp),
+            enabled = size.isNotBlank()
         ) {
+//            val enteredSize = size.toFloatOrNull() ?: 0f
+            val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+
             Text(
-                text = if ((size.toFloatOrNull() ?: 0f) >= 4f) {
+                text = if (enteredSize >= 4f) {
                     stringResource(id = R.string.set_polygon)
                 } else {
                     stringResource(id = R.string.get_coordinates)
                 }
             )
         }
-
-//        if (!farmerPhoto.isBlank())
-//        {
-//            val imgFile = File(farmerPhoto)
-//
-//            // on below line we are checking if the image file exist or not.
-//            var imgBitmap: Bitmap? = null
-//            if (imgFile.exists()) {
-//                // on below line we are creating an image bitmap variable
-//                // and adding a bitmap to it from image file.
-//                imgBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-//            }
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                    ,
-//                painter = rememberAsyncImagePainter(farmerPhoto),
-//                contentDescription = null
-//            )
-//        }
-//        else
-//        {
-//            Image(
-//                modifier = Modifier
-//                    .size(width = 200.dp, height = 150.dp)
-//                    .padding(16.dp, 8.dp)
-//                    .align(Alignment.CenterHorizontally)
-//                ,
-//                painter = painterResource(id = R.drawable.image_placeholder),
-//                contentDescription = null
-//            )
-//        }
-//
-//        Button(
-//            onClick = {
-//                val permissionCheckResult =
-//                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-//
-//                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-//                {
-//                    cameraLauncher.launch(uri)
-//                    isImageUploaded = true
-//                }
-//                else
-//                {
-//                    permissionLauncher.launch(Manifest.permission.CAMERA)
-//                }
-//            }
-//        ){
-//            Text(text = stringResource(id = R.string.take_picture))
-//        }
         Button(
             onClick = {
+                isFormSubmitted = true
 //                Finding the center of the polygon captured
                 if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
                     val center = coordinatesData.toLatLngList().getCenterOfPolygon()
@@ -669,6 +907,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
+                .background(buttonColor)
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
@@ -680,6 +919,7 @@ fun FarmForm(
 fun addFarm(
     farmViewModel: FarmViewModel,
     siteId: Long,
+    remote_id: UUID,
     farmerPhoto: String,
     farmerName: String,
     memberId: String,
@@ -693,6 +933,7 @@ fun addFarm(
 ): Farm {
     val farm = Farm(
         siteId,
+        remote_id,
         farmerPhoto,
         farmerName,
         memberId,
@@ -706,7 +947,7 @@ fun addFarm(
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addFarm(farm)
+    farmViewModel.addFarm(farm,siteId)
     return farm
 }
 
@@ -720,6 +961,71 @@ fun promptEnableLocation(context: Context) {
     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
     context.startActivity(intent)
 }
+
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun LocationPermissionRequest(
+    onLocationEnabled: () -> Unit,
+    onPermissionsGranted: () -> Unit,
+    onPermissionsDenied: () -> Unit,
+    showLocationDialogNew: MutableState<Boolean>,
+    hasToShowDialog: Boolean
+) {
+    val context = LocalContext.current
+    val multiplePermissionsState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+
+    LaunchedEffect(Unit) {
+        if (isLocationEnabled(context)) {
+            if (multiplePermissionsState.allPermissionsGranted) {
+                onPermissionsGranted()
+            } else {
+                multiplePermissionsState.launchMultiplePermissionRequest()
+            }
+        } else {
+            onLocationEnabled()
+        }
+    }
+
+    // Optionally, show some text to inform the user about the importance of permissions
+    if ((!multiplePermissionsState.allPermissionsGranted) && hasToShowDialog) {
+        Column {
+            AlertDialog(
+                onDismissRequest = { showLocationDialogNew.value = false },
+                title = { Text(stringResource(id = R.string.enable_location)) },
+                text = { Text(stringResource(id = R.string.enable_location_msg)) },
+                confirmButton = {
+                    Button(onClick = {
+                        // Perform action to enable location permissions
+                        promptEnableLocation(context)
+                        showLocationDialogNew.value = false  // Dismiss the dialog after action
+                    }) {
+                        Text(stringResource(id = R.string.yes))
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = {
+                        // Show a toast message indicating that the permission was denied
+                        Toast.makeText(
+                            context,
+                            R.string.location_permission_denied_message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        showLocationDialogNew.value = false  // Dismiss the dialog after action
+                    }) {
+                        Text(stringResource(id = R.string.no))
+                    }
+                }
+            )
+        }
+    }
+}
+
 
 @SuppressLint("SimpleDateFormat")
 fun Context.createImageFile(): File {
