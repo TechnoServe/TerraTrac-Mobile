@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
         }
 
         // Start the service when the activity is created
-//        startSyncService()
+        startSyncService()
 
         setContent {
             val navController = rememberNavController()
