@@ -1,10 +1,12 @@
 package org.technoserve.farmcollector.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +14,8 @@ import android.os.Environment
 import android.os.Looper
 import android.os.Parcel
 import android.os.Parcelable
+import android.provider.Settings
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
@@ -23,6 +27,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +52,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -95,8 +101,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -126,6 +134,12 @@ import java.util.Objects
 import java.util.regex.Pattern
 
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.technoserve.farmcollector.database.RestoreStatus
+import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import java.util.UUID
 
 // data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
@@ -327,6 +341,13 @@ fun FarmList(
 
     // State to manage the loading status
     val isLoading = remember { mutableStateOf(true) }
+    var deviceId by remember { mutableStateOf("") }
+    // State variable to observe restore status
+    val restoreStatus by farmViewModel.restoreStatus.observeAsState()
+
+    LaunchedEffect(Unit) {
+        deviceId = DeviceIdUtil.getDeviceId(context)
+    }
 
     // Simulate a network request or data loading
     LaunchedEffect(Unit) {
@@ -334,6 +355,7 @@ fun FarmList(
         delay(2000) // Adjust the delay as needed
         // After loading data, set isLoading to false
         isLoading.value = false
+
     }
 
     fun createFileForSharing(): File? {
@@ -743,21 +765,191 @@ fun FarmList(
             showAdd = true,
             showExport = listItems.isNotEmpty(),
             showShare = listItems.isNotEmpty(),
-            showSearch = listItems.isNotEmpty()
+            showSearch = listItems.isNotEmpty(),
+            onRestoreClicked = {farmViewModel.restoreData(deviceId)}
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (isLoading.value) {
-            // Show loader while data is loading
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
+//        // Handle the restore status to display appropriate messages or indicators
+//        when (restoreStatus) {
+//            is RestoreStatus.InProgress -> {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(16.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    CircularProgressIndicator()
+//                }
+//            }
+//
+//            is RestoreStatus.Success -> {
+//                // Display a completion message
+//                val status = restoreStatus as RestoreStatus.Success
+//                Text(
+//                    text = "Restoration completed. Added: ${status.addedCount}, Updated: ${status.updatedCount}",
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .fillMaxWidth(),
+//                    textAlign = TextAlign.Center,
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+//            }
+//
+//            is RestoreStatus.Error -> {
+//                // Display an error message
+//                val status = restoreStatus as RestoreStatus.Error
+//                Text(
+//                    text = "Error during restoration: ${status.message}",
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .fillMaxWidth(),
+//                    textAlign = TextAlign.Center,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.error
+//                )
+//            }
+//
+//            null ->
+//                if (isLoading.value) {
+//                    // Show loader while data is loading
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(16.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                } else {
+//                    val hasData = listItems.isNotEmpty() // Check if there's data available
+//
+//                    if (hasData) {
+//                        // Only show the TabRow and HorizontalPager if there is data
+//                        TabRow(
+//                            selectedTabIndex = pagerState.currentPage,
+//                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+//                            contentColor = MaterialTheme.colorScheme.onSurface,
+//                        ) {
+//                            tabs.forEachIndexed { index, title ->
+//                                Tab(
+//                                    selected = pagerState.currentPage == index,
+//                                    onClick = {
+//                                        coroutineScope.launch {
+//                                            pagerState.animateScrollToPage(index)
+//                                        }
+//                                    },
+//                                    text = { Text(title) },
+//                                )
+//                            }
+//                        }
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+//                        HorizontalPager(
+//                            state = pagerState,
+//                            modifier = Modifier.weight(1f),
+//                        ) { page ->
+//                            val filteredListItems = when (page) {
+//                                1 -> listItems.filter { it.needsUpdate }
+//                                else -> listItems
+//                            }.filter {
+//                                it.farmerName.contains(searchQuery, ignoreCase = true)
+//                            }
+//                            if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
+//                                // Show the list only when loading is complete
+//                                LazyColumn(
+//                                    modifier = Modifier
+//                                        .fillMaxSize()
+//                                ) {
+//                                    val filteredList = filteredListItems.filter {
+//                                        it.farmerName.contains(searchQuery, ignoreCase = true)
+//                                    }
+//
+//                                    if (filteredList.isEmpty()) {
+//                                        item {
+//                                            Column(
+//                                                modifier = Modifier
+//                                                    .fillMaxSize()
+//                                                    .padding(16.dp),
+//                                                horizontalAlignment = Alignment.CenterHorizontally,
+//                                                verticalArrangement = Arrangement.Top,
+//                                            ) {
+//                                                Text(
+//                                                    text = stringResource(R.string.no_results_found),
+//                                                    modifier = Modifier
+//                                                        .padding(16.dp)
+//                                                        .fillMaxWidth(),
+//                                                    textAlign = TextAlign.Center,
+//                                                    style = MaterialTheme.typography.bodyMedium,
+//                                                )
+//                                            }
+//                                        }
+//                                    } else {
+//                                        items(filteredList) { farm ->
+//                                            FarmCard(
+//                                                farm = farm,
+//                                                onCardClick = {
+//                                                    navController.currentBackStackEntry?.arguments?.apply {
+//                                                        putParcelableArrayList(
+//                                                            "coordinates",
+//                                                            farm.coordinates?.map {
+//                                                                it.first?.let { it1 ->
+//                                                                    it.second?.let { it2 ->
+//                                                                        ParcelablePair(
+//                                                                            it1, it2
+//                                                                        )
+//                                                                    }
+//                                                                }
+//                                                            }?.let { ArrayList(it) }
+//                                                        )
+//                                                        putParcelable(
+//                                                            "farmData",
+//                                                            ParcelableFarmData(farm, "view")
+//                                                        )
+//                                                    }
+//                                                    navController.navigate(route = "setPolygon")
+//                                                },
+//                                                onDeleteClick = {
+//                                                    selectedIds.add(farm.id)
+//                                                    selectedFarm.value = farm
+//                                                    showDeleteDialog.value = true
+//                                                }
+//                                            )
+//                                            Spacer(modifier = Modifier.height(16.dp))
+//                                        }
+//                                    }
+//                                }
+//                            } else {
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                                Image(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .align(Alignment.CenterHorizontally)
+//                                        .padding(16.dp, 8.dp),
+//                                    painter = painterResource(id = R.drawable.no_data2),
+//                                    contentDescription = null
+//                                )
+//                            }
+//                        }
+//                    } else {
+//                        // Display a message or image indicating no data available
+//                        Spacer(modifier = Modifier.height(8.dp))
+//                        Image(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .align(Alignment.CenterHorizontally)
+//                                .padding(16.dp, 8.dp),
+//                            painter = painterResource(id = R.drawable.no_data2),
+//                            contentDescription = null
+//                        )
+//                    }
+//                }
+//        }
+
+        // Function to show data or no data message
+        @Composable
+        fun showDataContent() {
             val hasData = listItems.isNotEmpty() // Check if there's data available
 
             if (hasData) {
@@ -882,11 +1074,72 @@ fun FarmList(
             }
         }
 
+        when (restoreStatus) {
+            is RestoreStatus.InProgress -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            is RestoreStatus.Success -> {
+                // Display a completion message
+                val status = restoreStatus as RestoreStatus.Success
+                Text(
+                    text = "Restoration completed. Added: ${status.addedCount}, Updated: ${status.updatedCount}",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            is RestoreStatus.Error -> {
+                // Display an error message
+                val status = restoreStatus as RestoreStatus.Error
+                Text(
+                    text = "Error during restoration: ${status.message}",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                // After displaying the error message, proceed to display data if available
+                showDataContent()
+            }
+
+            null -> {
+                if (isLoading.value) {
+                    // Show loader while data is loading
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    // Display data or no data message if loading is complete
+                    showDataContent()
+                }
+            }
+        }
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
     }
 }
+
+
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun ImportFileDialog(
@@ -1090,17 +1343,20 @@ fun FarmListHeader(
         title = {
             Text(
                 text = title,
-                style =
-                    MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary,
-                    ),
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
-                textAlign = TextAlign.Center,
+//                style =
+//                    MaterialTheme.typography.bodySmall.copy(
+//                        fontSize = 22.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        color = MaterialTheme.colorScheme.secondary,
+//                    ),
+//                modifier =
+//                    Modifier
+//                        .fillMaxWidth()
+//                        .padding(4.dp),
+//                textAlign = TextAlign.Center,
+                fontSize = 22.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         },
         actions = {
@@ -1167,6 +1423,150 @@ fun FarmListHeader(
     }
 }
 
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun FarmListHeaderPlots(
+//    title: String,
+//    onAddFarmClicked: () -> Unit,
+//    onBackClicked: () -> Unit,
+//    onBackSearchClicked: () -> Unit,
+//    onExportClicked: () -> Unit,
+//    onShareClicked: () -> Unit,
+//    onImportClicked: () -> Unit,
+//    onSearchQueryChanged: (String) -> Unit,
+//    showAdd: Boolean,
+//    showExport: Boolean,
+//    showShare: Boolean,
+//    showSearch: Boolean,
+//) {
+//    val context = LocalContext.current as Activity
+//
+//    // State for holding the search query
+//    var searchQuery by remember { mutableStateOf("") }
+//    var isSearchVisible by remember { mutableStateOf(false) }
+//
+//    // State for tracking if import has been completed
+//    var isImportDisabled by remember { mutableStateOf(false) }
+//
+//    TopAppBar(
+//        title = { Text(text = title, fontSize = 18.sp) },
+//        navigationIcon = {
+//            IconButton(onClick = onBackClicked) {
+//                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//            }
+//        },
+//        actions = {
+//            IconButton(
+//                onClick = { /* Handle restore action */ },
+//                modifier = Modifier.size(36.dp)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Refresh,
+//                    contentDescription = "Restore",
+//                    modifier = Modifier.size(24.dp)
+//                )
+//            }
+//            Spacer(modifier = Modifier.width(2.dp))
+//            if (showExport) {
+//                IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.save),
+//                        contentDescription = "Export",
+//                        modifier = Modifier.size(24.dp),
+//                    )
+//                }
+//                Spacer(modifier = Modifier.width(2.dp))
+//            }
+//            if (showShare) {
+//                IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+//                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
+//                }
+//                Spacer(modifier = Modifier.width(2.dp))
+//            }
+//            IconButton(
+//                onClick = {
+//                    if (!isImportDisabled) {
+//                        onImportClicked()
+//                        isImportDisabled = true // Disable the import icon after importing
+//                    }
+//                },
+//                modifier = Modifier.size(36.dp),
+//                enabled = !isImportDisabled // Disable the button if import is completed
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.icons8_import_file_48),
+//                    contentDescription = "Import",
+//                    modifier = Modifier.size(24.dp),
+//                )
+//            }
+//            Spacer(modifier = Modifier.width(2.dp))
+//            if (showAdd) {
+//                IconButton(onClick = {
+//                    // Remove plot_size from shared preferences
+//                    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+//                    if (sharedPref.contains("plot_size")) {
+//                        sharedPref.edit().remove("plot_size").apply()
+//                    }
+//                    if (sharedPref.contains("selectedUnit")) {
+//                        sharedPref.edit().remove("selectedUnit").apply()
+//                    }
+//                    // Call the onAddFarmClicked lambda
+//                    onAddFarmClicked()
+//                }, modifier = Modifier.size(36.dp)) {
+//                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
+//                }
+//                Spacer(modifier = Modifier.width(2.dp))
+//            }
+//            if (showSearch) {
+//                IconButton(onClick = {
+//                    isSearchVisible = !isSearchVisible
+//                }, modifier = Modifier.size(36.dp)) {
+//                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
+//                }
+//            }
+//        },
+//    )
+//
+//    // Conditional rendering of the search field
+//    if (isSearchVisible && showSearch) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier =
+//                Modifier
+//                    .padding(horizontal = 16.dp)
+//                    .fillMaxWidth(),
+//        ) {
+//            OutlinedTextField(
+//                value = searchQuery,
+//                onValueChange = {
+//                    searchQuery = it
+//                    onSearchQueryChanged(it)
+//                },
+//                modifier =
+//                    Modifier
+//                        .padding(start = 8.dp)
+//                        .weight(1f),
+//                label = { Text(stringResource(R.string.search)) },
+//                leadingIcon = {
+//                    IconButton(onClick = {
+//                        // onBackSearchClicked()
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                },
+//                singleLine = true,
+//                colors =
+//                    TextFieldDefaults.outlinedTextFieldColors(
+//                        cursorColor = MaterialTheme.colorScheme.onSurface,
+//                    ),
+//            )
+//        }
+//    }
+//}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmListHeaderPlots(
@@ -1182,119 +1582,132 @@ fun FarmListHeaderPlots(
     showExport: Boolean,
     showShare: Boolean,
     showSearch: Boolean,
+    onRestoreClicked: () -> Unit
 ) {
     val context = LocalContext.current as Activity
 
-    // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
-
-    // State for tracking if import has been completed
     var isImportDisabled by remember { mutableStateOf(false) }
 
-    TopAppBar(
-        title = { Text(text = title, fontSize = 18.sp) },
-        navigationIcon = {
-            IconButton(onClick = onBackClicked) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-            }
-        },
-        actions = {
-            if (showExport) {
-                IconButton(onClick = onExportClicked, modifier = Modifier.size(24.dp)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.save),
-                        contentDescription = "Export",
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            if (showShare) {
-                IconButton(onClick = onShareClicked, modifier = Modifier.size(24.dp)) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
-                }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            IconButton(
-                onClick = {
-                    if (!isImportDisabled) {
-                        onImportClicked()
-                        isImportDisabled = true // Disable the import icon after importing
-                    }
-                },
-                modifier = Modifier.size(24.dp),
-                enabled = !isImportDisabled // Disable the button if import is completed
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.icons8_import_file_48),
-                    contentDescription = "Import",
-                    modifier = Modifier.size(24.dp),
+    Column {
+        TopAppBar(
+            title = {
+                Text(
+                    text = title,
+                    fontSize = 22.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-            }
-            Spacer(modifier = Modifier.width(2.dp))
-            if (showAdd) {
-                IconButton(onClick = {
-                    // Remove plot_size from shared preferences
-                    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
-                    if (sharedPref.contains("plot_size")) {
-                        sharedPref.edit().remove("plot_size").apply()
-                    }
-                    if (sharedPref.contains("selectedUnit")) {
-                        sharedPref.edit().remove("selectedUnit").apply()
-                    }
-                    // Call the onAddFarmClicked lambda
-                    onAddFarmClicked()
-                }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
+            },
+            navigationIcon = {
+                IconButton(onClick = onBackClicked) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                 }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            if (showSearch) {
-                IconButton(onClick = {
-                    isSearchVisible = !isSearchVisible
-                }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
+            },
+            actions = {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.horizontalScroll(rememberScrollState())
+                ) {
+                    IconButton(
+                        onClick = { onRestoreClicked() },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Restore",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    if (showExport) {
+                        IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.save),
+                                contentDescription = "Export",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+                    if (showShare) {
+                        IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = {
+                            if (!isImportDisabled) {
+                                onImportClicked()
+                                isImportDisabled = true
+                            }
+                        },
+                        modifier = Modifier.size(36.dp),
+                        enabled = !isImportDisabled
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.icons8_import_file_48),
+                            contentDescription = "Import",
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                    if (showAdd) {
+                        IconButton(onClick = {
+                            val sharedPref =
+                                context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+                            sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
+                            onAddFarmClicked()
+                        }, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    if (showSearch) {
+                        IconButton(onClick = {
+                            isSearchVisible = !isSearchVisible
+                        }, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Search",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
                 }
-            }
-        },
-    )
+            },
+        )
 
-    // Conditional rendering of the search field
-    if (isSearchVisible && showSearch) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-        ) {
+        if (isSearchVisible && showSearch) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
                     onSearchQueryChanged(it)
                 },
-                modifier =
-                    Modifier
-                        .padding(start = 8.dp)
-                        .weight(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 label = { Text(stringResource(R.string.search)) },
                 leadingIcon = {
                     IconButton(onClick = {
-                        // onBackSearchClicked()
                         searchQuery = ""
                         onSearchQueryChanged("")
-                        isSearchVisible = !isSearchVisible
+                        isSearchVisible = false
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 singleLine = true,
-                colors =
-                    TextFieldDefaults.outlinedTextFieldColors(
-                        cursorColor = MaterialTheme.colorScheme.onSurface,
-                    ),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface,
+                )
             )
         }
     }

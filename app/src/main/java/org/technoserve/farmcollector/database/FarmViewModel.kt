@@ -18,7 +18,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import org.technoserve.farmcollector.BuildConfig
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.remote.ApiService
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.UUID
@@ -43,6 +47,12 @@ data class ParsedFarms(
     val invalidFarms: List<String>
 )
 
+// Define a sealed class for restore status
+sealed class RestoreStatus {
+    object InProgress : RestoreStatus()
+    data class Success(val addedCount: Int, val updatedCount: Int,val message: String) : RestoreStatus()
+    data class Error(val message: String) : RestoreStatus()
+}
 
 
 class FarmViewModel(
@@ -55,11 +65,23 @@ class FarmViewModel(
     private val _farms = MutableLiveData<List<Farm>>()
     val farms: LiveData<List<Farm>> get() = _farms
 
+    private val _restoreStatus = MutableLiveData<RestoreStatus>()
+    val restoreStatus: LiveData<RestoreStatus> get() = _restoreStatus
+
+    private val apiService: ApiService
+
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
         repository = FarmRepository(farmDAO)
         readAllSites = RefreshableLiveData { repository.readAllSites }
         readData = RefreshableLiveData { repository.readData }
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        apiService = retrofit.create(ApiService::class.java)
     }
 
     fun readAllData(siteId: Long): LiveData<List<Farm>> = repository.readAllFarms(siteId)
@@ -783,6 +805,60 @@ class FarmViewModel(
 //            _farms.postValue(getExistingFarms(siteId))
 //        }
 //    }
+
+
+    // restore data from the server
+    fun restoreData(deviceId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _restoreStatus.postValue(RestoreStatus.InProgress)
+
+                // Fetch data from the server
+                val serverFarms = apiService.getFarmsByDeviceId(deviceId)
+
+                // Get local farms
+                val localFarms = repository.readData.value ?: emptyList()
+
+                // Initialize counters for added and updated farms
+                var addedCount = 0
+                var updatedCount = 0
+
+                // Compare and update
+                serverFarms.forEach { serverFarm ->
+                    val localFarm = localFarms.find { it.id == serverFarm.id }
+                    if (localFarm == null) {
+                        // Farm doesn't exist locally, add it
+                        repository.addFarm(serverFarm)
+                        addedCount++
+                    } else if (localFarm != serverFarm) {
+                        // Farm exists but is different, update it
+                        repository.updateFarm(serverFarm)
+                        updatedCount++
+                    }
+                }
+
+                // Prepare a success message
+                val message = "Restoration completed: $addedCount farms added, $updatedCount farms updated."
+
+                // Refresh the farms LiveData
+                _farms.postValue(repository.readData.value)
+
+                // Post the completed status with the message
+                _restoreStatus.postValue(
+                    RestoreStatus.Success(
+                        addedCount = addedCount,
+                        updatedCount = updatedCount,
+                        message = message
+                    )
+                )
+            } catch (e: Exception) {
+                // Post the error status with the exception message
+                _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))
+            }
+        }
+    }
+
+
 }
 
 class FarmViewModelFactory(

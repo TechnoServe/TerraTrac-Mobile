@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -573,23 +574,6 @@ fun SetPolygon(
                         )
                     }
                     ElevatedButton(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth(0.22f),
-                        shape = RoundedCornerShape(0.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White),
-                        onClick = {
-                            showClearMapDialog.value = true
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(id = R.string.reset),
-                            tint = Color.Black,
-                            modifier = Modifier.padding(4.dp),
-                        )
-                    }
-                    ElevatedButton(
                         modifier = Modifier.fillMaxWidth(0.28f),
 //                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
                         colors = ButtonDefaults.buttonColors(Color.White),
@@ -599,10 +583,33 @@ fun SetPolygon(
                             viewModel.removeLastCoordinate()
                         },
                     ) {
+//                        Icon(
+//                            imageVector = Icons.Default.,
+//                            contentDescription = stringResource(id = R.string.drop_point),
+//                            tint = Color.Black,
+//                            modifier = Modifier.padding(4.dp),
+//                        )
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            painter = painterResource(R.drawable.drop),
                             contentDescription = stringResource(id = R.string.drop_point),
                             tint = Color.Black,
+                            modifier = Modifier.padding(4.dp),
+                        )
+                    }
+                    ElevatedButton(
+                        modifier =
+                        Modifier
+                            .fillMaxWidth(0.22f),
+                        shape = RoundedCornerShape(0.dp),
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        onClick = {
+                            showClearMapDialog.value = true
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(id = R.string.reset),
+                            tint = Color.Red,
                             modifier = Modifier.padding(4.dp),
                         )
                     }
