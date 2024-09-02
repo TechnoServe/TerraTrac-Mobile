@@ -744,13 +744,6 @@ fun FarmList(
         }
     }
 
-//    fun onDelete() {
-//        val toDelete = mutableListOf<Long>()
-//        toDelete.addAll(selectedIds)
-//        farmViewModel.deleteList(toDelete)
-//        selectedIds.removeAll(selectedIds)
-//        showDeleteDialog.value = false
-//    }
 
     Column(
         modifier = Modifier
@@ -777,7 +770,7 @@ fun FarmList(
             showShare = listItems.isNotEmpty(),
             showSearch = listItems.isNotEmpty(),
             onRestoreClicked = {
-                farmViewModel.restoreData(deviceId) { success ->
+                farmViewModel.restoreData(deviceId = deviceId, phoneNumber = "") { success ->
                     if (success) {
                         finalMessage = "Data restored successfully."
                     } else {
@@ -788,183 +781,6 @@ fun FarmList(
 
         )
         Spacer(modifier = Modifier.height(8.dp))
-
-//        // Handle the restore status to display appropriate messages or indicators
-//        when (restoreStatus) {
-//            is RestoreStatus.InProgress -> {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(16.dp),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    CircularProgressIndicator()
-//                }
-//            }
-//
-//            is RestoreStatus.Success -> {
-//                // Display a completion message
-//                val status = restoreStatus as RestoreStatus.Success
-//                Text(
-//                    text = "Restoration completed. Added: ${status.addedCount}, Updated: ${status.updatedCount}",
-//                    modifier = Modifier
-//                        .padding(16.dp)
-//                        .fillMaxWidth(),
-//                    textAlign = TextAlign.Center,
-//                    style = MaterialTheme.typography.bodyMedium
-//                )
-//            }
-//
-//            is RestoreStatus.Error -> {
-//                // Display an error message
-//                val status = restoreStatus as RestoreStatus.Error
-//                Text(
-//                    text = "Error during restoration: ${status.message}",
-//                    modifier = Modifier
-//                        .padding(16.dp)
-//                        .fillMaxWidth(),
-//                    textAlign = TextAlign.Center,
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.error
-//                )
-//            }
-//
-//            null ->
-//                if (isLoading.value) {
-//                    // Show loader while data is loading
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxSize()
-//                            .padding(16.dp),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        CircularProgressIndicator()
-//                    }
-//                } else {
-//                    val hasData = listItems.isNotEmpty() // Check if there's data available
-//
-//                    if (hasData) {
-//                        // Only show the TabRow and HorizontalPager if there is data
-//                        TabRow(
-//                            selectedTabIndex = pagerState.currentPage,
-//                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-//                            contentColor = MaterialTheme.colorScheme.onSurface,
-//                        ) {
-//                            tabs.forEachIndexed { index, title ->
-//                                Tab(
-//                                    selected = pagerState.currentPage == index,
-//                                    onClick = {
-//                                        coroutineScope.launch {
-//                                            pagerState.animateScrollToPage(index)
-//                                        }
-//                                    },
-//                                    text = { Text(title) },
-//                                )
-//                            }
-//                        }
-//
-//                        Spacer(modifier = Modifier.height(8.dp))
-//
-//                        HorizontalPager(
-//                            state = pagerState,
-//                            modifier = Modifier.weight(1f),
-//                        ) { page ->
-//                            val filteredListItems = when (page) {
-//                                1 -> listItems.filter { it.needsUpdate }
-//                                else -> listItems
-//                            }.filter {
-//                                it.farmerName.contains(searchQuery, ignoreCase = true)
-//                            }
-//                            if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
-//                                // Show the list only when loading is complete
-//                                LazyColumn(
-//                                    modifier = Modifier
-//                                        .fillMaxSize()
-//                                ) {
-//                                    val filteredList = filteredListItems.filter {
-//                                        it.farmerName.contains(searchQuery, ignoreCase = true)
-//                                    }
-//
-//                                    if (filteredList.isEmpty()) {
-//                                        item {
-//                                            Column(
-//                                                modifier = Modifier
-//                                                    .fillMaxSize()
-//                                                    .padding(16.dp),
-//                                                horizontalAlignment = Alignment.CenterHorizontally,
-//                                                verticalArrangement = Arrangement.Top,
-//                                            ) {
-//                                                Text(
-//                                                    text = stringResource(R.string.no_results_found),
-//                                                    modifier = Modifier
-//                                                        .padding(16.dp)
-//                                                        .fillMaxWidth(),
-//                                                    textAlign = TextAlign.Center,
-//                                                    style = MaterialTheme.typography.bodyMedium,
-//                                                )
-//                                            }
-//                                        }
-//                                    } else {
-//                                        items(filteredList) { farm ->
-//                                            FarmCard(
-//                                                farm = farm,
-//                                                onCardClick = {
-//                                                    navController.currentBackStackEntry?.arguments?.apply {
-//                                                        putParcelableArrayList(
-//                                                            "coordinates",
-//                                                            farm.coordinates?.map {
-//                                                                it.first?.let { it1 ->
-//                                                                    it.second?.let { it2 ->
-//                                                                        ParcelablePair(
-//                                                                            it1, it2
-//                                                                        )
-//                                                                    }
-//                                                                }
-//                                                            }?.let { ArrayList(it) }
-//                                                        )
-//                                                        putParcelable(
-//                                                            "farmData",
-//                                                            ParcelableFarmData(farm, "view")
-//                                                        )
-//                                                    }
-//                                                    navController.navigate(route = "setPolygon")
-//                                                },
-//                                                onDeleteClick = {
-//                                                    selectedIds.add(farm.id)
-//                                                    selectedFarm.value = farm
-//                                                    showDeleteDialog.value = true
-//                                                }
-//                                            )
-//                                            Spacer(modifier = Modifier.height(16.dp))
-//                                        }
-//                                    }
-//                                }
-//                            } else {
-//                                Spacer(modifier = Modifier.height(8.dp))
-//                                Image(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .align(Alignment.CenterHorizontally)
-//                                        .padding(16.dp, 8.dp),
-//                                    painter = painterResource(id = R.drawable.no_data2),
-//                                    contentDescription = null
-//                                )
-//                            }
-//                        }
-//                    } else {
-//                        // Display a message or image indicating no data available
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Image(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .align(Alignment.CenterHorizontally)
-//                                .padding(16.dp, 8.dp),
-//                            painter = painterResource(id = R.drawable.no_data2),
-//                            contentDescription = null
-//                        )
-//                    }
-//                }
-//        }
 
         // Function to show data or no data message
         @Composable
@@ -1167,7 +983,7 @@ fun FarmList(
                                     if (emailOrPhone.isNotBlank()) {
                                         showRestorePrompt =
                                             false // Hide the restore prompt on retry
-                                        farmViewModel.restoreData(deviceId) { success ->
+                                        farmViewModel.restoreData(deviceId = deviceId , phoneNumber = emailOrPhone) { success ->
                                             finalMessage = if (success) {
                                                 "Data restored successfully."
                                             } else {

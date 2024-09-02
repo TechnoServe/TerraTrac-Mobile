@@ -25,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -35,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -87,13 +85,8 @@ fun SiteForm(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var village by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
-
-    var showInfoDialog by remember { mutableStateOf(false) }
-
-//    val phone_label = Text(stringResource(id=R.string.phone_number))
-//    val phoneInfo = Text(stringResource(id=R.string.phone_info))
-
-    var showDisclaimer by remember { mutableStateOf(false) }
+    var showDisclaimerPhone by remember { mutableStateOf(false) }
+    var showDisclaimerEmail by remember { mutableStateOf(false) }
 
 
     val farmViewModel: FarmViewModel = viewModel(
@@ -256,8 +249,8 @@ fun SiteForm(navController: NavController) {
                     unfocusedIndicatorColor = inputBorder,
                     errorIndicatorColor = Color.Red
                 ),
-            trailingIcon = {
-                IconButton(onClick = { showDisclaimer = !showDisclaimer }) {
+                trailingIcon = {
+                IconButton(onClick = { showDisclaimerPhone = !showDisclaimerPhone }) {
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = stringResource(R.string.phone_info),
@@ -275,13 +268,18 @@ fun SiteForm(navController: NavController) {
                         false
                     }
             )
-        if (showDisclaimer) {
-            Text(
-                text = stringResource(R.string.phone_info),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 16.dp)
+        if (showDisclaimerPhone) {
+            AlertDialog(
+                onDismissRequest = { showDisclaimerPhone = false },
+                title = {Text(stringResource(id=R.string.phone_number)) },
+                text = { Text(stringResource(id=R.string.phone_info)) },
+                confirmButton = {
+                    TextButton(onClick = { showDisclaimerPhone = false }) {
+                        Text("OK")
+                    }
+                }
             )
+
         }
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
@@ -315,7 +313,7 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             trailingIcon = {
-                IconButton(onClick = { showInfoDialog = !showInfoDialog }) {
+                IconButton(onClick = { showDisclaimerEmail = !showDisclaimerEmail }) {
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = stringResource(R.string.email_info),
@@ -333,13 +331,13 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
-        if (showInfoDialog) {
+        if (showDisclaimerEmail) {
             AlertDialog(
-                onDismissRequest = { showInfoDialog = false },
+                onDismissRequest = { showDisclaimerEmail = false },
                 title = {Text(stringResource(id=R.string.email)) },
                 text = { Text(stringResource(id=R.string.email_info)) },
                 confirmButton = {
-                    TextButton(onClick = { showInfoDialog = false }) {
+                    TextButton(onClick = { showDisclaimerEmail = false }) {
                         Text("OK")
                     }
                 }

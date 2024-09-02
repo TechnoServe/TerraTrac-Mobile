@@ -43,8 +43,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
     override suspend fun doWork(): Result {
 
         if (checkNotificationPermission()) {
-            sendSyncNotification()
-            //showSyncNotification()
+            // sendSyncNotification()
         } else {
             Log.d(TAG, "Notification permission not granted.")
             // Handle the case where notification permission is not granted
@@ -80,38 +79,45 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
             Log.d("YourTag", "Device ID: $deviceId")
 
             // Log the payload
-            Log.d(TAG, "Payload to send: ${farmDtos.joinToString(separator = "\n") { it.toString() }}")
+            // Log.d(TAG, "Payload to send: ${farmDtos.joinToString(separator = "\n") { it.toString() }}")
+            Log.d(TAG, "Farms before sync: ${unsyncedFarms.map { it.synced }}")
 
-            Log.d(TAG, "Syncing Farms: ${farmDtos.size}")
+
+           // Log.d(TAG, "Syncing Farms: ${farmDtos.size}")
 
             val response = api.syncFarms(farmDtos)
-            Log.d(TAG, "Response: $response")
+           // Log.d(TAG, "Response: $response")
 
             if (response.isSuccessful) {
-                showSyncNotification()
+//                showSyncNotification()
+//                unsyncedFarms.forEach { farm ->
+//                    farmDao.updateFarmSyncStatus(farm.copy(synced = true))
+//                }
                 unsyncedFarms.forEach { farm ->
-                    farmDao.updateFarmSyncStatus(farm.copy(synced = true))
+                    farmDao.updateFarmSyncStatus(farm.id, true)
                 }
                 Log.d(TAG, "Farms synced successfully.")
+
                 createNotificationChannelAndShowCompleteNotification() // Notify sync success
             } else {
                 Log.d(TAG, "Failed to sync farms: ${response.message()}")
                 createSyncFailedNotification() // Notify sync failure
                 return Result.failure() // Return failure result
             }
+            Log.d(TAG, "Farms After sync: ${unsyncedFarms.map { it.synced }}")
         } catch (e: Exception) {
             Log.e(TAG, "Error syncing farms: ${e.message}", e)
             createSyncFailedNotification() // Notify sync failure
             return Result.retry() // Retry if an exception occurred
         }
 
-        Log.d(TAG, "SyncWorker completed successfully.")
+        // Log.d(TAG, "SyncWorker completed successfully.")
         return Result.success()
     }
 
     private fun createSyncFailedNotification() {
         if (!checkNotificationPermission()) {
-            Log.d(TAG, "Notification permission not granted.")
+// Log.d(TAG, "Notification permission not granted.")
             return
         }
 

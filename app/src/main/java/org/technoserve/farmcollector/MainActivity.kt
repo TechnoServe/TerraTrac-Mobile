@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -23,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -34,7 +32,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
-import org.technoserve.farmcollector.database.sync.SyncService
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.screens.AddFarm
 import org.technoserve.farmcollector.ui.screens.AddSite
@@ -92,18 +89,14 @@ class MainActivity : ComponentActivity() {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
-//        remove plot_size from shared preferences if it exists
+        // remove plot_size from shared preferences if it exists
         if (sharedPref.contains("plot_size")) {
             sharedPref.edit().remove("plot_size").apply()
         }
         // remove selected unit from shared preferences if it exists
-        // remove selected unit from shared preferences if it exists
         if (sharedPref.contains("selectedUnit")) {
             sharedPref.edit().remove("selectedUnit").apply()
         }
-
-        // Start the service when the activity is created
-        startSyncService()
 
         setContent {
             val navController = rememberNavController()
@@ -139,71 +132,6 @@ class MainActivity : ComponentActivity() {
                             factory = FarmViewModelFactory(applicationContext as Application),
                         )
                     val listItems by farmViewModel.readData.observeAsState(listOf())
-//                    NavHost(
-//                        navController = navController,
-//                        startDestination = "home",
-//                    ) {
-//                        composable("home") {
-//                            Home(navController, languageViewModel, languages)
-//                        }
-//                        composable("siteList") {
-//                            ScreenWithSidebar(navController) {
-//                                CollectionSiteList(navController)
-//                            }
-//                        }
-//                        composable("farmList/{siteId}") { backStackEntry ->
-//                            val siteId = backStackEntry.arguments?.getString("siteId")
-//                            if (siteId != null) {
-////                                ScreenWithSidebar(navController) {
-//                                    FarmList(
-//                                        navController = navController,
-//                                        siteId = siteId.toLong(),
-//                                    )
-////                                }
-//                            }
-//                        }
-//                        composable("addFarm/{siteId}") { backStackEntry ->
-//                            val siteId = backStackEntry.arguments?.getString("siteId")
-//                            if (siteId != null) {
-//                                AddFarm(navController = navController, siteId = siteId.toLong())
-//                            }
-//                        }
-//                        composable("addSite") {
-//                            AddSite(navController)
-//                        }
-//
-//                        composable("updateFarm/{farmId}") { backStackEntry ->
-//                            val farmId = backStackEntry.arguments?.getString("farmId")
-//                            if (farmId != null) {
-//                                UpdateFarmForm(
-//                                    navController = navController,
-//                                    farmId = farmId.toLong(),
-//                                    listItems = listItems,
-//                                )
-//                            }
-//                        }
-//                        // Screen for displaying and setting farm polygon coordinates
-//                        composable(
-//                            "setPolygon",
-//                            arguments =
-//                                listOf(
-//                                    navArgument("coordinates") {
-//                                        type = NavType.StringType
-//                                    },
-//                                ),
-//                        ) {
-//                            SetPolygon(navController, viewModel)
-//                        }
-//                        composable("settings") {
-//                            SettingsScreen(
-//                                navController,
-//                                darkMode,
-//                                languageViewModel,
-//                                languages,
-//                            )
-//                        }
-//                    }
-
                     NavHost(
                         navController = navController,
                         startDestination = Routes.HOME,
@@ -217,7 +145,7 @@ class MainActivity : ComponentActivity() {
                             }
                             Home(navController, languageViewModel, languages)
                         }
-                        composable("siteList") {
+                        composable(Routes.SITE_LIST) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
@@ -225,7 +153,7 @@ class MainActivity : ComponentActivity() {
                                 CollectionSiteList(navController)
                             }
                         }
-                        composable("farmList/{siteId}") { backStackEntry ->
+                        composable(Routes.FARM_LIST) { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
                             LaunchedEffect(Unit) {
                                 canExitApp = false
@@ -237,7 +165,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        composable("addFarm/{siteId}") { backStackEntry ->
+                        composable(Routes.ADD_FARM) { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
                             LaunchedEffect(Unit) {
                                 canExitApp = false
@@ -246,13 +174,13 @@ class MainActivity : ComponentActivity() {
                                 AddFarm(navController = navController, siteId = siteId.toLong())
                             }
                         }
-                        composable("addSite") {
+                        composable(Routes.ADD_SITE) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
                             AddSite(navController)
                         }
-                        composable("updateFarm/{farmId}") { backStackEntry ->
+                        composable(Routes.UPDATE_FARM) { backStackEntry ->
                             val farmId = backStackEntry.arguments?.getString("farmId")
                             LaunchedEffect(Unit) {
                                 canExitApp = false
@@ -265,8 +193,8 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        composable(
-                            "setPolygon/{coordinates}",
+
+                        composable(Routes.SET_POLYGON,
                             arguments = listOf(
                                 navArgument("coordinates") { type = NavType.StringType }
                             )
@@ -277,7 +205,7 @@ class MainActivity : ComponentActivity() {
                             val coordinates = backStackEntry.arguments?.getString("coordinates")
                             SetPolygon(navController, viewModel,)
                         }
-                        composable("settings") {
+                        composable(Routes.SETTINGS,) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
@@ -289,15 +217,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-
-
                 }
             }
         }
-    }
-
-    private fun startSyncService() {
-        val serviceIntent = Intent(this, SyncService::class.java)
-        ContextCompat.startForegroundService(this, serviceIntent)
     }
 }

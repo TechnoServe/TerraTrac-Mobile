@@ -58,7 +58,6 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.Farm
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.map.MapViewModel
@@ -84,17 +83,14 @@ fun SetPolygon(
     val context = LocalContext.current as Activity
     var coordinates by remember { mutableStateOf(listOf<Pair<Double, Double>>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
+    var hasPointsOnMap by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val showConfirmDialog = remember { mutableStateOf(false) }
     val showClearMapDialog = remember { mutableStateOf(false) }
     //  Getting farm details such as polygon or single pair of lat and long if shared from farm list
-//    val farmData =
-//        navController.previousBackStackEntry?.arguments?.getSerializable("farmData") as? Pair<Farm, String>
-
     val farmData = navController.previousBackStackEntry?.arguments?.getParcelable<ParcelableFarmData>("farmData")
 
-//    cast farmData string to Farm object
-    //val farmInfo = farmData?.first
+    // cast farmData string to Farm object
     val farmInfo = farmData?.farm
     var accuracy by remember { mutableStateOf("") }
     var viewSelectFarm by remember { mutableStateOf(false) }
@@ -108,8 +104,6 @@ fun SetPolygon(
         }
 
     val showAlertDialog = remember { mutableStateOf(false) }
-
-    val showPermissionRequest = remember { mutableStateOf(false) }
 
     val mapViewModel: MapViewModel = viewModel()
     // Remember the state for showing the dialog
@@ -127,7 +121,7 @@ fun SetPolygon(
     val messageText = stringResource(id = R.string.location_services_required_message)
     val enableButtonText = stringResource(id = R.string.enable)
 
-// Dialog to prompt user to enable location services
+    // Dialog to prompt user to enable location services
     if (showLocationDialog.value) {
         AlertDialog(
             onDismissRequest = { showLocationDialog.value = false },
@@ -213,18 +207,11 @@ fun SetPolygon(
             showConfirmDialog,
             fun() {
                 // Check if coordinates size is greater than 4
-//                if (coordinates.size >= 4 && coordinates.first() == coordinates.last()) {
                 if (coordinates.size >= 3) {
                     mapViewModel.clearCoordinates()
                     mapViewModel.addCoordinates(coordinates)
-//                    navController.previousBackStackEntry?.savedStateHandle?.apply {
-//                        set("coordinates", coordinates)
-//                    }
-
                     val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
                     navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
-
-                    // mapViewModel.showAreaDialog(calculatedArea.toString(), enteredArea.toString())
                     mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
                 } else {
                     showAlertDialog.value = true
@@ -233,7 +220,7 @@ fun SetPolygon(
         )
     }
 
-// Alert dialog for insufficient coordinates
+    // Alert dialog for insufficient coordinates
     if (showAlertDialog.value) {
         AlertDialog(
             onDismissRequest = {
@@ -259,23 +246,7 @@ fun SetPolygon(
         )
     }
 
-//    fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
-//        // Split the string on the decimal point
-//        val parts = value.split(".")
-//        if (parts.size == 2) {
-//            // Truncate the decimal part to the specified number of places
-//            val truncatedDecimalPart = parts[1].take(decimalPlaces)
-//            return if (truncatedDecimalPart.isEmpty()) {
-//                parts[0] // If no decimal places, return the integer part only
-//            } else {
-//                "${parts[0]}.$truncatedDecimalPart" // Combine integer and truncated decimal part
-//            }
-//        }
-//        return value // No decimal point found, return original value
-//    }
-
-
-    // Display AreaDialog if needed
+    // Display AreaDialog
     AreaDialog(
         showDialog = mapViewModel.showDialog.collectAsState().value,
         onDismiss = { mapViewModel.dismissDialog() },
@@ -283,14 +254,9 @@ fun SetPolygon(
             val chosenSize =
                 when (chosenArea) {
                     CALCULATED_AREA_OPTION -> calculatedArea.toString()
-                    //ENTERED_AREA_OPTION -> enteredArea.toString()
                     ENTERED_AREA_OPTION -> enteredAreaConverted.toString()
-
                     else -> throw IllegalArgumentException("Unknown area option: $chosenArea")
                 }
-            //sharedPref.edit().putString("plot_size", chosenSize).apply()
-            // Assuming chosenSize is a Double or String representing the size
-            //val originalSize = chosenSize.toString()
             val truncatedSize = truncateToDecimalPlaces(formatInput(chosenSize), 9)
             sharedPref.edit().putString("plot_size", truncatedSize).apply()
             if (sharedPref.contains("selectedUnit")) {
@@ -301,7 +267,6 @@ fun SetPolygon(
             navController.navigateUp()
         },
         calculatedArea = calculatedArea,
-        //enteredArea = enteredArea,
         enteredArea = enteredAreaConverted
     )
 
@@ -427,10 +392,8 @@ fun SetPolygon(
                                     text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                //if (farmInfo.coordinates?.isEmpty() == true) {
-                                    Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
-                                    Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
-                                //}
+                                Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
+                                Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
                                 Text(
                                     text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo.size.toString()),9)} ${
                                         stringResource(
@@ -504,7 +467,7 @@ fun SetPolygon(
                                 .fillMaxWidth(0.28f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
-                        // colors = ButtonDefaults.buttonColors(Color(0xFF1C9C3C)),
+                        enabled = isCapturingCoordinates,  // Enable only when capturing coordinates
                         onClick = {
                             if (!isLocationEnabled(context)) {
                                 showLocationDialog.value = true
@@ -547,7 +510,7 @@ fun SetPolygon(
                                                     return@addOnSuccessListener
                                                 }
 
-//                                            update map camera position
+                                            // update map camera position
                                                 val coordinate =
                                                     Pair(location.latitude, location.longitude)
                                                 accuracy = location.accuracy.toString()
@@ -555,11 +518,12 @@ fun SetPolygon(
                                                 coordinates = coordinates + coordinate
                                                 viewModel.addMarker(coordinate)
 
-//                                                add camera position
+                                                // add camera position
                                                 viewModel.addCoordinate(
                                                     location.latitude,
                                                     location.longitude,
                                                 )
+                                                hasPointsOnMap = coordinates.isNotEmpty()  // Enable Drop/Reset buttons
                                             }
                                         }
                                 }
@@ -575,20 +539,14 @@ fun SetPolygon(
                     }
                     ElevatedButton(
                         modifier = Modifier.fillMaxWidth(0.28f),
-//                        colors = ButtonDefaults.buttonColors(Color(0xFFCA1212)),
                         colors = ButtonDefaults.buttonColors(Color.White),
+                        enabled = hasPointsOnMap,  // Enable only when there are points to drop
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
                             coordinates = coordinates.dropLast(1)
                             viewModel.removeLastCoordinate()
                         },
                     ) {
-//                        Icon(
-//                            imageVector = Icons.Default.,
-//                            contentDescription = stringResource(id = R.string.drop_point),
-//                            tint = Color.Black,
-//                            modifier = Modifier.padding(4.dp),
-//                        )
                         Icon(
                             painter = painterResource(R.drawable.drop),
                             contentDescription = stringResource(id = R.string.drop_point),
@@ -602,6 +560,7 @@ fun SetPolygon(
                             .fillMaxWidth(0.22f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
+                        enabled = hasPointsOnMap,  // Enable only when there are points to reset
                         onClick = {
                             showClearMapDialog.value = true
                         },

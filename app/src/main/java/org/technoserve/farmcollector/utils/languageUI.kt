@@ -26,7 +26,7 @@ fun LanguageSelector(viewModel: LanguageViewModel, languages: List<Language>) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-//    do on click to set the language when activity loads
+    //do on click to set the language when activity loads
     viewModel.selectLanguage(currentLanguage, context)
 
     Row(

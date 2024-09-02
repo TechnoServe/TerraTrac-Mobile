@@ -3,8 +3,6 @@ package org.technoserve.farmcollector.utils
 import android.annotation.SuppressLint
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 object GeoCalculator {
     // The function to calculate the Area using the captured Polygons
@@ -22,14 +20,7 @@ object GeoCalculator {
         // Convert area to hectares (1 hectare = 10,000 square meters)
         val areaInHectares = areaInSquareMeters / 10000.0
 
-//        // Format the result to 6 decimal places
-//        return String.format("%.6f", areaInHectares).toDouble()
-        // Format the result to 6 decimal places and ensure the correct format
+        // Format the result to 9 decimal places and ensure the correct format
         return String.format("%.9f", areaInHectares).replace(',', '.').toDouble()
-//
-//        // Round the result to 5 decimal places
-//        val roundedAreaInHectares = BigDecimal(areaInHectares).setScale(5, RoundingMode.HALF_UP).toDouble()
-//
-//        return roundedAreaInHectares
     }
 }

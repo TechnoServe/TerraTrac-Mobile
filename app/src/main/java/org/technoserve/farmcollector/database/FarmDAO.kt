@@ -69,8 +69,11 @@ interface FarmDAO {
     @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId LIMIT 1")
     fun getCollectionSiteById(siteId: Long): CollectionSite?
 
-    @Update
-    suspend fun updateFarmSyncStatus(farm: Farm)
+//    @Update
+//    suspend fun updateFarmSyncStatus(farm: Farm)
+
+    @Query("UPDATE farms SET synced = :synced WHERE id = :farmId")
+    suspend fun updateFarmSyncStatus(farmId: Long, synced: Boolean)
 
     @Query("UPDATE Farms SET scheduledForSync=1 WHERE id IN (:ids)")
     fun updateSyncListStatus(ids: List<Long>)
@@ -104,5 +107,13 @@ interface FarmDAO {
             }
         }
     }
+
+    @Transaction
+    suspend fun updateSyncStatusForFarms(farms: List<Farm>) {
+        farms.forEach { farm ->
+            updateFarmSyncStatus(farm.id, true)
+        }
+    }
+
 
 }

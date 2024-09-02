@@ -61,8 +61,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
@@ -87,13 +85,10 @@ import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.map.getCenterOfPolygon
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.File
-import java.io.IOException
-import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Objects
 import java.util.UUID
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -104,12 +99,6 @@ private const val REQUEST_CHECK_SETTINGS = 1000
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
-//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-//        coordinatesData =
-//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-//                "coordinates"
-//            )
-//    }
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
         val parcelableCoordinates = navController.currentBackStackEntry!!
             .savedStateHandle
@@ -234,11 +223,6 @@ fun FarmForm(
     // Regex pattern to check for scientific notation
     val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
 
-    val file = context.createImageFile()
-    val uri = FileProvider.getUriForFile(
-        Objects.requireNonNull(context),
-        context.packageName + ".provider", file
-    )
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }
@@ -345,6 +329,11 @@ fun FarmForm(
     }
 
     fun saveFarm() {
+        // Validate size input if the size is empty we use the default size 0
+        if (size.isEmpty()) {
+            size = "0.0"
+        }
+
         // convert selectedUnit to hectares
         val sizeInHa = convertSize(size.toDouble(), selectedUnit)
         // Add farm
@@ -444,64 +433,6 @@ fun FarmForm(
     val fillForm = stringResource(id = R.string.fill_form)
 
     val showPermissionRequest = remember { mutableStateOf(false) }
-
-    var imageInputStream: InputStream? = null
-    val resultLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val treeUri = result.data?.data
-
-                if (treeUri != null) {
-                    val takeFlags =
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
-
-                    // Now, you have permission to write to the selected directory
-                    val imageFileName = "image${Instant.now().millis}.jpg"
-
-                    val selectedDir = DocumentFile.fromTreeUri(context, treeUri)
-                    val imageFile = selectedDir?.createFile("image/jpeg", imageFileName)
-
-                    imageFile?.uri?.let { fileUri ->
-                        try {
-                            imageInputStream?.use { input ->
-                                context.contentResolver.openOutputStream(fileUri)?.use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-
-                            // Update the database with the file path
-                            farmerPhoto = fileUri.toString()
-                            // Update other fields in the Farm object
-                            // Then, insert or update the farm object in your database
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-        }
-
-    val cameraLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
-            uri?.let { it1 ->
-                imageInputStream = context.contentResolver.openInputStream(it1)
-
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                resultLauncher.launch(intent)
-            }
-        }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) {
-        if (it) {
-            Toast.makeText(context, permissionGranted, Toast.LENGTH_SHORT).show()
-            cameraLauncher.launch(uri)
-        } else {
-            Toast.makeText(context, permissionDenied, Toast.LENGTH_SHORT).show()
-        }
-    }
 
     val (focusRequester1) = FocusRequester.createRefs()
     val (focusRequester2) = FocusRequester.createRefs()
@@ -725,14 +656,6 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = latitude,
-//                    onValueChange = {
-//                        if (it.split(".").last().length >= 6) latitude = it
-//                        else Toast.makeText(
-//                            context,
-//                            R.string.error_latitude_decimal_places,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    },
                     onValueChange = {
                         val parts = it.split(".")
                         if (parts.size == 2 && parts.last().length == 5 ) {
@@ -769,14 +692,6 @@ fun FarmForm(
                 TextField(
                     readOnly = true,
                     value = longitude,
-//                    onValueChange = {
-//                        if (it.split(".").last().length >= 6) longitude = it
-//                        else Toast.makeText(
-//                            context,
-//                            R.string.error_longitude_decimal_places,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    },
                     onValueChange = {
                         val parts = it.split(".")
                         if (parts.size == 2) {
@@ -832,7 +747,6 @@ fun FarmForm(
         // Button to trigger the location permission request
         Button(
             onClick = {
-//                val enteredSize = size.toFloatOrNull() ?: 0f
                 val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
                 if (isLocationEnabled(context) && context.hasLocationPermission()) {
                     if (enteredSize < 4f) {
@@ -876,7 +790,6 @@ fun FarmForm(
                 .height(50.dp),
             enabled = size.isNotBlank()
         ) {
-//            val enteredSize = size.toFloatOrNull() ?: 0f
             val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
 
             Text(
@@ -890,7 +803,7 @@ fun FarmForm(
         Button(
             onClick = {
                 isFormSubmitted = true
-//                Finding the center of the polygon captured
+                // Finding the center of the polygon captured
                 if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
                     val center = coordinatesData.toLatLngList().getCenterOfPolygon()
                     val bounds: LatLngBounds = center

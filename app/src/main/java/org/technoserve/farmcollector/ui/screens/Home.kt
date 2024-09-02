@@ -47,7 +47,7 @@ fun Home(
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        add language selector here and align on right
+    // add language selector here and align on right
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End

@@ -1,11 +1,13 @@
 package org.technoserve.farmcollector.database
 
 import android.app.Application
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
@@ -798,83 +800,27 @@ class FarmViewModel(
             repository.readAllFarmsSync(siteId)
         }
 
-//    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
-//        viewModelScope.launch {
-//            flagFarmersWithNewPlotInfo(siteId, importedFarms, this@FarmViewModel)
-//            // Update the farms LiveData after importing
-//            _farms.postValue(getExistingFarms(siteId))
-//        }
-//    }
-
 
     // restore data from the server
-//    fun restoreData(deviceId: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                _restoreStatus.postValue(RestoreStatus.InProgress)
-//
-//                // Fetch data from the server
-//                val serverFarms = apiService.getFarmsByDeviceId(deviceId)
-//
-//                // Get local farms
-//                val localFarms = repository.readData.value ?: emptyList()
-//
-//                // Initialize counters for added and updated farms
-//                var addedCount = 0
-//                var updatedCount = 0
-//
-//                // Compare and update
-//                serverFarms.forEach { serverFarm ->
-//                    val localFarm = localFarms.find { it.id == serverFarm.id }
-//                    if (localFarm == null) {
-//                        // Farm doesn't exist locally, add it
-//                        repository.addFarm(serverFarm)
-//                        addedCount++
-//                    } else if (localFarm != serverFarm) {
-//                        // Farm exists but is different, update it
-//                        repository.updateFarm(serverFarm)
-//                        updatedCount++
-//                    }
-//                }
-//
-//                // Prepare a success message
-//                val message = "Restoration completed: $addedCount farms added, $updatedCount farms updated."
-//
-//                // Refresh the farms LiveData
-//                _farms.postValue(repository.readData.value)
-//
-//                // Post the completed status with the message
-//                _restoreStatus.postValue(
-//                    RestoreStatus.Success(
-//                        addedCount = addedCount,
-//                        updatedCount = updatedCount,
-//                        message = message
-//                    )
-//                )
-//            } catch (e: Exception) {
-//                // Post the error status with the exception message
-//                _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))
-//            }
-//        }
-//    }
 
-    fun restoreData(deviceId: String, onCompletion: (Boolean) -> Unit) {
+    fun restoreData(deviceId: String ?, phoneNumber: String?, onCompletion: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _restoreStatus.postValue(RestoreStatus.InProgress)
 
                 // Fetch data from the server
-                val serverFarms = apiService.getFarmsByDeviceId(deviceId)
 
                 // Get local farms
                 val localFarms = repository.readData.value ?: emptyList()
+
+                Log.d(TAG, "Local Farms  $localFarms")
 
                 // Initialize counters for added and updated farms
                 var addedCount = 0
                 var updatedCount = 0
 
                 // Compare and update
-                serverFarms.forEach { serverFarm ->
+                deviceId?.let { apiService.getFarmsByDeviceId(it) }?.forEach { serverFarm ->
                     val localFarm = localFarms.find { it.id == serverFarm.id }
                     if (localFarm == null) {
                         // Farm doesn't exist locally, add it
@@ -888,7 +834,8 @@ class FarmViewModel(
                 }
 
                 // Prepare a success message
-                val message = "Restoration completed: $addedCount farms added, $updatedCount farms updated."
+                val message =
+                    "Restoration completed: $addedCount farms added, $updatedCount farms updated."
 
                 // Refresh the farms LiveData
                 _farms.postValue(repository.readData.value)
