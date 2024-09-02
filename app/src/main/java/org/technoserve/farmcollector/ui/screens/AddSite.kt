@@ -18,9 +18,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -28,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -79,6 +87,14 @@ fun SiteForm(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var village by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
+
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+//    val phone_label = Text(stringResource(id=R.string.phone_number))
+//    val phoneInfo = Text(stringResource(id=R.string.phone_info))
+
+    var showDisclaimer by remember { mutableStateOf(false) }
+
 
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -207,41 +223,66 @@ fun SiteForm(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                keyboardType = KeyboardType.Phone
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester3.requestFocus() }
-            ),
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it
-                isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
-            },
-            label = { Text(stringResource(id = R.string.phone_number,),color = inputLabelColor) },
-            supportingText = {
-                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(stringResource(R.string.error_invalid_phone_number, phoneNumber))
-            },
-            isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
-            colors = TextFieldDefaults.textFieldColors(
-                errorLeadingIconColor = Color.Red,
-                cursorColor = inputTextColor,
-                errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester3.requestFocus()
-                    }
-                    false
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Phone
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusRequester3.requestFocus() }
+                ),
+                value = phoneNumber,
+                onValueChange = {
+                    phoneNumber = it
+                    isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
+                },
+                label = {
+                    Text(
+                        stringResource(id = R.string.phone_number,),
+                        color = inputLabelColor
+                    )
+                },
+                supportingText = {
+                    if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(
+                        stringResource(R.string.error_invalid_phone_number, phoneNumber)
+                    )
+                },
+                isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
+                colors = TextFieldDefaults.textFieldColors(
+                    errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
+                ),
+            trailingIcon = {
+                IconButton(onClick = { showDisclaimer = !showDisclaimer }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.phone_info),
+                        tint = inputLabelColor
+                    )
                 }
-        )
+            },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .onKeyEvent {
+                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                            focusRequester3.requestFocus()
+                        }
+                        false
+                    }
+            )
+        if (showDisclaimer) {
+            Text(
+                text = stringResource(R.string.phone_info),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,
@@ -273,6 +314,15 @@ fun SiteForm(navController: NavController) {
                 unfocusedIndicatorColor = inputBorder,
                 errorIndicatorColor = Color.Red
             ),
+            trailingIcon = {
+                IconButton(onClick = { showInfoDialog = !showInfoDialog }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.email_info),
+                        tint = inputLabelColor
+                    )
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -283,6 +333,18 @@ fun SiteForm(navController: NavController) {
                     false
                 }
         )
+        if (showInfoDialog) {
+            AlertDialog(
+                onDismissRequest = { showInfoDialog = false },
+                title = {Text(stringResource(id=R.string.email)) },
+                text = { Text(stringResource(id=R.string.email_info)) },
+                confirmButton = {
+                    TextButton(onClick = { showInfoDialog = false }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,

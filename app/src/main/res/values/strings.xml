@@ -133,4 +133,8 @@
     <string name="error_farm_size_invalid">Invalid Farm Size</string>
     <string name="invalid_farms">%1$d Invalid farm Records were not Imported</string>
     <string name="invalid_farms_with_names">%1$d Invalid farm records were not imported. Farmers: %2$s</string>
+
+    <string name="phone_info">Your phone number may be used for data recovery in future.</string>
+    <string name="email_info">Your email address will be used for data recovery in future.</string>
+
 </resources>

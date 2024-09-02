@@ -2,10 +2,12 @@ package org.technoserve.farmcollector
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
@@ -17,7 +19,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -46,6 +51,19 @@ import org.technoserve.farmcollector.utils.LanguageViewModelFactory
 import org.technoserve.farmcollector.utils.getLocalizedLanguages
 import org.technoserve.farmcollector.utils.updateLocale
 import java.util.Locale
+
+
+// Constants for navigation routes
+object Routes {
+    const val HOME = "home"
+    const val SITE_LIST = "siteList"
+    const val FARM_LIST = "farmList/{siteId}"
+    const val ADD_FARM = "addFarm/{siteId}"
+    const val ADD_SITE = "addSite"
+    const val UPDATE_FARM = "updateFarm/{farmId}"
+    const val SET_POLYGON = "setPolygon"
+    const val SETTINGS = "settings"
+}
 
 // @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -89,6 +107,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
+            var context = LocalContext.current
+            var canExitApp by remember { mutableStateOf(false) }
             val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
             LaunchedEffect(currentLanguage) {
@@ -119,41 +139,124 @@ class MainActivity : ComponentActivity() {
                             factory = FarmViewModelFactory(applicationContext as Application),
                         )
                     val listItems by farmViewModel.readData.observeAsState(listOf())
+//                    NavHost(
+//                        navController = navController,
+//                        startDestination = "home",
+//                    ) {
+//                        composable("home") {
+//                            Home(navController, languageViewModel, languages)
+//                        }
+//                        composable("siteList") {
+//                            ScreenWithSidebar(navController) {
+//                                CollectionSiteList(navController)
+//                            }
+//                        }
+//                        composable("farmList/{siteId}") { backStackEntry ->
+//                            val siteId = backStackEntry.arguments?.getString("siteId")
+//                            if (siteId != null) {
+////                                ScreenWithSidebar(navController) {
+//                                    FarmList(
+//                                        navController = navController,
+//                                        siteId = siteId.toLong(),
+//                                    )
+////                                }
+//                            }
+//                        }
+//                        composable("addFarm/{siteId}") { backStackEntry ->
+//                            val siteId = backStackEntry.arguments?.getString("siteId")
+//                            if (siteId != null) {
+//                                AddFarm(navController = navController, siteId = siteId.toLong())
+//                            }
+//                        }
+//                        composable("addSite") {
+//                            AddSite(navController)
+//                        }
+//
+//                        composable("updateFarm/{farmId}") { backStackEntry ->
+//                            val farmId = backStackEntry.arguments?.getString("farmId")
+//                            if (farmId != null) {
+//                                UpdateFarmForm(
+//                                    navController = navController,
+//                                    farmId = farmId.toLong(),
+//                                    listItems = listItems,
+//                                )
+//                            }
+//                        }
+//                        // Screen for displaying and setting farm polygon coordinates
+//                        composable(
+//                            "setPolygon",
+//                            arguments =
+//                                listOf(
+//                                    navArgument("coordinates") {
+//                                        type = NavType.StringType
+//                                    },
+//                                ),
+//                        ) {
+//                            SetPolygon(navController, viewModel)
+//                        }
+//                        composable("settings") {
+//                            SettingsScreen(
+//                                navController,
+//                                darkMode,
+//                                languageViewModel,
+//                                languages,
+//                            )
+//                        }
+//                    }
+
                     NavHost(
                         navController = navController,
-                        startDestination = "home",
+                        startDestination = Routes.HOME,
                     ) {
-                        composable("home") {
+                        composable(Routes.HOME) {
+                            BackHandler(enabled = canExitApp) {
+                                (context as? Activity)?.finish()
+                            }
+                            LaunchedEffect(Unit) {
+                                canExitApp = true
+                            }
                             Home(navController, languageViewModel, languages)
                         }
                         composable("siteList") {
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
                             ScreenWithSidebar(navController) {
                                 CollectionSiteList(navController)
                             }
                         }
                         composable("farmList/{siteId}") { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
                             if (siteId != null) {
-                                ScreenWithSidebar(navController) {
-                                    FarmList(
-                                        navController = navController,
-                                        siteId = siteId.toLong(),
-                                    )
-                                }
+                                FarmList(
+                                    navController = navController,
+                                    siteId = siteId.toLong(),
+                                )
                             }
                         }
                         composable("addFarm/{siteId}") { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
                             if (siteId != null) {
                                 AddFarm(navController = navController, siteId = siteId.toLong())
                             }
                         }
                         composable("addSite") {
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
                             AddSite(navController)
                         }
-
                         composable("updateFarm/{farmId}") { backStackEntry ->
                             val farmId = backStackEntry.arguments?.getString("farmId")
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
                             if (farmId != null) {
                                 UpdateFarmForm(
                                     navController = navController,
@@ -162,19 +265,22 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        // Screen for displaying and setting farm polygon coordinates
                         composable(
-                            "setPolygon",
-                            arguments =
-                                listOf(
-                                    navArgument("coordinates") {
-                                        type = NavType.StringType
-                                    },
-                                ),
-                        ) {
-                            SetPolygon(navController, viewModel)
+                            "setPolygon/{coordinates}",
+                            arguments = listOf(
+                                navArgument("coordinates") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
+                            val coordinates = backStackEntry.arguments?.getString("coordinates")
+                            SetPolygon(navController, viewModel,)
                         }
                         composable("settings") {
+                            LaunchedEffect(Unit) {
+                                canExitApp = false
+                            }
                             SettingsScreen(
                                 navController,
                                 darkMode,
@@ -183,6 +289,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+
+
                 }
             }
         }

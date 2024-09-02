@@ -808,7 +808,57 @@ class FarmViewModel(
 
 
     // restore data from the server
-    fun restoreData(deviceId: String) {
+//    fun restoreData(deviceId: String) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                _restoreStatus.postValue(RestoreStatus.InProgress)
+//
+//                // Fetch data from the server
+//                val serverFarms = apiService.getFarmsByDeviceId(deviceId)
+//
+//                // Get local farms
+//                val localFarms = repository.readData.value ?: emptyList()
+//
+//                // Initialize counters for added and updated farms
+//                var addedCount = 0
+//                var updatedCount = 0
+//
+//                // Compare and update
+//                serverFarms.forEach { serverFarm ->
+//                    val localFarm = localFarms.find { it.id == serverFarm.id }
+//                    if (localFarm == null) {
+//                        // Farm doesn't exist locally, add it
+//                        repository.addFarm(serverFarm)
+//                        addedCount++
+//                    } else if (localFarm != serverFarm) {
+//                        // Farm exists but is different, update it
+//                        repository.updateFarm(serverFarm)
+//                        updatedCount++
+//                    }
+//                }
+//
+//                // Prepare a success message
+//                val message = "Restoration completed: $addedCount farms added, $updatedCount farms updated."
+//
+//                // Refresh the farms LiveData
+//                _farms.postValue(repository.readData.value)
+//
+//                // Post the completed status with the message
+//                _restoreStatus.postValue(
+//                    RestoreStatus.Success(
+//                        addedCount = addedCount,
+//                        updatedCount = updatedCount,
+//                        message = message
+//                    )
+//                )
+//            } catch (e: Exception) {
+//                // Post the error status with the exception message
+//                _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))
+//            }
+//        }
+//    }
+
+    fun restoreData(deviceId: String, onCompletion: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _restoreStatus.postValue(RestoreStatus.InProgress)
@@ -851,9 +901,15 @@ class FarmViewModel(
                         message = message
                     )
                 )
+
+                // Notify completion with the success status
+                onCompletion(addedCount > 0 || updatedCount > 0)
             } catch (e: Exception) {
                 // Post the error status with the exception message
                 _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))
+
+                // Notify completion with failure status
+                onCompletion(false)
             }
         }
     }

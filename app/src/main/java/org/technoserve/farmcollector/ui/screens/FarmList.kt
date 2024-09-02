@@ -51,11 +51,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,6 +74,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -344,6 +349,11 @@ fun FarmList(
     var deviceId by remember { mutableStateOf("") }
     // State variable to observe restore status
     val restoreStatus by farmViewModel.restoreStatus.observeAsState()
+
+    var emailOrPhone by remember { mutableStateOf("") }
+    var showRestorePrompt by remember { mutableStateOf(false) }
+    var finalMessage by remember { mutableStateOf("") }
+    var showFinalMessage by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         deviceId = DeviceIdUtil.getDeviceId(context)
@@ -766,7 +776,16 @@ fun FarmList(
             showExport = listItems.isNotEmpty(),
             showShare = listItems.isNotEmpty(),
             showSearch = listItems.isNotEmpty(),
-            onRestoreClicked = {farmViewModel.restoreData(deviceId)}
+            onRestoreClicked = {
+                farmViewModel.restoreData(deviceId) { success ->
+                    if (success) {
+                        finalMessage = "Data restored successfully."
+                    } else {
+                        showRestorePrompt = true
+                    }
+                }
+            }
+
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -1097,22 +1116,85 @@ fun FarmList(
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium
                 )
+                showRestorePrompt = false // Hide the restore prompt if restoration is successful
             }
 
             is RestoreStatus.Error -> {
                 // Display an error message
                 val status = restoreStatus as RestoreStatus.Error
-                Text(
-                    text = "Error during restoration: ${status.message}",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
-                // After displaying the error message, proceed to display data if available
-                showDataContent()
+//                showRestorePrompt = true // Show the restore prompt if restoration fails
+
+                if (showRestorePrompt) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "No data available. Please enter your phone number or email to restore data.",
+                            modifier = Modifier.padding(bottom = 16.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        TextField(
+                            value = emailOrPhone,
+                            onValueChange = { emailOrPhone = it },
+                            label = { Text("Email or Phone Number") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                onClick = {
+                                    showRestorePrompt = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Cancel")
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    if (emailOrPhone.isNotBlank()) {
+                                        showRestorePrompt =
+                                            false // Hide the restore prompt on retry
+                                        farmViewModel.restoreData(deviceId) { success ->
+                                            finalMessage = if (success) {
+                                                "Data restored successfully."
+                                            } else {
+                                                // showRestorePrompt = true
+                                                "No data was found for the provided information. Please try again later or contact support."
+                                            }
+                                            // showFinalMessage = true
+                                        }
+                                    }
+                                },
+                                enabled = emailOrPhone.isNotBlank(),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Restore Data")
+                            }
+                        }
+                    }
+                } else {
+                    // Display a message indicating no data available
+                    Text(
+                        text = finalMessage,
+                        modifier = Modifier.padding(16.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    showDataContent()
+                }
             }
 
             null -> {
@@ -1132,6 +1214,96 @@ fun FarmList(
                 }
             }
         }
+
+//        Scaffold(
+//            bottomBar = {
+//                BottomAppBar(
+//                    content = {
+//                        IconButton(onClick = { /* Handle settings action */ },modifier = Modifier.size(36.dp)) {
+//                            Icon(Icons.Default.Refresh, contentDescription = "Restore",modifier = Modifier.size(24.dp))
+//                        }
+//                        Spacer(Modifier.weight(1f, true))
+//                        IconButton(onClick = { /* Handle settings action */ },modifier = Modifier.size(36.dp)) {
+//                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Import",modifier = Modifier.size(24.dp))
+//                        }
+//                        Spacer(Modifier.weight(1f, true))
+//                        IconButton(onClick = { /* Handle settings action */ }) {
+//                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+//                        }
+//                        Spacer(Modifier.weight(1f, true))
+//                        IconButton(onClick = { /* Handle refresh action */ }, modifier = Modifier.size(36.dp)) {
+//                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Download",modifier = Modifier.size(24.dp))
+//
+//                        }
+//                        Spacer(Modifier.weight(1f, true))
+//                        IconButton(onClick = { /* Handle export action */ },modifier = Modifier.size(36.dp)) {
+//                            Icon(Icons.Default.Share, contentDescription = "Export",modifier = Modifier.size(24.dp))
+//                        }
+//                    }
+//                )
+//            }
+//        ) { paddingValues ->
+//            when (restoreStatus) {
+//                is RestoreStatus.InProgress -> {
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(paddingValues),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//
+//                is RestoreStatus.Success -> {
+//                    // Display a completion message
+//                    val status = restoreStatus as RestoreStatus.Success
+//                    Text(
+//                        text = "Restoration completed. Added: ${status.addedCount}, Updated: ${status.updatedCount}",
+//                        modifier = Modifier
+//                            .padding(paddingValues)
+//                            .fillMaxWidth(),
+//                        textAlign = TextAlign.Center,
+//                        style = MaterialTheme.typography.bodyMedium
+//                    )
+//                    showRestorePrompt = false // Hide the restore prompt if restoration is successful
+//                }
+//
+//                is RestoreStatus.Error -> {
+//                    // Display an error message
+//                    val status = restoreStatus as RestoreStatus.Error
+//                    Text(
+//                        text = "Error during restoration: ${status.message}",
+//                        modifier = Modifier
+//                            .padding(paddingValues)
+//                            .fillMaxWidth(),
+//                        textAlign = TextAlign.Center,
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        color = MaterialTheme.colorScheme.error
+//                    )
+//                    showRestorePrompt = true // Show the restore prompt if restoration fails
+//                    // After displaying the error message, proceed to display data if available
+//                    showDataContent()
+//                }
+//
+//                null -> {
+//                    if (isLoading.value) {
+//                        // Show loader while data is loading
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxSize()
+//                                .padding(16.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            CircularProgressIndicator()
+//                        }
+//                    } else {
+//                        // Display data or no data message if loading is complete
+//                        showDataContent()
+//                    }
+//                }
+//            }
+
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
