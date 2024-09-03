@@ -770,7 +770,7 @@ fun FarmList(
             showShare = listItems.isNotEmpty(),
             showSearch = listItems.isNotEmpty(),
             onRestoreClicked = {
-                farmViewModel.restoreData(deviceId = deviceId, phoneNumber = "") { success ->
+                farmViewModel.restoreData(deviceId = deviceId, phoneNumber = "", farmViewModel = farmViewModel) { success ->
                     if (success) {
                         finalMessage = "Data restored successfully."
                     } else {
@@ -925,7 +925,7 @@ fun FarmList(
                 // Display a completion message
                 val status = restoreStatus as RestoreStatus.Success
                 Text(
-                    text = "Restoration completed. Added: ${status.addedCount}, Updated: ${status.updatedCount}",
+                    text = "Restoration completed. Added: ${status.addedCount}",
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
@@ -983,7 +983,7 @@ fun FarmList(
                                     if (emailOrPhone.isNotBlank()) {
                                         showRestorePrompt =
                                             false // Hide the restore prompt on retry
-                                        farmViewModel.restoreData(deviceId = deviceId , phoneNumber = emailOrPhone) { success ->
+                                        farmViewModel.restoreData(deviceId = deviceId , phoneNumber = emailOrPhone, farmViewModel = farmViewModel) { success ->
                                             finalMessage = if (success) {
                                                 "Data restored successfully."
                                             } else {

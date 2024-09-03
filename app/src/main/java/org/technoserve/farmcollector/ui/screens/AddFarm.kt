@@ -158,9 +158,6 @@ fun formatInput(input: String): String {
            decimalPlaces > 3 -> {
                 // Format to 6 decimal places without trailing zeros if more than 3 decimal places
                BigDecimal(input).setScale(9, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
-
-               //truncateToDecimalPlaces(input,9)
-
             }
             decimalPlaces == 0 -> {
                 // No decimal part, return the number as is
@@ -171,7 +168,6 @@ fun formatInput(input: String): String {
                 val formattedNumber = number.setScale(9, RoundingMode.DOWN)
                 // If 3 or fewer decimal places, return as is without trailing zeros
                 formattedNumber.stripTrailingZeros().toPlainString()
-//                truncateToDecimalPlaces(input,9)
             }
         }
     } catch (e: NumberFormatException) {
@@ -206,14 +202,11 @@ fun FarmForm(
     var longitude by rememberSaveable { mutableStateOf("") }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
-//    var selectedUnit by remember { mutableStateOf(items[0]) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
-
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
-
     val mapViewModel: MapViewModel = viewModel()
     // Read initial value from SharedPreferences
     var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
@@ -222,7 +215,6 @@ fun FarmForm(
     var isFormSubmitted by remember { mutableStateOf(false) }
     // Regex pattern to check for scientific notation
     val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
-
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }

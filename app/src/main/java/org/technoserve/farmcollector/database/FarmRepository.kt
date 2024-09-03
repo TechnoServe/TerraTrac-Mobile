@@ -11,6 +11,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getAll(siteId)
     }
 
+    fun getAllFarms(): List<Farm> {
+        return farmDAO.getAllFarms()
+    }
+
     fun readAllFarmsSync(siteId: Long): List<Farm> {
         return farmDAO.getAllSync(siteId)
     }

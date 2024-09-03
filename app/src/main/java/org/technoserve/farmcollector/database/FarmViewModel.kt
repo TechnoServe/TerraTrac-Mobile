@@ -10,6 +10,8 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -52,7 +54,7 @@ data class ParsedFarms(
 // Define a sealed class for restore status
 sealed class RestoreStatus {
     object InProgress : RestoreStatus()
-    data class Success(val addedCount: Int, val updatedCount: Int,val message: String) : RestoreStatus()
+    data class Success(val addedCount: Int,val message: String) : RestoreStatus()
     data class Error(val message: String) : RestoreStatus()
 }
 
@@ -63,6 +65,7 @@ class FarmViewModel(
     private val repository: FarmRepository
     val readAllSites: RefreshableLiveData<List<CollectionSite>>
     val readData: RefreshableLiveData<List<Farm>>
+    //val readData: List<Farm>
 
     private val _farms = MutableLiveData<List<Farm>>()
     val farms: LiveData<List<Farm>> get() = _farms
@@ -77,6 +80,7 @@ class FarmViewModel(
         repository = FarmRepository(farmDAO)
         readAllSites = RefreshableLiveData { repository.readAllSites }
         readData = RefreshableLiveData { repository.readData }
+        // readData = repository.getAllFarms()
 
         val retrofit = Retrofit.Builder()
             .baseUrl(BuildConfig.BASE_URL)
@@ -549,34 +553,9 @@ class FarmViewModel(
                                 importedFarms.add(newFarm)
                             }
 
-//                            val existingFarm =
-//                                newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
                             val existingFarm = newFarm.remoteId?.let {
                                 repository.getFarmByDetails(newFarm)
                             }
-//                            if (existingFarm != null) {
-//                                if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-//                                    // Farm needs an update
-//                                    println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-//                                    farmsNeedingUpdate.add(newFarm)
-//                                } else {
-//                                    // Farm is a duplicate but does not need an update
-//                                    val duplicateMessage =
-//                                        "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-//                                    println(duplicateMessage)
-//                                    duplicateFarms.add(duplicateMessage)
-//                                }
-//                            } else {
-//                                // Handle case where farm exists in the system but not in the repository
-//                                val unknownFarmMessage =
-//                                    "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-//                                println(unknownFarmMessage)
-//
-////                            // Remove farm from repository
-////                            runBlocking {
-////                                newFarm.remoteId?.let { repository.deleteFarmByRemoteId(it) }
-////                            }
-//                            }
 
                             if (repository.farmNeedsUpdateImport(newFarm)) {
                                 // Farm needs an update
@@ -639,11 +618,6 @@ class FarmViewModel(
                         invalidFarms.size,
                         farmerNames
                     )
-//                    val invalidFarmsMessage = context.getString(R.string.invalid_farms, invalidFarms.size)
-//                    Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
-                    // Show the toast message
-                   // Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
-                    // Show a custom duration toast
                     showCustomToast(context, invalidFarmsMessage, 5000)
                 }
             }
@@ -651,12 +625,6 @@ class FarmViewModel(
             withContext(Dispatchers.Main) {
                 if (farmsNeedingUpdate.isNotEmpty()) {
                     val farmsNeedingUpdateMessage = context.getString(R.string.farms_needing_update, farmsNeedingUpdate.size)
-//                    Toast
-//                        .makeText(
-//                            context,
-//                            "${farmsNeedingUpdate.size} farms need to be updated",
-//                            Toast.LENGTH_LONG,
-//                        ).show()
                     Toast.makeText(context, farmsNeedingUpdateMessage, Toast.LENGTH_LONG).show()
                 }
             }
@@ -800,24 +768,28 @@ class FarmViewModel(
             repository.readAllFarmsSync(siteId)
         }
 
+    suspend fun getAllExistingFarms(): List<Farm> =
+        withContext(Dispatchers.IO) {
+            repository.getAllFarms()
+        }
 
     // restore data from the server
 
-    fun restoreData(deviceId: String ?, phoneNumber: String?, onCompletion: (Boolean) -> Unit) {
+    fun restoreData(
+        deviceId: String?,
+        phoneNumber: String?,
+        farmViewModel: FarmViewModel,
+        onCompletion: (Boolean) -> Unit
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _restoreStatus.postValue(RestoreStatus.InProgress)
 
-                // Fetch data from the server
-
-                // Get local farms
-                val localFarms = repository.readData.value ?: emptyList()
-
-                Log.d(TAG, "Local Farms  $localFarms")
+                // Get local farms from the repository directly
+                val localFarms = farmViewModel.getAllExistingFarms()
 
                 // Initialize counters for added and updated farms
                 var addedCount = 0
-                var updatedCount = 0
 
                 // Compare and update
                 deviceId?.let { apiService.getFarmsByDeviceId(it) }?.forEach { serverFarm ->
@@ -826,31 +798,25 @@ class FarmViewModel(
                         // Farm doesn't exist locally, add it
                         repository.addFarm(serverFarm)
                         addedCount++
-                    } else if (localFarm != serverFarm) {
-                        // Farm exists but is different, update it
-                        repository.updateFarm(serverFarm)
-                        updatedCount++
                     }
                 }
 
                 // Prepare a success message
-                val message =
-                    "Restoration completed: $addedCount farms added, $updatedCount farms updated."
+                val message = "Restoration completed: $addedCount farms added."
 
                 // Refresh the farms LiveData
-                _farms.postValue(repository.readData.value)
+                _farms.postValue(repository.getAllFarms())
 
                 // Post the completed status with the message
                 _restoreStatus.postValue(
                     RestoreStatus.Success(
                         addedCount = addedCount,
-                        updatedCount = updatedCount,
                         message = message
                     )
                 )
 
                 // Notify completion with the success status
-                onCompletion(addedCount > 0 || updatedCount > 0)
+                onCompletion(addedCount > 0)
             } catch (e: Exception) {
                 // Post the error status with the exception message
                 _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))
@@ -860,7 +826,6 @@ class FarmViewModel(
             }
         }
     }
-
 
 }
 

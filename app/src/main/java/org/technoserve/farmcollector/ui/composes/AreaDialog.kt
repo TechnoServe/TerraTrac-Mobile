@@ -12,6 +12,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
 
+/**
+ * This popup dialog allows you to choose from the entered size and calculated area from the captured polygon.
+ */
+
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
 const val ENTERED_AREA_OPTION = "ENTERED_AREA"
 
