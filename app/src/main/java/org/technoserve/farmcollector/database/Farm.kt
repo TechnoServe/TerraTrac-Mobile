@@ -136,51 +136,82 @@ data class Farm(
     }
 }
 
-data class FarmDto(
-    val remote_id: String,
-    val farmer_name: String,
-    val farm_size: Float,
-    val device_id: String,
-    val collection_site: String,
-//    val email: String,
-//    val phone_number: String,
-//    val site_village: String,
-//    val site_district: String,
+
+
+data class CollectionSiteDto(
+    val name: String,
     val agent_name: String,
-    val farm_village: String,
-    val farm_district: String,
-    val latitude: Double,
-    val longitude: Double,
-    val polygon: List<List<Double?>>?// Each coordinate is a list [longitude, latitude]
+    val phone_number: String?,
+    val email: String?,
+    val village: String?,
+    val district: String?
 )
 
-fun List<Farm>.toDtoList( deviceId: String,farmDao: FarmDAO): List<FarmDto> {
-    return this.mapNotNull { farm ->
-        val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
-        collectionSite?.let { site ->
-            farm.remoteId?.let { remoteId ->
+data class FarmDetailDto(
+    val remote_id: String,
+    val farmer_name: String,
+    val member_id: String, // Assuming member_id corresponds to `remote_id`
+    val village: String,
+    val district: String,
+    val size: Float,
+    val latitude: Double,
+    val longitude: Double,
+    val coordinates: List<List<Double?>>? // Converted from `polygon`
+)
 
-                // Ensure latitude and longitude are not empty or null before parsing
-                val latitude = farm.latitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
-                val longitude = farm.longitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
+data class DeviceFarmDto(
+    val device_id: String,
+    val collection_site: CollectionSiteDto,
+    val farms: List<FarmDetailDto>
+)
 
-                FarmDto(
-                    remote_id = remoteId.toString(),
-                    farmer_name = farm.farmerName,
-                    farm_size = farm.size,
-                    device_id = deviceId,
-                    collection_site = site.name,
-                    agent_name = site.agentName ?: "Unknown",
-                    farm_village = farm.village,
-                    farm_district = farm.district,
-                    latitude = latitude,
-                    longitude = longitude,
-                    polygon = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() // Convert coordinate pairs
-                )
+
+fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<DeviceFarmDto> {
+    return this.groupBy { it.siteId } // Group by siteId
+        .mapNotNull { (siteId, farms) ->
+            val collectionSite = farmDao.getCollectionSiteById(siteId) ?: return@mapNotNull null
+
+            // Map the collection site details
+            val collectionSiteDto = CollectionSiteDto(
+                name = collectionSite.name,
+                agent_name = collectionSite.agentName ?: "Unknown",
+                phone_number = collectionSite.phoneNumber,
+                email = collectionSite.email,
+                village = collectionSite.village,
+                district = collectionSite.district
+            )
+
+            // Map the farms
+            val farmDtos = farms.mapNotNull { farm ->
+                farm.remoteId?.let { remoteId ->
+                    // Ensure latitude and longitude are not empty or null before parsing
+                    val latitude = farm.latitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
+                    val longitude = farm.longitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
+
+                    FarmDetailDto(
+                        remote_id = remoteId.toString(),
+                        farmer_name = farm.farmerName,
+                        member_id = farm.memberId,
+                        village = farm.village,
+                        district = farm.district,
+                        size = farm.size,
+                        latitude = latitude,
+                        longitude = longitude,
+                        coordinates = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() // Convert coordinate pairs
+                    )
+                }
             }
+
+            DeviceFarmDto(
+                device_id = deviceId,
+                collection_site = collectionSiteDto,
+                farms = farmDtos
+            )
         }
-    }
 }
+
+
+
 
 @Entity(tableName = "CollectionSites")
 data class CollectionSite(

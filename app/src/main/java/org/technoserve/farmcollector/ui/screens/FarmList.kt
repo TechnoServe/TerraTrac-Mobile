@@ -144,6 +144,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import java.util.UUID
 
 // data class Farm(val farmerName: String, val village: String, val district: String)
@@ -304,7 +305,7 @@ fun ConfirmationDialog(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(
@@ -350,10 +351,18 @@ fun FarmList(
     // State variable to observe restore status
     val restoreStatus by farmViewModel.restoreStatus.observeAsState()
 
-    var emailOrPhone by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var showRestorePrompt by remember { mutableStateOf(false) }
     var finalMessage by remember { mutableStateOf("") }
     var showFinalMessage by remember { mutableStateOf(false) }
+
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
     LaunchedEffect(Unit) {
         deviceId = DeviceIdUtil.getDeviceId(context)
@@ -770,7 +779,7 @@ fun FarmList(
             showShare = listItems.isNotEmpty(),
             showSearch = listItems.isNotEmpty(),
             onRestoreClicked = {
-                farmViewModel.restoreData(deviceId = deviceId, phoneNumber = "", farmViewModel = farmViewModel) { success ->
+                farmViewModel.restoreData(deviceId = deviceId, phoneNumber = "", email="", farmViewModel = farmViewModel) { success ->
                     if (success) {
                         finalMessage = "Data restored successfully."
                     } else {
@@ -956,11 +965,56 @@ fun FarmList(
                         )
 
                         TextField(
-                            value = emailOrPhone,
-                            onValueChange = { emailOrPhone = it },
-                            label = { Text("Email or Phone Number") },
+                            value = phone,
+                            onValueChange = { phone = it },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.phone_number,),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (phone.isNotEmpty() && !isValidPhoneNumber(phone)) Text(
+                                    stringResource(R.string.error_invalid_phone_number, phone)
+                                )
+                            },
+                            isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            )
+
+                        )
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = { Text(stringResource(id = R.string.email),color = inputLabelColor) },
+                            supportingText = {
+                                if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                        email
+                                    ).matches()
+                                )
+                                    Text(stringResource(R.string.error_invalid_email_address))
+                            },
+                            isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                email
+                            ).matches(),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            ),
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -980,10 +1034,10 @@ fun FarmList(
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 onClick = {
-                                    if (emailOrPhone.isNotBlank()) {
+                                    if (phone.isNotBlank() || email.isNotBlank()) {
                                         showRestorePrompt =
                                             false // Hide the restore prompt on retry
-                                        farmViewModel.restoreData(deviceId = deviceId , phoneNumber = emailOrPhone, farmViewModel = farmViewModel) { success ->
+                                        farmViewModel.restoreData(deviceId = deviceId , phoneNumber = phone,email=email,farmViewModel = farmViewModel) { success ->
                                             finalMessage = if (success) {
                                                 "Data restored successfully."
                                             } else {
@@ -994,7 +1048,7 @@ fun FarmList(
                                         }
                                     }
                                 },
-                                enabled = emailOrPhone.isNotBlank(),
+                                enabled = email.isNotBlank() || phone.isNotBlank(),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text("Restore Data")

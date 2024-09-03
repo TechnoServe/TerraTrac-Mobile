@@ -34,7 +34,7 @@ interface FarmDAO {
     fun getData(): LiveData<List<Farm>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(farm: Farm)
+    fun insert(farm: Farm):Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(farms: List<Farm>)
@@ -88,10 +88,10 @@ interface FarmDAO {
     @Query("DELETE FROM CollectionSites WHERE siteId IN (:ids)")
     fun deleteListSite(ids: List<Long>)
 
-    @Query("SELECT * FROM Farms WHERE synced = 0")
+    @Query("SELECT * FROM Farms WHERE synced = 1")
     suspend fun getUnsyncedFarms(): List<Farm>
 
-    @Query("SELECT * FROM Farms WHERE remote_id=:remoteId LIMIT 1")
+    @Query("SELECT * FROM Farms WHERE remote_id=:remoteId LIMIT 0")
     suspend fun getFarmByRemoteId(remoteId: UUID): Farm?
 
     @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")

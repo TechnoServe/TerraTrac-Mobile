@@ -18,18 +18,30 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.joda.time.Instant
+import org.joda.time.format.DateTimeFormatter
 import org.json.JSONObject
 import org.technoserve.farmcollector.BuildConfig
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.remote.ApiService
+import org.technoserve.farmcollector.database.remote.FarmRequest
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
+import kotlin.random.Random
 
 data class ImportResult(
     val success: Boolean,
@@ -57,6 +69,43 @@ sealed class RestoreStatus {
     data class Success(val addedCount: Int,val message: String) : RestoreStatus()
     data class Error(val message: String) : RestoreStatus()
 }
+
+data class CollectionSiteRestore(
+    val id: Long,
+    val name: String,
+    val device_id: String,
+    val agent_name: String,
+    val email: String,
+    val phone_number: String,
+    val village: String,
+    val district: String,
+    val created_at: String,
+    val updated_at: String
+)
+
+data class FarmRestore(
+    val id: Long,
+    val remote_id: String,
+    val farmer_name: String,
+    val member_id: String?,
+    val size: Double,
+    val agent_name: String?,
+    val village: String,
+    val district: String,
+    val latitude: Double,
+    val longitude: Double,
+    val coordinates: List<List<Double>>,
+    val created_at: String,
+    val updated_at: String,
+    val site_id: Long
+)
+
+data class ServerFarmResponse(
+    val device_id: String,
+    val collection_site: CollectionSiteRestore,
+    val farms: List<FarmRestore>
+)
+
 
 
 class FarmViewModel(
@@ -775,9 +824,112 @@ class FarmViewModel(
 
     // restore data from the server
 
+
+    val TAG = "FarmConversion"
+
+
+    fun FarmRestore.toFarm(): Farm {
+        Log.d(TAG, "Starting conversion for FarmRestore id: $id")
+
+        // Convert remote_id to UUID
+        val remoteId: UUID = try {
+            UUID.fromString(this.remote_id)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid UUID format for remote_id: ${this.remote_id} in FarmRestore id: $id", e)
+            UUID.randomUUID() // Fallback or handle appropriately
+        }
+        Log.d(TAG, "Converted remoteId: $remoteId")
+
+        // Parse created_at
+        val createdAt: Long = try {
+            Instant.now().millis
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing created_at: ${this.created_at} in FarmRestore id: $id", e)
+            System.currentTimeMillis() // Fallback or handle appropriately
+        }
+        Log.d(TAG, "Converted createdAt: $createdAt")
+
+        // Parse updated_at
+        val updatedAt: Long = try {
+            Instant.now().millis
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing updated_at: ${this.updated_at} in FarmRestore id: $id", e)
+            System.currentTimeMillis() // Fallback or handle appropriately
+        }
+        Log.d(TAG, "Converted updatedAt: $updatedAt")
+
+        // Convert coordinates
+        val coordinatesMapped: List<Pair<Double, Double>>? = try {
+            // Assuming this.coordinates is of type List<List<Double>>?
+            this.coordinates?.map { coordList ->
+                if (coordList.size >= 2) {
+                    val first = coordList[0]
+                    val second = coordList[1]
+                    Pair(first, second)
+                } else {
+                    Log.w(TAG, "Invalid coordinate list size: ${coordList.size} for FarmRestore id: $id")
+                    Pair(0.0, 0.0) // Adjust default value as needed
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error mapping coordinates for FarmRestore id: $id", e)
+            null
+        }
+
+        // Format the coordinates into the desired string format
+        val formattedCoordinates = coordinatesMapped?.joinToString(prefix = "[", postfix = "]") { "[%.6f, %.6f]".format(it.first, it.second) }
+
+        Log.d(TAG, "Converted coordinates: $formattedCoordinates")
+
+
+        // Convert size from Double to Float
+        val sizeFloat: Float = this.size.toFloat()
+        Log.d(TAG, "Converted size: $sizeFloat")
+
+        // Convert latitude and longitude from Double to String
+        val latitudeStr: String = this.latitude.toString()
+        val longitudeStr: String = this.longitude.toString()
+        Log.d(TAG, "Converted latitude: $latitudeStr, longitude: $longitudeStr")
+
+        // Handle member_id
+        val memberId: String = this.member_id ?: ""
+        Log.d(TAG, "Handled memberId: '$memberId'")
+
+        // Create Farm object
+        val farm = Farm(
+            siteId = this.site_id,
+            remoteId = remoteId,
+            farmerPhoto = "", // No data provided in FarmRestore
+            farmerName = this.farmer_name,
+            memberId = memberId,
+            village = this.village,
+            district = this.district,
+            purchases = null, // Assuming not available in FarmRestore
+            size = sizeFloat,
+            latitude = latitudeStr,
+            longitude = longitudeStr,
+            coordinates = coordinatesMapped,
+            synced = false,
+            scheduledForSync = false,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            needsUpdate = false
+        )
+        Log.d(TAG, "Created Farm object: $farm")
+
+        return farm
+    }
+
+
+
+
+
+
+    // Restore data from the server
     fun restoreData(
         deviceId: String?,
         phoneNumber: String?,
+        email: String?,
         farmViewModel: FarmViewModel,
         onCompletion: (Boolean) -> Unit
     ) {
@@ -788,18 +940,67 @@ class FarmViewModel(
                 // Get local farms from the repository directly
                 val localFarms = farmViewModel.getAllExistingFarms()
 
+                Log.d(TAG,"Local Farms $localFarms")
+
+                // Prepare the request body
+                val farmRequest = FarmRequest(
+                    device_id = deviceId.orEmpty(),
+                    email= email.orEmpty(),
+                    phone_number = phoneNumber.orEmpty()
+                )
+
+                // Fetch farms from the server
+                val serverFarms = apiService.getFarmsByDeviceId(farmRequest)
+                // Initialize Gson
+                val gson = Gson()
+
+// Convert the JSON to the ServerFarmResponse object
+                val serverFarmResponse = gson.fromJson(gson.toJson(serverFarms), Array<ServerFarmResponse>::class.java).toList()
+
+// Extract and flatten the list of farms
+                val farmList: List<FarmRestore> = serverFarmResponse.flatMap { it.farms }
+
+                Log.d(TAG, "Extracted Farms: $farmList")
+
+
+                // Convert each FarmRestore to Farm with logging for inspection
+                val farmEntities: List<Farm> = farmList.map { farmRestore ->
+                    Log.d(TAG, "Converting FarmRestore: $farmRestore") // Log the FarmRestore before conversion
+
+                    val farm = farmRestore.toFarm() // Perform the conversion
+
+                    Log.d(TAG, "Converted Farm: $farm") // Log the converted Farm object
+
+                    farm // Return the converted farm
+                }
+
+                Log.d(TAG, "Extracted Farms Converted: $farmEntities") // Log the entire list of converted Farm objects
+
+
+
+
+
                 // Initialize counters for added and updated farms
                 var addedCount = 0
 
                 // Compare and update
-                deviceId?.let { apiService.getFarmsByDeviceId(it) }?.forEach { serverFarm ->
-                    val localFarm = localFarms.find { it.id == serverFarm.id }
+                farmEntities.forEach { serverFarm ->
+                    val localFarm = localFarms.find { it.remoteId == serverFarm.remoteId }
+
                     if (localFarm == null) {
                         // Farm doesn't exist locally, add it
-                        repository.addFarm(serverFarm)
+                        Log.d(TAG, "Adding new farm: $serverFarm") // Log the farm being added
+
+                        // repository.addFarm(serverFarm)
+                        addFarm(serverFarm,serverFarm.siteId)
                         addedCount++
+                    } else {
+                        Log.d(TAG, "Farm already exists locally: $localFarm") // Log the farm that already exists
                     }
                 }
+
+                Log.d(TAG, "Total farms added: $addedCount") // Log the total count of farms added
+
 
                 // Prepare a success message
                 val message = "Restoration completed: $addedCount farms added."

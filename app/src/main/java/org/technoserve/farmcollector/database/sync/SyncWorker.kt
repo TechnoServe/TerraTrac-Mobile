@@ -20,10 +20,11 @@ import okhttp3.OkHttpClient
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.AppDatabase
 import org.technoserve.farmcollector.database.remote.ApiService
-import org.technoserve.farmcollector.database.toDtoList
+//import org.technoserve.farmcollector.database.toDtoList
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import org.technoserve.farmcollector.BuildConfig
+import org.technoserve.farmcollector.database.toDeviceFarmDtoList
 import java.util.concurrent.TimeUnit
 
 
@@ -74,12 +75,13 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         try {
             val deviceId = DeviceIdUtil.getDeviceId(applicationContext)
-            val farmDtos = unsyncedFarms.toDtoList(deviceId, farmDao)
+            val farmDtos = unsyncedFarms.toDeviceFarmDtoList(deviceId, farmDao)
 
             Log.d("YourTag", "Device ID: $deviceId")
 
             // Log the payload
-            // Log.d(TAG, "Payload to send: ${farmDtos.joinToString(separator = "\n") { it.toString() }}")
+            Log.d(TAG, "Payload to send: ${farmDtos.joinToString(separator = "\n") { it.toString() }}")
+
             Log.d(TAG, "Farms before sync: ${unsyncedFarms.map { it.synced }}")
 
 

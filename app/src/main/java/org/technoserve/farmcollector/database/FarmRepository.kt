@@ -1,5 +1,7 @@
 package org.technoserve.farmcollector.database
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.lifecycle.LiveData
 import java.util.UUID
 
@@ -23,17 +25,43 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getFarmById(farmId)
     }
 
+//    suspend fun addFarm(farm: Farm) {
+//        val existingFarm = isFarmDuplicate(farm)
+//        if (existingFarm == null) {
+//            farmDAO.insert(farm)
+//        } else {
+//            // If the farm exists and needs an update, perform the update
+//            if (farmNeedsUpdate(existingFarm, farm)) {
+//                farmDAO.update(farm)
+//            }
+//        }
+//    }
+
     suspend fun addFarm(farm: Farm) {
         val existingFarm = isFarmDuplicate(farm)
+
         if (existingFarm == null) {
-            farmDAO.insert(farm)
+            Log.d(TAG, "Attempting to insert new farm: $farm")
+            val insertResult = farmDAO.insert(farm)
+            Log.d(TAG, "Insert operation result: $insertResult")
+            if (insertResult != -1L) {
+                Log.d(TAG, "New farm inserted: $farm")
+            } else {
+                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
+            }
         } else {
-            // If the farm exists and needs an update, perform the update
+            Log.d(TAG, "Farm already exists: $existingFarm")
+
             if (farmNeedsUpdate(existingFarm, farm)) {
+                Log.d(TAG, "Updating existing farm: $farm")
                 farmDAO.update(farm)
+            } else {
+                Log.d(TAG, "No update needed for farm: $farm")
             }
         }
     }
+
+
 
     private suspend fun addFarms(farms: List<Farm>) {
         farmDAO.insertAllIfNotExists(farms)
