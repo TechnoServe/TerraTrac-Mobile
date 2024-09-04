@@ -80,8 +80,8 @@ interface FarmDAO {
 //    @Update
 //    suspend fun updateFarmSyncStatus(farm: Farm)
 
-    @Query("UPDATE farms SET synced = :synced WHERE id = :farmId")
-    suspend fun updateFarmSyncStatus(farmId: Long, synced: Boolean)
+    @Query("UPDATE farms SET synced = :synced WHERE id = :remoteId")
+    suspend fun updateFarmSyncStatus(remoteId: UUID, synced: Boolean)
 
     @Query("UPDATE Farms SET scheduledForSync=1 WHERE id IN (:ids)")
     fun updateSyncListStatus(ids: List<Long>)
@@ -119,7 +119,7 @@ interface FarmDAO {
     @Transaction
     suspend fun updateSyncStatusForFarms(farms: List<Farm>) {
         farms.forEach { farm ->
-            updateFarmSyncStatus(farm.id, true)
+            updateFarmSyncStatus(farm.remoteId, true)
         }
     }
 

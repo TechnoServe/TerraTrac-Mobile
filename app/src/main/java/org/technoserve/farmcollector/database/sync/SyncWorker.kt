@@ -96,7 +96,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 //                    farmDao.updateFarmSyncStatus(farm.copy(synced = true))
 //                }
                 unsyncedFarms.forEach { farm ->
-                    farmDao.updateFarmSyncStatus(farm.id, true)
+                    farmDao.updateFarmSyncStatus(farm.remoteId, true)
                 }
                 Log.d(TAG, "Farms synced successfully.")
 

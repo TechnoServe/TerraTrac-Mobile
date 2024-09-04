@@ -77,6 +77,7 @@ sealed class RestoreStatus {
 
 data class CollectionSiteRestore(
     val id: Long,
+    val local_cs_id:Long,
     val name: String,
     val device_id: String,
     val agent_name: String,
@@ -867,10 +868,8 @@ class FarmViewModel(
         return finalValue.toFloat()
     }
 
-
-
     @SuppressLint("DefaultLocale")
-    fun FarmRestore.toFarm(): Farm {
+    fun FarmRestore.toFarm(local_cs_id:Long): Farm {
         Log.d(TAG, "Starting conversion for FarmRestore id: $id")
 
         // Convert remote_id to UUID
@@ -939,9 +938,11 @@ class FarmViewModel(
         val memberId: String = this.member_id ?: "100"
         Log.d(TAG, "Handled memberId: '$memberId'")
 
+
+
         // Create Farm object
         val farm = Farm(
-            siteId = 9,
+            siteId = local_cs_id,
             remoteId = remoteId,
             farmerPhoto = "farmer_photo",
             farmerName = this.farmer_name,
@@ -996,6 +997,11 @@ class FarmViewModel(
 // Convert the JSON to the ServerFarmResponse object
                 val serverFarmResponse = gson.fromJson(gson.toJson(serverFarms), Array<ServerFarmResponse>::class.java).toList()
 
+                // Extracting the local_cs_id from the first item in the list
+                val collectionSiteLocalId: Long = serverFarmResponse.first().collection_site.local_cs_id
+
+                Log.d(TAG, "Extracted collectionSiteLocalId: $collectionSiteLocalId")
+
 // Extract and flatten the list of farms
                 val farmList: List<FarmRestore> = serverFarmResponse.flatMap { it.farms }
 
@@ -1006,7 +1012,7 @@ class FarmViewModel(
                 val farmEntities: List<Farm> = farmList.map { farmRestore ->
                     Log.d(TAG, "Converting FarmRestore: $farmRestore") // Log the FarmRestore before conversion
 
-                    val farm = farmRestore.toFarm() // Perform the conversion
+                    val farm = farmRestore.toFarm(collectionSiteLocalId) // Perform the conversion
 
                     Log.d(TAG, "Converted Farm: $farm") // Log the converted Farm object
 

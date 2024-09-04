@@ -139,6 +139,7 @@ data class Farm(
 
 
 data class CollectionSiteDto(
+    val local_cs_id: Long,
     val name: String,
     val agent_name: String,
     val phone_number: String?,
@@ -150,7 +151,7 @@ data class CollectionSiteDto(
 data class FarmDetailDto(
     val remote_id: String,
     val farmer_name: String,
-    val member_id: String, // Assuming member_id corresponds to `remote_id`
+    val member_id: String,
     val village: String,
     val district: String,
     val size: Float,
@@ -173,6 +174,7 @@ fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<Dev
 
             // Map the collection site details
             val collectionSiteDto = CollectionSiteDto(
+                local_cs_id = collectionSite.siteId,
                 name = collectionSite.name,
                 agent_name = collectionSite.agentName ?: "Unknown",
                 phone_number = collectionSite.phoneNumber,
