@@ -45,7 +45,10 @@ interface FarmDAO {
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertSite(site: CollectionSite)
+    fun insertSite(site: CollectionSite) : Long
+
+    @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId")
+    suspend fun getSiteById(siteId: Long): CollectionSite?
 
     @Update
     fun updateSite(site: CollectionSite)
@@ -80,7 +83,7 @@ interface FarmDAO {
 //    @Update
 //    suspend fun updateFarmSyncStatus(farm: Farm)
 
-    @Query("UPDATE farms SET synced = :synced WHERE id = :remoteId")
+    @Query("UPDATE farms SET synced = :synced WHERE remote_id = :remoteId")
     suspend fun updateFarmSyncStatus(remoteId: UUID, synced: Boolean)
 
     @Query("UPDATE Farms SET scheduledForSync=1 WHERE id IN (:ids)")
@@ -92,7 +95,7 @@ interface FarmDAO {
     @Query("DELETE FROM CollectionSites WHERE siteId IN (:ids)")
     fun deleteListSite(ids: List<Long>)
 
-    @Query("SELECT * FROM Farms WHERE synced = 1")
+    @Query("SELECT * FROM Farms WHERE synced = 0")
     suspend fun getUnsyncedFarms(): List<Farm>
 
     @Query("SELECT * FROM Farms WHERE remote_id=:remoteId LIMIT 0")
@@ -101,11 +104,15 @@ interface FarmDAO {
     @Query("SELECT * FROM Farms WHERE  siteId = :siteId LIMIT 1")
     suspend fun getFarmBySiteId(siteId: Long): Farm?
 
-    @Query("DELETE FROM farms WHERE remote_id = :remoteId")
+    @Query("DELETE FROM Farms WHERE remote_id = :remoteId")
     suspend fun deleteFarmByRemoteId(remoteId: UUID)
 
-    @Query("SELECT * FROM farms WHERE remote_id = :remoteId OR (farmerName = :farmerName AND village = :village AND district = :district) LIMIT 1")
+    @Query("SELECT * FROM Farms WHERE remote_id = :remoteId OR (farmerName = :farmerName AND village = :village AND district = :district) LIMIT 1")
     suspend fun getFarmByDetails(remoteId: UUID, farmerName: String, village: String, district: String): Farm?
+
+    @Query("SELECT * FROM CollectionSites WHERE siteId = :localCsId OR (name = :siteName AND village = :village AND district = :district) LIMIT 1")
+    suspend fun getSiteByDetails(localCsId: Long, siteName: String, village: String, district: String): CollectionSite?
+
 
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {

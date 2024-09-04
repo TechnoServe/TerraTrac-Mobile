@@ -71,9 +71,10 @@ data class ParsedFarms(
 // Define a sealed class for restore status
 sealed class RestoreStatus {
     object InProgress : RestoreStatus()
-    data class Success(val addedCount: Int,val message: String) : RestoreStatus()
+    data class Success(val addedCount: Int, val message: String, val sitesCreated: Int = 0) : RestoreStatus()
     data class Error(val message: String) : RestoreStatus()
 }
+
 
 data class CollectionSiteRestore(
     val id: Long,
@@ -868,6 +869,22 @@ class FarmViewModel(
         return finalValue.toFloat()
     }
 
+    // Extension function to convert CollectionSiteRestore to CollectionSite
+    fun CollectionSiteRestore.toCollectionSite(): CollectionSite {
+        return CollectionSite(
+            name = this.name,
+            agentName = this.agent_name,
+            phoneNumber = this.phone_number,
+            email = this.email,
+            village = this.village,
+            district = this.district,
+            createdAt =  Instant.now().millis,
+            updatedAt =  Instant.now().millis
+        ).apply {
+           siteId = this@toCollectionSite.local_cs_id
+        }
+    }
+
     @SuppressLint("DefaultLocale")
     fun FarmRestore.toFarm(local_cs_id:Long): Farm {
         Log.d(TAG, "Starting conversion for FarmRestore id: $id")
@@ -977,15 +994,20 @@ class FarmViewModel(
             try {
                 _restoreStatus.postValue(RestoreStatus.InProgress)
 
-                // Get local farms from the repository directly
+                // Get local farms and sites from the repository
                 val localFarms = farmViewModel.getAllExistingFarms()
+                val localSites = farmViewModel.getAllSites()
+                val siteIds = localSites.map { site -> site.siteId } // Extract all site IDs
 
-                Log.d(TAG,"Local Farms $localFarms")
+
+                Log.d(TAG, "Local Farms: $localFarms")
+                Log.d(TAG, "Local Sites: $localSites")
+                Log.d(TAG, "Site IDs: $siteIds")
 
                 // Prepare the request body
                 val farmRequest = FarmRequest(
                     device_id = deviceId.orEmpty(),
-                    email= email.orEmpty(),
+                    email = email.orEmpty(),
                     phone_number = phoneNumber.orEmpty()
                 )
 
@@ -994,54 +1016,105 @@ class FarmViewModel(
                 // Initialize Gson
                 val gson = Gson()
 
-// Convert the JSON to the ServerFarmResponse object
-                val serverFarmResponse = gson.fromJson(gson.toJson(serverFarms), Array<ServerFarmResponse>::class.java).toList()
+                // Convert the JSON to the ServerFarmResponse object
+                val serverFarmResponseList: List<ServerFarmResponse> = gson.fromJson(
+                    gson.toJson(serverFarms),
+                    Array<ServerFarmResponse>::class.java
+                ).toList()
 
-                // Extracting the local_cs_id from the first item in the list
-                val collectionSiteLocalId: Long = serverFarmResponse.first().collection_site.local_cs_id
+//                val collectionSiteLocalId: Long = serverFarmResponseList.first().collection_site.local_cs_id
+//
+//                Log.d(TAG, "Extracted collectionSiteLocalId: $collectionSiteLocalId")
+//
+                // Extract and flatten the list of farms
+               //  val farmList: List<FarmRestore> = serverFarmResponseList.flatMap { it.farms }
+                val collectionSites: Map<Long, CollectionSiteRestore> =
+                    serverFarmResponseList.associateBy(
+                        { it.collection_site.local_cs_id },
+                        { it.collection_site }
+                    )
 
-                Log.d(TAG, "Extracted collectionSiteLocalId: $collectionSiteLocalId")
+//                Log.d(TAG, "Extracted Farms: $farmList")
+//                Log.d(TAG, "Extracted Collection Sites: $collectionSites")
+//
+//
+//                // Convert each FarmRestore to Farm
+//                val farmEntities: List<Farm> = farmList.map { farmRestore ->
+//                    Log.d(
+//                        TAG,
+//                        "Converting FarmRestore: $farmRestore"
+//                    ) // Log the FarmRestore before conversion
+//
+//                    val farm = farmRestore.toFarm(collectionSiteLocalId) // Perform the conversion
+//
+//                    Log.d(TAG, "Converted Farm: $farm") // Log the converted Farm object
+//
+//                    farm // Return the converted farm
+//                }
+//
+//                Log.d(
+//                    TAG,
+//                    "Extracted Farms Converted: $farmEntities"
+//                ) // Log the entire list of converted Farm objects
 
-// Extract and flatten the list of farms
-                val farmList: List<FarmRestore> = serverFarmResponse.flatMap { it.farms }
+                // Group farms by their associated collection site (using site_id in FarmRestore to map to CollectionSiteRestore)
+                val farmEntities: List<Farm> = serverFarmResponseList.flatMap { serverFarmResponse ->
+                    // Extract the local_cs_id from the collection_site
+                    val collectionSiteLocalId = serverFarmResponse.collection_site.local_cs_id
 
-                Log.d(TAG, "Extracted Farms: $farmList")
+                    // Convert each FarmRestore to Farm with the correct collectionSiteLocalId
+                    serverFarmResponse.farms.map { farmRestore ->
+                        Log.d(TAG, "Converting FarmRestore: $farmRestore for Collection Site Local ID: $collectionSiteLocalId")
 
+                        // Convert FarmRestore to Farm, associating it with the correct local_cs_id
+                        val farm = farmRestore.toFarm(collectionSiteLocalId)
 
-                // Convert each FarmRestore to Farm with logging for inspection
-                val farmEntities: List<Farm> = farmList.map { farmRestore ->
-                    Log.d(TAG, "Converting FarmRestore: $farmRestore") // Log the FarmRestore before conversion
+                        Log.d(TAG, "Converted Farm: $farm")
 
-                    val farm = farmRestore.toFarm(collectionSiteLocalId) // Perform the conversion
-
-                    Log.d(TAG, "Converted Farm: $farm") // Log the converted Farm object
-
-                    farm // Return the converted farm
+                        farm // Return the converted farm
+                    }
                 }
 
-                Log.d(TAG, "Extracted Farms Converted: $farmEntities") // Log the entire list of converted Farm objects
+                Log.d(TAG, "All Converted Farms: $farmEntities")
+
+
 
                 // Initialize counters for added and updated farms
                 var addedCount = 0
+                var createdSiteCount = 0
 
-                // Compare and update
+                // Create missing sites and add/update farms
                 farmEntities.forEach { serverFarm ->
+                    val siteId = serverFarm.siteId
+                    val localSite = localSites.find { it.siteId == siteId }
                     val localFarm = localFarms.find { it.remoteId == serverFarm.remoteId }
-                    val localSites = farmViewModel.getAllSites()
-                    val siteIds = localSites.map { site -> site.siteId } // Extract all site IDs
-                    Log.d(TAG, "Site IDs: $siteIds") // Log the site IDs
 
+                    if (localSite == null) {
+                        // Site doesn't exist locally, create it
+                        val siteToCreate = collectionSites[siteId]
+                        if (siteToCreate != null) {
+                            val collectionSite = siteToCreate.toCollectionSite()
+                            Log.d(TAG, "Creating new site: $collectionSite")
+                            addSite(collectionSite)
+                            createdSiteCount++
+                        }
+                    }
+
+                    // Add or update the farm
                     if (localFarm == null) {
-                        // Farm doesn't exist locally, check if it needs an update based on the criteria
+                        // Farm doesn't exist locally, add it
                         if (serverFarm.size == 0f || serverFarm.latitude == "0.0" || serverFarm.longitude == "0.0") {
                             serverFarm.needsUpdate = true
-                            addFarm(serverFarm, 9)
-                            Log.d(TAG, "Farm needs update due to missing size or coordinates: $serverFarm")
+                            addFarm(serverFarm, siteId)
+                            Log.d(
+                                TAG,
+                                "Farm needs update due to missing size or coordinates: $serverFarm"
+                            )
                             addedCount++
                         } else {
                             // Add the farm as it is complete
-                            Log.d(TAG, "Adding new farm: $serverFarm") // Log the farm being added
-                            addFarm(serverFarm, siteId = 9)
+                            Log.d(TAG, "Adding new farm: $serverFarm")
+                            addFarm(serverFarm, siteId)
                             Log.d(TAG, "New farm added successfully")
                             addedCount++
                         }
@@ -1052,21 +1125,23 @@ class FarmViewModel(
                         // Optionally update the local farm if the serverFarm has better information
                         if (serverFarm.size != 0f && serverFarm.latitude != "0.0" && serverFarm.longitude != "0.0") {
                             // Check if localFarm needs an update
-                            if (localFarm.size == 0f || localFarm.latitude == "0.0" || localFarm.longitude =="0.0") {
+                            if (localFarm.size == 0f || localFarm.latitude == "0.0" || localFarm.longitude == "0.0") {
                                 localFarm.needsUpdate = true
                                 farmViewModel.updateFarm(localFarm)
-                                Log.d(TAG, "Updated local farm due to missing size or coordinates: $localFarm")
+                                Log.d(
+                                    TAG,
+                                    "Updated local farm due to missing size or coordinates: $localFarm"
+                                )
                             }
                         }
                     }
                 }
 
-
-                Log.d(TAG, "Total farms added: $addedCount") // Log the total count of farms added
-
+                Log.d(TAG, "Total farms added: $addedCount")
+                Log.d(TAG, "Total sites created: $createdSiteCount")
 
                 // Prepare a success message
-                val message = "Restoration completed: $addedCount farms added."
+                val message = "Restoration completed: $addedCount farms added, $createdSiteCount sites created."
 
                 // Refresh the farms LiveData
                 _farms.postValue(repository.getAllFarms())
@@ -1075,12 +1150,13 @@ class FarmViewModel(
                 _restoreStatus.postValue(
                     RestoreStatus.Success(
                         addedCount = addedCount,
+                        sitesCreated=createdSiteCount,
                         message = message
                     )
                 )
 
                 // Notify completion with the success status
-                onCompletion(addedCount > 0)
+                onCompletion(addedCount > 0 || createdSiteCount > 0)
             } catch (e: Exception) {
                 // Post the error status with the exception message
                 _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))

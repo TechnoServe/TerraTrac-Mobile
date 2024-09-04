@@ -98,9 +98,10 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
                 unsyncedFarms.forEach { farm ->
                     farmDao.updateFarmSyncStatus(farm.remoteId, true)
                 }
-                Log.d(TAG, "Farms synced successfully.")
-
-                createNotificationChannelAndShowCompleteNotification() // Notify sync success
+                if(totalItems>0) {
+                    Log.d(TAG, "Farms synced successfully.")
+                    createNotificationChannelAndShowCompleteNotification() // Notify sync success
+                }
             } else {
                 Log.d(TAG, "Failed to sync farms: ${response.message()}")
                 createSyncFailedNotification() // Notify sync failure

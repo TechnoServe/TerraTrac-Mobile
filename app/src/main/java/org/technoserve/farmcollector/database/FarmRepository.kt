@@ -73,9 +73,30 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.insertAllIfNotExists(farms)
     }
 
+//    suspend fun addSite(site: CollectionSite) {
+//        farmDAO.insertSite(site)
+//    }
+
     suspend fun addSite(site: CollectionSite) {
-        farmDAO.insertSite(site)
+        // Check if the site already exists
+        val existingSite = isSiteDuplicate(site)
+
+        if (existingSite == null) {
+            Log.d(TAG, "Attempting to insert new site: $site")
+            val insertResult = farmDAO.insertSite(site)
+            Log.d(TAG, "Insert operation result: $insertResult")
+            if (insertResult != -1L) {
+                Log.d(TAG, "New site inserted: $site")
+            } else {
+                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
+            }
+        } else {
+            Log.d(TAG, "Site already exists: $existingSite")
+        }
     }
+
+
+
 
     fun getLastFarm(): LiveData<List<Farm>> {
         return farmDAO.getLastFarm()
@@ -154,6 +175,15 @@ class FarmRepository(private val farmDAO: FarmDAO) {
             farm.farmerName,
             farm.village,
             farm.district
+        )
+    }
+
+    suspend fun isSiteDuplicate(collectionSite: CollectionSite): CollectionSite? {
+        return farmDAO.getSiteByDetails(
+           collectionSite.siteId,
+            collectionSite.district,
+            collectionSite.name,
+            collectionSite.village
         )
     }
 

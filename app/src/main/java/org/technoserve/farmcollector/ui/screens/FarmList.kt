@@ -934,7 +934,7 @@ fun FarmList(
                 // Display a completion message
                 val status = restoreStatus as RestoreStatus.Success
                 Text(
-                    text = "Restoration completed. Added: ${status.addedCount}",
+                    text = "Restoration completed. Added: ${status.addedCount} Farms, and ${status.sitesCreated} sites created",
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
@@ -1085,95 +1085,6 @@ fun FarmList(
                 }
             }
         }
-
-//        Scaffold(
-//            bottomBar = {
-//                BottomAppBar(
-//                    content = {
-//                        IconButton(onClick = { /* Handle settings action */ },modifier = Modifier.size(36.dp)) {
-//                            Icon(Icons.Default.Refresh, contentDescription = "Restore",modifier = Modifier.size(24.dp))
-//                        }
-//                        Spacer(Modifier.weight(1f, true))
-//                        IconButton(onClick = { /* Handle settings action */ },modifier = Modifier.size(36.dp)) {
-//                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Import",modifier = Modifier.size(24.dp))
-//                        }
-//                        Spacer(Modifier.weight(1f, true))
-//                        IconButton(onClick = { /* Handle settings action */ }) {
-//                            Icon(Icons.Default.Settings, contentDescription = "Settings")
-//                        }
-//                        Spacer(Modifier.weight(1f, true))
-//                        IconButton(onClick = { /* Handle refresh action */ }, modifier = Modifier.size(36.dp)) {
-//                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Download",modifier = Modifier.size(24.dp))
-//
-//                        }
-//                        Spacer(Modifier.weight(1f, true))
-//                        IconButton(onClick = { /* Handle export action */ },modifier = Modifier.size(36.dp)) {
-//                            Icon(Icons.Default.Share, contentDescription = "Export",modifier = Modifier.size(24.dp))
-//                        }
-//                    }
-//                )
-//            }
-//        ) { paddingValues ->
-//            when (restoreStatus) {
-//                is RestoreStatus.InProgress -> {
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxSize()
-//                            .padding(paddingValues),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        CircularProgressIndicator()
-//                    }
-//                }
-//
-//                is RestoreStatus.Success -> {
-//                    // Display a completion message
-//                    val status = restoreStatus as RestoreStatus.Success
-//                    Text(
-//                        text = "Restoration completed. Added: ${status.addedCount}, Updated: ${status.updatedCount}",
-//                        modifier = Modifier
-//                            .padding(paddingValues)
-//                            .fillMaxWidth(),
-//                        textAlign = TextAlign.Center,
-//                        style = MaterialTheme.typography.bodyMedium
-//                    )
-//                    showRestorePrompt = false // Hide the restore prompt if restoration is successful
-//                }
-//
-//                is RestoreStatus.Error -> {
-//                    // Display an error message
-//                    val status = restoreStatus as RestoreStatus.Error
-//                    Text(
-//                        text = "Error during restoration: ${status.message}",
-//                        modifier = Modifier
-//                            .padding(paddingValues)
-//                            .fillMaxWidth(),
-//                        textAlign = TextAlign.Center,
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        color = MaterialTheme.colorScheme.error
-//                    )
-//                    showRestorePrompt = true // Show the restore prompt if restoration fails
-//                    // After displaying the error message, proceed to display data if available
-//                    showDataContent()
-//                }
-//
-//                null -> {
-//                    if (isLoading.value) {
-//                        // Show loader while data is loading
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxSize()
-//                                .padding(16.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            CircularProgressIndicator()
-//                        }
-//                    } else {
-//                        // Display data or no data message if loading is complete
-//                        showDataContent()
-//                    }
-//                }
-//            }
 
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
