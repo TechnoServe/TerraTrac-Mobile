@@ -942,6 +942,7 @@ fun FarmList(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 showRestorePrompt = false // Hide the restore prompt if restoration is successful
+                showDataContent()
             }
 
             is RestoreStatus.Error -> {

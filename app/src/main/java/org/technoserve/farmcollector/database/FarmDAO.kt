@@ -27,6 +27,10 @@ interface FarmDAO {
 
     @Transaction
     @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
+    fun getAllSites(): List<CollectionSite>
+
+    @Transaction
+    @Query("SELECT * FROM CollectionSites ORDER BY createdAt DESC")
     fun getSites(): LiveData<List<CollectionSite>>
 
     @Transaction

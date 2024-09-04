@@ -1,5 +1,6 @@
 package org.technoserve.farmcollector.database
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -13,8 +14,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -30,6 +33,7 @@ import org.technoserve.farmcollector.BuildConfig
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.remote.ApiService
 import org.technoserve.farmcollector.database.remote.FarmRequest
+import org.technoserve.farmcollector.ui.screens.truncateToDecimalPlaces
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
@@ -41,6 +45,7 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import java.util.regex.Pattern
 import kotlin.random.Random
 
 data class ImportResult(
@@ -143,17 +148,28 @@ class FarmViewModel(
 
     fun getSingleFarm(farmId: Long): LiveData<List<Farm>> = repository.readFarm(farmId)
 
+    val sites = readAllSites.value ?: emptyList()
+
     fun addFarm(
         farm: Farm,
         siteId: Long,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!repository.isFarmDuplicateBoolean(farm)) {
+                Log.d(TAG, "Attempting to add New Farm in FarmViewModelScope")
                 repository.addFarm(farm)
+                Log.d(TAG, "New Farm in FarmViewModelScope was successfully added")
+                FarmAddResult(success = true, message = "Farm added successfully", farm)
+                // Update the LiveData list
+                _farms.postValue(repository.readAllFarms(siteId).value?: emptyList())
+                Log.d(TAG, "Attempting to add New Farm in FarmViewModelScope")
+                repository.addFarm(farm)
+                Log.d(TAG, "New Farm in FarmViewModelScope was successfully added")
                 FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
                 _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
             } else {
+                Log.d(TAG, "New Farm in FarmViewModelScope was not added" )
                 FarmAddResult(
                     success = false,
                     message = "Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}. Needs update.",
@@ -822,12 +838,38 @@ class FarmViewModel(
             repository.getAllFarms()
         }
 
+    suspend fun getAllSites(): List<CollectionSite> =
+        withContext(Dispatchers.IO) {
+            repository.getAllSites()
+        }
+
     // restore data from the server
 
 
     val TAG = "FarmConversion"
 
+    // Regular expression pattern to detect scientific notation
+    val scientificNotationPattern = Pattern.compile("^[+-]?\\d*\\.?\\d+([eE][+-]?\\d+)?$")
 
+    // Function to format the float value to avoid scientific notation
+    fun formatFloatValue(value: Float, decimalPlaces: Int): Float {
+        // Format the float to a string with the specified number of decimal places
+        val formattedValue = String.format("%.${decimalPlaces}f", value)
+
+        // Check if the formatted value is in scientific notation and truncate if needed
+        val finalValue = if (scientificNotationPattern.matcher(formattedValue).matches()) {
+            truncateToDecimalPlaces(formattedValue, decimalPlaces)
+        } else {
+            formattedValue
+        }
+
+        // Convert the final formatted string back to a float and return it
+        return finalValue.toFloat()
+    }
+
+
+
+    @SuppressLint("DefaultLocale")
     fun FarmRestore.toFarm(): Farm {
         Log.d(TAG, "Starting conversion for FarmRestore id: $id")
 
@@ -884,7 +926,9 @@ class FarmViewModel(
 
         // Convert size from Double to Float
         val sizeFloat: Float = this.size.toFloat()
-        Log.d(TAG, "Converted size: $sizeFloat")
+        val formattedSize = formatFloatValue(sizeFloat, 9)
+        Log.d(TAG, "Converted size: ${formattedSize}")
+
 
         // Convert latitude and longitude from Double to String
         val latitudeStr: String = this.latitude.toString()
@@ -892,20 +936,20 @@ class FarmViewModel(
         Log.d(TAG, "Converted latitude: $latitudeStr, longitude: $longitudeStr")
 
         // Handle member_id
-        val memberId: String = this.member_id ?: ""
+        val memberId: String = this.member_id ?: "100"
         Log.d(TAG, "Handled memberId: '$memberId'")
 
         // Create Farm object
         val farm = Farm(
-            siteId = this.site_id,
+            siteId = 9,
             remoteId = remoteId,
-            farmerPhoto = "", // No data provided in FarmRestore
+            farmerPhoto = "farmer_photo",
             farmerName = this.farmer_name,
             memberId = memberId,
             village = this.village,
             district = this.district,
-            purchases = null, // Assuming not available in FarmRestore
-            size = sizeFloat,
+            purchases =0.toFloat(),
+            size = formattedSize,
             latitude = latitudeStr,
             longitude = longitudeStr,
             coordinates = coordinatesMapped,
@@ -919,11 +963,6 @@ class FarmViewModel(
 
         return farm
     }
-
-
-
-
-
 
     // Restore data from the server
     fun restoreData(
@@ -976,28 +1015,46 @@ class FarmViewModel(
 
                 Log.d(TAG, "Extracted Farms Converted: $farmEntities") // Log the entire list of converted Farm objects
 
-
-
-
-
                 // Initialize counters for added and updated farms
                 var addedCount = 0
 
                 // Compare and update
                 farmEntities.forEach { serverFarm ->
                     val localFarm = localFarms.find { it.remoteId == serverFarm.remoteId }
+                    val localSites = farmViewModel.getAllSites()
+                    val siteIds = localSites.map { site -> site.siteId } // Extract all site IDs
+                    Log.d(TAG, "Site IDs: $siteIds") // Log the site IDs
 
                     if (localFarm == null) {
-                        // Farm doesn't exist locally, add it
-                        Log.d(TAG, "Adding new farm: $serverFarm") // Log the farm being added
-
-                        // repository.addFarm(serverFarm)
-                        addFarm(serverFarm,serverFarm.siteId)
-                        addedCount++
+                        // Farm doesn't exist locally, check if it needs an update based on the criteria
+                        if (serverFarm.size == 0f || serverFarm.latitude == "0.0" || serverFarm.longitude == "0.0") {
+                            serverFarm.needsUpdate = true
+                            addFarm(serverFarm, 9)
+                            Log.d(TAG, "Farm needs update due to missing size or coordinates: $serverFarm")
+                            addedCount++
+                        } else {
+                            // Add the farm as it is complete
+                            Log.d(TAG, "Adding new farm: $serverFarm") // Log the farm being added
+                            addFarm(serverFarm, siteId = 9)
+                            Log.d(TAG, "New farm added successfully")
+                            addedCount++
+                        }
                     } else {
-                        Log.d(TAG, "Farm already exists locally: $localFarm") // Log the farm that already exists
+                        // Log the farm that already exists
+                        Log.d(TAG, "Farm already exists locally: $localFarm")
+
+                        // Optionally update the local farm if the serverFarm has better information
+                        if (serverFarm.size != 0f && serverFarm.latitude != "0.0" && serverFarm.longitude != "0.0") {
+                            // Check if localFarm needs an update
+                            if (localFarm.size == 0f || localFarm.latitude == "0.0" || localFarm.longitude =="0.0") {
+                                localFarm.needsUpdate = true
+                                farmViewModel.updateFarm(localFarm)
+                                Log.d(TAG, "Updated local farm due to missing size or coordinates: $localFarm")
+                            }
+                        }
                     }
                 }
+
 
                 Log.d(TAG, "Total farms added: $addedCount") // Log the total count of farms added
 

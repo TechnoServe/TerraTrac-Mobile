@@ -3,6 +3,7 @@ package org.technoserve.farmcollector.database
 import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import java.util.UUID
 
 class FarmRepository(private val farmDAO: FarmDAO) {
@@ -15,6 +16,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
 
     fun getAllFarms(): List<Farm> {
         return farmDAO.getAllFarms()
+    }
+
+    fun getAllSites(): List<CollectionSite>{
+        return farmDAO.getAllSites()
     }
 
     fun readAllFarmsSync(siteId: Long): List<Farm> {
@@ -40,6 +45,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     suspend fun addFarm(farm: Farm) {
         val existingFarm = isFarmDuplicate(farm)
 
+     // Check if the farm already exists
         if (existingFarm == null) {
             Log.d(TAG, "Attempting to insert new farm: $farm")
             val insertResult = farmDAO.insert(farm)
