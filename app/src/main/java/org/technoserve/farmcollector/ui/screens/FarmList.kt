@@ -1167,7 +1167,9 @@ fun ImportFileDialog(
     }
 
     AlertDialog(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = {
+//            onDismiss()
+                           },
         title = { Text(text = stringResource(R.string.import_file)) },
         text = {
             Column(
