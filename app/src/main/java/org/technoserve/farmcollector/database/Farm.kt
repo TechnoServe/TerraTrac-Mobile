@@ -157,7 +157,7 @@ data class FarmDetailDto(
     val size: Float,
     val latitude: Double,
     val longitude: Double,
-    val coordinates: List<List<Double?>>? // Converted from `polygon`
+    val coordinates: List<List<Double?>>?
 )
 
 data class DeviceFarmDto(
@@ -211,9 +211,6 @@ fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<Dev
             )
         }
 }
-
-
-
 
 @Entity(tableName = "CollectionSites")
 data class CollectionSite(

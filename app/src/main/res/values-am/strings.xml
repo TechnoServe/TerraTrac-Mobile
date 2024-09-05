@@ -135,5 +135,25 @@
     <string name="invalid_farms">%1$d የማይገባው እርሻ መዝግቦች አልተገቡም</string>
     <string name="invalid_farms_with_names">%1$d ተገቢ ያልሆኑ እርሻ ቅጽበቶች አልተሰጡም። ግለሰቦች፡ %2$s</string>
 
+    <string name="phone_info">የስልክ ቁጥርህ በፈጣሪ ውሂብ እንዲከለክል ሊጠቀም ይችላል።</string>
+    <string name="email_info">የኢሜል አድራሻህ በፈጣሪ ውሂብ እንዲከለክል ይጠቀማል።</string>
+    <string name="sync_service_notification_title">ማቅለሽ አገልግሎት</string>
+    <string name="sync_service_notification_text">ውሂብን እየማቀለሽ ነው…</string>
+    <string name="sync_service_channel_id">ማቅለሽ_አገልግሎት_ቻነል</string>
+    <string name="sync_complete">ማቅለሽ ተጠናቋል</string>
+    <string name="successfully_syncronized">እርሻዎች ከሰርቨር ጋር በትክክል ተመርተዋል።</string>
+    <string name="sync_channel_name">ማቅለሽ ቻነል</string>
+    <string name="sync_channel_description">የማቅለሽ ማስታወቂያዎች ለማቀለሽ ቻነል</string>
+    <string name="sync_channel_id">ማቅለሽ_ቻነል_id</string>
+    <string name="successfully_synchronized">በትክክል ተመርቷል</string>
+
+    <string name="restoration_completed">ማስያዝ ተጠናቋል። የተጨምሩት: %1$d እርሻዎች፣ እና %2$d ቦታዎች ተፈጥሯል።</string>
+    <string name="no_data_available">አንደኛ ውሂብ አልተገኘም። እባክዎን የስልኩን ቁጥር ወይም ኢሜልዎን እንዲመልስ አካባቢ ያስገቡ።</string>
+    <string name="data_restored_successfully">ውሂብ በትክክል ተመልሷል።</string>
+    <string name="no_data_found">ለተሰጡት መረጃዎች አንደኛ ውሂብ አልተገኘም። እባክዎን ከሰአት በኋላችሁ ይሞክሩ ወይም የድጋፍ አገልግሎት ያካፍሉ።</string>
+    <string name="restore_data">ውሂብ ይመልስ</string>
+    <string name="restoration_error">ውሂብ መልሰው አልተቻለም፦ %1$s</string>
+
+
 
 </resources>

@@ -94,7 +94,6 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 
-private const val REQUEST_CHECK_SETTINGS = 1000
 
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {

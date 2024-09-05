@@ -135,4 +135,24 @@
     <string name="invalid_farms">%1$d Registros de granjas inválidos no fueron importados</string>
     <string name="invalid_farms_with_names">%1$d registros de granjas inválidos no fueron importados. Agricultores: %2$s</string>
 
+    <string name="phone_info">Tu número de teléfono puede ser utilizado para la recuperación de datos en el futuro.</string>
+    <string name="email_info">Tu dirección de correo electrónico será utilizada para la recuperación de datos en el futuro.</string>
+    <string name="sync_service_notification_title">Servicio de sincronización</string>
+    <string name="sync_service_notification_text">Sincronizando datos…</string>
+    <string name="sync_service_channel_id">canal_servicio_sync</string>
+    <string name="sync_complete">Sincronización Completa</string>
+    <string name="successfully_syncronized">Las granjas se han sincronizado correctamente con el servidor.</string>
+    <string name="sync_channel_name">Canal de Sincronización</string>
+    <string name="sync_channel_description">Canal para notificaciones de sincronización</string>
+    <string name="sync_channel_id">canal_sync_id</string>
+    <string name="successfully_synchronized">Sincronizado con éxito</string>
+
+    <string name="restoration_completed">Restauración completada. Añadido: %1$d granjas y %2$d sitios creados</string>
+    <string name="no_data_available">No hay datos disponibles. Por favor, ingrese su número de teléfono o correo electrónico para restaurar los datos.</string>
+    <string name="data_restored_successfully">Datos restaurados con éxito.</string>
+    <string name="no_data_found">No se encontraron datos para la información proporcionada. Por favor, intente de nuevo más tarde o contacte al soporte.</string>
+    <string name="restore_data">Restaurar Datos</string>
+    <string name="restoration_error">No se pudo restaurar los datos: %1$s</string>
+
+
 </resources>

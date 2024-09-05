@@ -3,8 +3,6 @@ package org.technoserve.farmcollector.database
 import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import java.util.UUID
 
 class FarmRepository(private val farmDAO: FarmDAO) {
 
@@ -29,18 +27,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     fun readFarm(farmId: Long): LiveData<List<Farm>> {
         return farmDAO.getFarmById(farmId)
     }
-
-//    suspend fun addFarm(farm: Farm) {
-//        val existingFarm = isFarmDuplicate(farm)
-//        if (existingFarm == null) {
-//            farmDAO.insert(farm)
-//        } else {
-//            // If the farm exists and needs an update, perform the update
-//            if (farmNeedsUpdate(existingFarm, farm)) {
-//                farmDAO.update(farm)
-//            }
-//        }
-//    }
 
     suspend fun addFarm(farm: Farm) {
         val existingFarm = isFarmDuplicate(farm)
@@ -73,9 +59,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.insertAllIfNotExists(farms)
     }
 
-//    suspend fun addSite(site: CollectionSite) {
-//        farmDAO.insertSite(site)
-//    }
 
     suspend fun addSite(site: CollectionSite) {
         // Check if the site already exists
@@ -94,8 +77,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
             Log.d(TAG, "Site already exists: $existingSite")
         }
     }
-
-
 
 
     fun getLastFarm(): LiveData<List<Farm>> {
@@ -147,19 +128,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         farmDAO.deleteListSite(ids)
     }
 
-//    suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
-//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) } != null
-//    }
-//
-//    suspend fun isFarmDuplicate(farm: Farm): Farm? {
-//        return farm.remoteId?.let { farmDAO.getFarmByRemoteId(it) }
-//    }
-//
-//    // Function to fetch a farm by remote ID
-//    suspend fun getFarmByRemoteId(remoteId: UUID): Farm? {
-//        return farmDAO.getFarmByRemoteId(remoteId)
-//    }
-
     suspend fun isFarmDuplicateBoolean(farm: Farm): Boolean {
         return farmDAO.getFarmByDetails(
             farm.remoteId,
@@ -197,13 +165,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         )
     }
 
-
-//    suspend fun deleteFarmByRemoteId(remoteId: UUID) {
-//        farmDAO.deleteFarmByRemoteId(remoteId)
-//    }
-//
-
-
     fun farmNeedsUpdate(existingFarm: Farm, newFarm: Farm): Boolean {
         return existingFarm.farmerName != newFarm.farmerName ||
                 existingFarm.size != newFarm.size ||
@@ -229,37 +190,4 @@ class FarmRepository(private val farmDAO: FarmDAO) {
                 newFarm.remoteId.toString().isEmpty() ||
                 newFarm.coordinates.isNullOrEmpty()
     }
-
-
-
-
-
-
-//    suspend fun importFarms(farms: List<Farm>): ImportResult {
-//        val nonDuplicateFarms = mutableListOf<Farm>()
-//        val duplicateFarms = mutableListOf<String>()
-//        val farmsNeedingUpdate = mutableListOf<Farm>()
-//
-//        for (farm in farms) {
-//            val existingFarm = isFarmDuplicate(farm)
-//            duplicateFarms.add("Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}")
-//            if (existingFarm?.let { farmNeedsUpdate(it, farm) } == true) {
-//                farmsNeedingUpdate.add(farm)
-//            }
-//        }
-//
-//        addFarms(nonDuplicateFarms)
-//        // Update farms that need updates
-//        updateFarms(farmsNeedingUpdate)
-//        return ImportResult(
-//            success = nonDuplicateFarms.isNotEmpty(),
-//            message = if (nonDuplicateFarms.isNotEmpty()) "Import successful" else "No farms were imported",
-//            importedFarms = nonDuplicateFarms,
-//            duplicateFarms = duplicateFarms,
-//            farmsNeedingUpdate = farmsNeedingUpdate
-//        )
-//    }
-
-
-
 }

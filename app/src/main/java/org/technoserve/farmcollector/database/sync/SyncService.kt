@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.app.Service.START_STICKY
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -74,10 +73,11 @@ class SyncService : Service() {
     }
 
     private fun createNotification(): Notification {
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Sync Service")
-            .setContentText("Syncing data...")
+        return NotificationCompat.Builder(this, getString(R.string.sync_service_channel_id))
+            .setContentTitle(getString(R.string.sync_service_notification_title))
+            .setContentText(getString(R.string.sync_service_notification_text))
             .setSmallIcon(R.drawable.ic_launcher_sync)
             .build()
     }
+
 }

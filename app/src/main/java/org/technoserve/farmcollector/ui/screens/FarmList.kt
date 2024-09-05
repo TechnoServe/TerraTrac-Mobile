@@ -1,22 +1,16 @@
 package org.technoserve.farmcollector.ui.screens
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
 import android.os.Parcel
 import android.os.Parcelable
-import android.provider.Settings
-import android.telephony.TelephonyManager
-import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -51,15 +45,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -74,7 +64,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -109,7 +98,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -137,17 +125,10 @@ import java.util.Date
 import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
-
-import androidx.lifecycle.viewModelScope
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
-import java.util.UUID
 
-// data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
 
 enum class Action {
@@ -399,27 +380,6 @@ fun FarmList(
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
-//                        val reversedCoordinates =
-//                            matches
-//                                .map { match ->
-//                                    val (lat, lon) = match.destructured
-//                                    "[$lon, $lat]"
-//                                }.toList() // Convert Sequence to List for easy handling
-//                                .let { coordinates ->
-//                                    if (coordinates.isNotEmpty()) {
-//                                        if (coordinates.size == 1) {
-//                                            // Single point, return without additional brackets
-//                                            coordinates.first()
-//                                        } else {
-//                                            // Multiple points, add enclosing brackets
-//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                        }
-//                                    } else {
-//                                        "" // Return an empty string if there are no coordinates
-//                                    }
-//                                }
-
-
                         val reversedCoordinates =
                             matches
                                 .map { match ->
@@ -524,26 +484,6 @@ fun FarmList(
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-//                            val reversedCoordinates =
-//                                matches
-//                                    .map { match ->
-//                                        val (lat, lon) = match.destructured
-//                                        "[$lon, $lat]"
-//                                    }.toList() // Convert Sequence to List for easy handling
-//                                    .let { coordinates ->
-//                                        if (coordinates.isNotEmpty()) {
-//                                            if (coordinates.size == 1) {
-//                                                // Single point, return without additional brackets
-//                                                coordinates.first()
-//                                            } else {
-//                                                // Multiple points, add enclosing brackets
-//                                                coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                            }
-//                                        } else {
-//                                            "" // Return an empty string if here are no coordinates
-//                                        }
-//                                    }
-
                             val reversedCoordinates =
                                 matches
                                     .map { match ->
@@ -781,7 +721,7 @@ fun FarmList(
             onRestoreClicked = {
                 farmViewModel.restoreData(deviceId = deviceId, phoneNumber = "", email="", farmViewModel = farmViewModel) { success ->
                     if (success) {
-                        finalMessage = "Data restored successfully."
+                        finalMessage = context.getString(R.string.data_restored_successfully)
                     } else {
                         showRestorePrompt = true
                     }
@@ -934,7 +874,7 @@ fun FarmList(
                 // Display a completion message
                 val status = restoreStatus as RestoreStatus.Success
                 Text(
-                    text = "Restoration completed. Added: ${status.addedCount} Farms, and ${status.sitesCreated} sites created",
+                    text = stringResource(R.string.restoration_completed, status.addedCount, status.sitesCreated),
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
@@ -948,7 +888,6 @@ fun FarmList(
             is RestoreStatus.Error -> {
                 // Display an error message
                 val status = restoreStatus as RestoreStatus.Error
-//                showRestorePrompt = true // Show the restore prompt if restoration fails
 
                 if (showRestorePrompt) {
                     Column(
@@ -959,7 +898,7 @@ fun FarmList(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "No data available. Please enter your phone number or email to restore data.",
+                            text = stringResource(id=R.string.no_data_available),
                             modifier = Modifier.padding(bottom = 16.dp),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium
@@ -1029,7 +968,7 @@ fun FarmList(
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(id=R.string.cancel))
                             }
 
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1040,10 +979,9 @@ fun FarmList(
                                             false // Hide the restore prompt on retry
                                         farmViewModel.restoreData(deviceId = deviceId , phoneNumber = phone,email=email,farmViewModel = farmViewModel) { success ->
                                             finalMessage = if (success) {
-                                                "Data restored successfully."
+                                                context.getString(R.string.data_restored_successfully)
                                             } else {
-                                                // showRestorePrompt = true
-                                                "No data was found for the provided information. Please try again later or contact support."
+                                                context.getString(R.string.no_data_found)
                                             }
                                             // showFinalMessage = true
                                         }
@@ -1052,7 +990,7 @@ fun FarmList(
                                 enabled = email.isNotBlank() || phone.isNotBlank(),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Restore Data")
+                                Text(context.getString(R.string.restore_data))
                             }
                         }
                     }
@@ -1178,10 +1116,6 @@ fun ImportFileDialog(
                         .padding(8.dp)
                         .fillMaxWidth(),
             ) {
-//                Text(
-//                    text = stringResource(R.string.select_file_type),
-//                    modifier = Modifier.padding(bottom = 8.dp),
-//                )
                 Box(
                     modifier =
                         Modifier
@@ -1299,17 +1233,6 @@ fun FarmListHeader(
         title = {
             Text(
                 text = title,
-//                style =
-//                    MaterialTheme.typography.bodySmall.copy(
-//                        fontSize = 22.sp,
-//                        fontWeight = FontWeight.Bold,
-//                        color = MaterialTheme.colorScheme.secondary,
-//                    ),
-//                modifier =
-//                    Modifier
-//                        .fillMaxWidth()
-//                        .padding(4.dp),
-//                textAlign = TextAlign.Center,
                 fontSize = 22.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -1360,15 +1283,6 @@ fun FarmListHeader(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-//                trailingIcon = {
-//                    IconButton(onClick = {
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.Close, contentDescription = "Close")
-//                    }
-//                },
                 singleLine = true,
                 colors =
                     TextFieldDefaults.outlinedTextFieldColors(
@@ -1378,150 +1292,6 @@ fun FarmListHeader(
         }
     }
 }
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun FarmListHeaderPlots(
-//    title: String,
-//    onAddFarmClicked: () -> Unit,
-//    onBackClicked: () -> Unit,
-//    onBackSearchClicked: () -> Unit,
-//    onExportClicked: () -> Unit,
-//    onShareClicked: () -> Unit,
-//    onImportClicked: () -> Unit,
-//    onSearchQueryChanged: (String) -> Unit,
-//    showAdd: Boolean,
-//    showExport: Boolean,
-//    showShare: Boolean,
-//    showSearch: Boolean,
-//) {
-//    val context = LocalContext.current as Activity
-//
-//    // State for holding the search query
-//    var searchQuery by remember { mutableStateOf("") }
-//    var isSearchVisible by remember { mutableStateOf(false) }
-//
-//    // State for tracking if import has been completed
-//    var isImportDisabled by remember { mutableStateOf(false) }
-//
-//    TopAppBar(
-//        title = { Text(text = title, fontSize = 18.sp) },
-//        navigationIcon = {
-//            IconButton(onClick = onBackClicked) {
-//                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//            }
-//        },
-//        actions = {
-//            IconButton(
-//                onClick = { /* Handle restore action */ },
-//                modifier = Modifier.size(36.dp)
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.Refresh,
-//                    contentDescription = "Restore",
-//                    modifier = Modifier.size(24.dp)
-//                )
-//            }
-//            Spacer(modifier = Modifier.width(2.dp))
-//            if (showExport) {
-//                IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
-//                    Icon(
-//                        painter = painterResource(id = R.drawable.save),
-//                        contentDescription = "Export",
-//                        modifier = Modifier.size(24.dp),
-//                    )
-//                }
-//                Spacer(modifier = Modifier.width(2.dp))
-//            }
-//            if (showShare) {
-//                IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
-//                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
-//                }
-//                Spacer(modifier = Modifier.width(2.dp))
-//            }
-//            IconButton(
-//                onClick = {
-//                    if (!isImportDisabled) {
-//                        onImportClicked()
-//                        isImportDisabled = true // Disable the import icon after importing
-//                    }
-//                },
-//                modifier = Modifier.size(36.dp),
-//                enabled = !isImportDisabled // Disable the button if import is completed
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.icons8_import_file_48),
-//                    contentDescription = "Import",
-//                    modifier = Modifier.size(24.dp),
-//                )
-//            }
-//            Spacer(modifier = Modifier.width(2.dp))
-//            if (showAdd) {
-//                IconButton(onClick = {
-//                    // Remove plot_size from shared preferences
-//                    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
-//                    if (sharedPref.contains("plot_size")) {
-//                        sharedPref.edit().remove("plot_size").apply()
-//                    }
-//                    if (sharedPref.contains("selectedUnit")) {
-//                        sharedPref.edit().remove("selectedUnit").apply()
-//                    }
-//                    // Call the onAddFarmClicked lambda
-//                    onAddFarmClicked()
-//                }, modifier = Modifier.size(36.dp)) {
-//                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
-//                }
-//                Spacer(modifier = Modifier.width(2.dp))
-//            }
-//            if (showSearch) {
-//                IconButton(onClick = {
-//                    isSearchVisible = !isSearchVisible
-//                }, modifier = Modifier.size(36.dp)) {
-//                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
-//                }
-//            }
-//        },
-//    )
-//
-//    // Conditional rendering of the search field
-//    if (isSearchVisible && showSearch) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier =
-//                Modifier
-//                    .padding(horizontal = 16.dp)
-//                    .fillMaxWidth(),
-//        ) {
-//            OutlinedTextField(
-//                value = searchQuery,
-//                onValueChange = {
-//                    searchQuery = it
-//                    onSearchQueryChanged(it)
-//                },
-//                modifier =
-//                    Modifier
-//                        .padding(start = 8.dp)
-//                        .weight(1f),
-//                label = { Text(stringResource(R.string.search)) },
-//                leadingIcon = {
-//                    IconButton(onClick = {
-//                        // onBackSearchClicked()
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                },
-//                singleLine = true,
-//                colors =
-//                    TextFieldDefaults.outlinedTextFieldColors(
-//                        cursorColor = MaterialTheme.colorScheme.onSurface,
-//                    ),
-//            )
-//        }
-//    }
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1927,14 +1697,6 @@ fun UpdateFarmForm(
             },
         )
     }
-
-//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-//        coordinates =
-//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-//                "coordinates",
-//            )
-//    }
-
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
         val parcelableCoordinates = navController.currentBackStackEntry!!
             .savedStateHandle
@@ -2177,20 +1939,6 @@ fun UpdateFarmForm(
                 onValueChange = {
                     size = it
                 },
-//                value =  truncateToDecimalPlaces(formatInput(size),9),
-//                onValueChange = { inputValue ->
-//                    val formattedValue = when {
-//                        validateSize(inputValue) -> inputValue
-//                        // Check if the input is in scientific notation
-//                        scientificNotationPattern.matcher(inputValue).matches() -> {
-//                            truncateToDecimalPlaces(formatInput(inputValue),9)
-//                        }
-//                        else -> inputValue
-//                    }
-//
-//                    // Update the size state with the formatted value
-//                    size = formattedValue
-//                },
                 keyboardOptions =
                     KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number,
@@ -2290,7 +2038,6 @@ fun UpdateFarmForm(
                     showLocationDialog.value = true
                 } else {
                     if (isLocationEnabled(context) && context.hasLocationPermission()) {
-//                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
                         if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) {
                             // Simulate collecting latitude and longitude
                             if (context.hasLocationPermission()) {

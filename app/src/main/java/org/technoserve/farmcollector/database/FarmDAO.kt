@@ -80,9 +80,6 @@ interface FarmDAO {
     @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId LIMIT 1")
     fun getCollectionSiteById(siteId: Long): CollectionSite?
 
-//    @Update
-//    suspend fun updateFarmSyncStatus(farm: Farm)
-
     @Query("UPDATE farms SET synced = :synced WHERE remote_id = :remoteId")
     suspend fun updateFarmSyncStatus(remoteId: UUID, synced: Boolean)
 
@@ -112,7 +109,6 @@ interface FarmDAO {
 
     @Query("SELECT * FROM CollectionSites WHERE siteId = :localCsId OR (name = :siteName AND village = :village AND district = :district) LIMIT 1")
     suspend fun getSiteByDetails(localCsId: Long, siteName: String, village: String, district: String): CollectionSite?
-
 
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {

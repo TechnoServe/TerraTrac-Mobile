@@ -136,5 +136,21 @@
 
     <string name="phone_info">Your phone number may be used for data recovery in future.</string>
     <string name="email_info">Your email address will be used for data recovery in future.</string>
+    <string name="sync_service_notification_title">Sync Service</string>
+    <string name="sync_service_notification_text">Syncing data...</string>
+    <string name="sync_service_channel_id">sync_service_channel</string>
+    <string name="sync_complete">Sync Complete</string>
+    <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>
+    <string name="sync_channel_name">Sync Channel</string>
+    <string name="sync_channel_description">Channel for sync notifications</string>
+    <string name="sync_channel_id">sync_channel_id</string>
+    <string name="successfully_synchronized">Successfully synchronized</string>
+
+    <string name="restoration_completed">Restoration completed. Added: %1$d Farms, and %2$d sites created</string>
+    <string name="no_data_available">No data available. Please enter your phone number or email to restore data.</string>
+    <string name="data_restored_successfully">Data restored successfully.</string>
+    <string name="no_data_found">No data was found for the provided information. Please try again later or contact support.</string>
+    <string name="restore_data">Restore Data</string>
+    <string name="restoration_error">Failed to restore data: %1$s</string>
 
 </resources>

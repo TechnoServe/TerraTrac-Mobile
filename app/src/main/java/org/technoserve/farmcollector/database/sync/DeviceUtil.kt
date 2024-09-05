@@ -12,10 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 object DeviceIdUtil {
 
@@ -32,10 +29,6 @@ object DeviceIdUtil {
         }
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         return telephonyManager.imei
-    }
-
-    fun generateUuid(): String {
-        return UUID.randomUUID().toString()
     }
 
     suspend fun getAdvertisingId(context: Context): String? {

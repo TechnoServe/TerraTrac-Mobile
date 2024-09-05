@@ -135,4 +135,23 @@
     <string name="invalid_farms">%1$d Rekodi za mashamba zisizo sahihi hazijaingizwa</string>
     <string name="invalid_farms_with_names">%1$d rekodi za mashamba zisizo sahihi hazikuletewa. Wakulima: %2$s</string>
 
+    <string name="phone_info">Namba yako ya simu inaweza kutumika kwa urejeshaji wa data siku zijazo.</string>
+    <string name="email_info">Anwani yako ya barua pepe itatumika kwa urejeshaji wa data siku zijazo.</string>
+    <string name="sync_service_notification_title">Huduma ya Usawazishaji</string>
+    <string name="sync_service_notification_text">Inasawazisha data…</string>
+    <string name="sync_service_channel_id">usawazishaji_huduma_kanali</string>
+    <string name="sync_complete">Usawazishaji Umekamilika</string>
+    <string name="successfully_syncronized">Mashamba yamesawazishwa kwa mafanikio na seva.</string>
+    <string name="sync_channel_name">Kanali ya Usawazishaji</string>
+    <string name="sync_channel_description">Kanali kwa taarifa za usawazishaji</string>
+    <string name="sync_channel_id">kanali_usawazishaji_id</string>
+    <string name="successfully_synchronized">Imesawazishwa kwa mafanikio</string>
+
+    <string name="restoration_completed">Marekebisho yamekamilika. Imeongezwa: %1$d mashamba, na %2$d maeneo yaliyoanzishwa</string>
+    <string name="no_data_available">Hakuna data inayopatikana. Tafadhali ingiza nambari yako ya simu au barua pepe ili kurejesha data.</string>
+    <string name="data_restored_successfully">Data imerejelewa kwa mafanikio.</string>
+    <string name="no_data_found">Hakuna data iliyo patikana kwa taarifa zilizotolewa. Tafadhali jaribu tena baadaye au wasiliana na msaada.</string>
+    <string name="restore_data">Rejesha Data</string>
+    <string name="restoration_error">Imeshindwa kurejesha data: %1$s</string>
+
 </resources>

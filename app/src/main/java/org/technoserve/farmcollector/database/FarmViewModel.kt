@@ -2,7 +2,6 @@ package org.technoserve.farmcollector.database
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -11,23 +10,17 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.Instant
-import org.joda.time.format.DateTimeFormatter
 import org.json.JSONObject
 import org.technoserve.farmcollector.BuildConfig
 import org.technoserve.farmcollector.R
@@ -38,15 +31,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 import java.util.regex.Pattern
-import kotlin.random.Random
 
 data class ImportResult(
     val success: Boolean,
@@ -261,11 +247,6 @@ class FarmViewModel(
         return dateFormatter.parse(dateString).time
     }
 
-//    private suspend fun parseGeoJson(
-//        geoJsonString: String,
-//        siteId: Long,
-//    ): List<Farm> {
-//        val farms = mutableListOf<Farm>()
 
     private suspend fun parseGeoJson(
         geoJsonString: String,
@@ -358,7 +339,6 @@ class FarmViewModel(
                         )
                     }
                 if (newFarm != null) {
-//                    farms.add(newFarm)
                     validFarms.add(newFarm)
                 }
                 else {
@@ -485,25 +465,6 @@ class FarmViewModel(
                         val existingFarm = newFarm.remoteId?.let {
                             repository.getFarmByDetails(newFarm)
                         }
-
-//                        if (existingFarm != null) {
-//                            if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-//                                // Farm needs an update
-//                                println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-//                                farmsNeedingUpdate.add(newFarm)
-//                            } else {
-//                                // Farm is a duplicate but does not need an update
-//                                val duplicateMessage =
-//                                    "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-//                                println(duplicateMessage)
-//                                duplicateFarms.add(duplicateMessage)
-//                            }
-//                        } else {
-//                            // Handle case where farm exists in the system but not in the repository
-//                            val unknownFarmMessage =
-//                                "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-//                            println(unknownFarmMessage)
-//                        }
 
                         if (repository.farmNeedsUpdateImport(newFarm)) {
                             // Farm needs an update
@@ -1022,40 +983,12 @@ class FarmViewModel(
                     Array<ServerFarmResponse>::class.java
                 ).toList()
 
-//                val collectionSiteLocalId: Long = serverFarmResponseList.first().collection_site.local_cs_id
-//
-//                Log.d(TAG, "Extracted collectionSiteLocalId: $collectionSiteLocalId")
-//
                 // Extract and flatten the list of farms
-               //  val farmList: List<FarmRestore> = serverFarmResponseList.flatMap { it.farms }
                 val collectionSites: Map<Long, CollectionSiteRestore> =
                     serverFarmResponseList.associateBy(
                         { it.collection_site.local_cs_id },
                         { it.collection_site }
                     )
-
-//                Log.d(TAG, "Extracted Farms: $farmList")
-//                Log.d(TAG, "Extracted Collection Sites: $collectionSites")
-//
-//
-//                // Convert each FarmRestore to Farm
-//                val farmEntities: List<Farm> = farmList.map { farmRestore ->
-//                    Log.d(
-//                        TAG,
-//                        "Converting FarmRestore: $farmRestore"
-//                    ) // Log the FarmRestore before conversion
-//
-//                    val farm = farmRestore.toFarm(collectionSiteLocalId) // Perform the conversion
-//
-//                    Log.d(TAG, "Converted Farm: $farm") // Log the converted Farm object
-//
-//                    farm // Return the converted farm
-//                }
-//
-//                Log.d(
-//                    TAG,
-//                    "Extracted Farms Converted: $farmEntities"
-//                ) // Log the entire list of converted Farm objects
 
                 // Group farms by their associated collection site (using site_id in FarmRestore to map to CollectionSiteRestore)
                 val farmEntities: List<Farm> = serverFarmResponseList.flatMap { serverFarmResponse ->

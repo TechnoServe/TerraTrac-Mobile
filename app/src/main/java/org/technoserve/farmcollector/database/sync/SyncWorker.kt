@@ -20,7 +20,6 @@ import okhttp3.OkHttpClient
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.AppDatabase
 import org.technoserve.farmcollector.database.remote.ApiService
-//import org.technoserve.farmcollector.database.toDtoList
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import org.technoserve.farmcollector.BuildConfig
@@ -91,10 +90,6 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
            // Log.d(TAG, "Response: $response")
 
             if (response.isSuccessful) {
-//                showSyncNotification()
-//                unsyncedFarms.forEach { farm ->
-//                    farmDao.updateFarmSyncStatus(farm.copy(synced = true))
-//                }
                 unsyncedFarms.forEach { farm ->
                     farmDao.updateFarmSyncStatus(farm.remoteId, true)
                 }
@@ -245,10 +240,10 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
             notificationManager.createNotificationChannel(channel)
         }
 
-        val builder = NotificationCompat.Builder(applicationContext, "SYNC_CHANNEL_ID")
+        val builder = NotificationCompat.Builder(applicationContext, applicationContext.getString(R.string.sync_channel_id))
             .setSmallIcon(R.drawable.ic_launcher_sync_complete)
-            .setContentTitle("Sync Complete")
-            .setContentText("Farms have been successfully synchronized with the server.")
+            .setContentTitle(applicationContext.getString(R.string.sync_complete))
+            .setContentText(applicationContext.getString(R.string.successfully_syncronized))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         if (checkNotificationPermission()) {

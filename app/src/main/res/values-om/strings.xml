@@ -135,5 +135,24 @@
     <string name="invalid_farms">%1$d Waraqaa qabeenya beeyladaa dogoggoraa hin galmoofne</string>
     <string name="invalid_farms_with_names">%1$d qabeenya ispoortii dogongoraa hin taasifamne. Barsiisota: %2$s</string>
 
+    <string name="phone_info">Lakkoofsa bilbilaa kee deebi\'ee argachuuf yeroo itti aanutti fayyadamuu danda\'ama.</string>
+    <string name="email_info">Teessoo email kee deebi\'ee argachuuf yeroo itti aanutti fayyadamuu danda\'ama.</string>
+    <string name="sync_service_notification_title">Tajaajila Sinkii</string>
+    <string name="sync_service_notification_text">Daataan walitti fufaa jira…</string>
+    <string name="sync_service_channel_id">sinkii_tajaajila_kaanaalii</string>
+    <string name="sync_complete">Sinkii Xumurameera</string>
+    <string name="successfully_syncronized">Lafotuun milkiidhaan sirriitti seerveratti walfudhateera.</string>
+    <string name="sync_channel_name">Kaanaalii Sinkii</string>
+    <string name="sync_channel_description">Kaanaalii beeksisa sinkii tajaajilu</string>
+    <string name="sync_channel_id">sinkii_kaanaalii_id</string>
+    <string name="successfully_synchronized">Milkiidhaan walitti fufameera</string>
+
+    <string name="restoration_completed">Gargaarsa xumurame. Dabalamanii: %1$d Lafotuu fi %2$d bakka uumame</string>
+    <string name="no_data_available">Odeeffannoo hin jiru. Odeeffannoo deebisuu qabduuf lakkoofsa bilbilaa ykn email kee galchi.</string>
+    <string name="data_restored_successfully">Odeeffannoon milkiidhaan deebi\'ameera.</string>
+    <string name="no_data_found">Odeeffannoo kennaman irratti hin argamne. Maaloo, yeroo biraa yaali ykn gargaarsa gaafadhu.</string>
+    <string name="restore_data">Odeeffannoo Deebi\'aa</string>
+    <string name="restoration_error">Odeeffannoo deebi\'uu hin dandeenye: %1$s</string>
+
 
 </resources>
