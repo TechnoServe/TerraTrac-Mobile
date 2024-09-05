@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
@@ -205,13 +206,15 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester2.requestFocus()
+                    .fillMaxWidth() // Make the element fill the width of its parent
+                    .padding(bottom = 16.dp) // Add bottom padding
+                    .focusRequester(focusRequester2) // Attach a focus requester
+                    .onKeyEvent { keyEvent ->
+                    // Handle key events
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester2.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false
+                    false // Indicate that the event is not consumed
                 }
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -258,14 +261,16 @@ fun SiteForm(navController: NavController) {
                     )
                 }
             },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .onKeyEvent {
-                        if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                            focusRequester3.requestFocus()
+            modifier = Modifier
+                        .fillMaxWidth() // Make the element fill the width of its parent
+                        .padding(bottom = 16.dp) // Add bottom padding
+                        .focusRequester(focusRequester3) // Attach a focus requester
+                         .onKeyEvent { keyEvent ->
+                        // Handle key events
+                        if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                            focusRequester3.requestFocus() // Request focus when Enter key is pressed
                         }
-                        false
+                        false // Indicate that the event is not consumed
                     }
             )
         if (showDisclaimerPhone) {
@@ -275,7 +280,7 @@ fun SiteForm(navController: NavController) {
                 text = { Text(stringResource(id=R.string.phone_info)) },
                 confirmButton = {
                     TextButton(onClick = { showDisclaimerPhone = false }) {
-                        Text("OK")
+                        Text(stringResource(id=R.string.ok))
                     }
                 }
             )
@@ -322,13 +327,15 @@ fun SiteForm(navController: NavController) {
                 }
             },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester4.requestFocus()
+                    .fillMaxWidth() // Make the element fill the width of its parent
+                .padding(bottom = 16.dp) // Add bottom padding
+                .focusRequester(focusRequester4) // Attach a focus requester
+                .onKeyEvent { keyEvent ->
+                    // Handle key events
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester4.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false
+                    false // Indicate that the event is not consumed
                 }
         )
         if (showDisclaimerEmail) {
@@ -364,18 +371,24 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester5.requestFocus()
+                .fillMaxWidth() // Make the element fill the width of its parent
+                .padding(bottom = 16.dp) // Add bottom padding
+                .focusRequester(focusRequester5) // Attach a focus requester
+                .onKeyEvent { keyEvent ->
+                    // Handle key events
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester5.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false
+                    false // Indicate that the event is not consumed
                 }
         )
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester6.requestFocus() }
+            ),
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
@@ -391,6 +404,7 @@ fun SiteForm(navController: NavController) {
             ),
             modifier = Modifier
                 .fillMaxWidth()
+                .focusRequester(focusRequester6)
                 .padding(bottom = 16.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
