@@ -154,5 +154,7 @@
     <string name="restore_data">Restaurar Datos</string>
     <string name="restoration_error">No se pudo restaurar los datos: %1$s</string>
 
+    <string name="sync_failed">Sincronización fallida</string>
+    <string name="syncronization_failed">Error al sincronizar los datos de las granjas con el servidor</string>
 
 </resources>

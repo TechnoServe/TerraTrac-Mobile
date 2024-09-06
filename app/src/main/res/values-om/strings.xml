@@ -153,6 +153,9 @@
     <string name="no_data_found">Odeeffannoo kennaman irratti hin argamne. Maaloo, yeroo biraa yaali ykn gargaarsa gaafadhu.</string>
     <string name="restore_data">Odeeffannoo Deebi\'aa</string>
     <string name="restoration_error">Odeeffannoo deebi\'uu hin dandeenye: %1$s</string>
+    <string name="sync_failed">Sinksii kufaatee</string>
+    <string name="syncronization_failed">Daataa Fardeen Sinksii Saffisa waliin galchuu hin danda\'amne</string>
+
 
 
 </resources>

@@ -145,12 +145,14 @@
     <string name="sync_channel_description">Channel for sync notifications</string>
     <string name="sync_channel_id">sync_channel_id</string>
     <string name="successfully_synchronized">Successfully synchronized</string>
-
     <string name="restoration_completed">Restoration completed. Added: %1$d Farms, and %2$d sites created</string>
     <string name="no_data_available">No data available. Please enter your phone number or email to restore data.</string>
     <string name="data_restored_successfully">Data restored successfully.</string>
     <string name="no_data_found">No data was found for the provided information. Please try again later or contact support.</string>
     <string name="restore_data">Restore Data</string>
     <string name="restoration_error">Failed to restore data: %1$s</string>
+    <string name="sync_failed">Sync Failed</string>
+    <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
+
 
 </resources>

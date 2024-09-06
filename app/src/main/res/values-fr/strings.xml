@@ -153,6 +153,9 @@
     <string name="no_data_found">Aucune donnée trouvée pour les informations fournies. Veuillez réessayer plus tard ou contacter le support.</string>
     <string name="restore_data">Restaurer les données</string>
     <string name="restoration_error">Échec de la restauration des données : %1$s</string>
+    <string name="sync_failed">Échec de la synchronisation</string>
+    <string name="syncronization_failed">Échec de la synchronisation des données des fermes avec le serveur</string>
+
 
 
 

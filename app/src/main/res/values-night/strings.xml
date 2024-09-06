@@ -153,5 +153,8 @@
     <string name="no_data_found">No data was found for the provided information. Please try again later or contact support.</string>
     <string name="restore_data">Restore Data</string>
     <string name="restoration_error">Failed to restore data: %1$s</string>
+    <string name="sync_failed">Sync Failed</string>
+    <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
+
 
 </resources>

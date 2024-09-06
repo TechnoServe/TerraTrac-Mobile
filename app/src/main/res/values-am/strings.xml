@@ -154,6 +154,10 @@
     <string name="restore_data">ውሂብ ይመልስ</string>
     <string name="restoration_error">ውሂብ መልሰው አልተቻለም፦ %1$s</string>
 
+    <string name="sync_failed">ማስተካከያው አልተሳካም</string>
+    <string name="syncronization_failed">የእርሻ መረጃን ከአገልጋይ ጋር ማስተካከል አልተሳካም</string>
+
+
 
 
 </resources>

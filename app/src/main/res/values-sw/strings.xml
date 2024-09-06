@@ -153,5 +153,7 @@
     <string name="no_data_found">Hakuna data iliyo patikana kwa taarifa zilizotolewa. Tafadhali jaribu tena baadaye au wasiliana na msaada.</string>
     <string name="restore_data">Rejesha Data</string>
     <string name="restoration_error">Imeshindwa kurejesha data: %1$s</string>
+    <string name="sync_failed">Usawazishaji Umeshindwa</string>
+    <string name="syncronization_failed">Imeshindwa kusawazisha Data za Mashamba na seva</string>
 
 </resources>

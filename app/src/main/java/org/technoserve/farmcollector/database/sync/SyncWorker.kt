@@ -93,7 +93,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
                 unsyncedFarms.forEach { farm ->
                     farmDao.updateFarmSyncStatus(farm.remoteId, true)
                 }
-                if(totalItems>0) {
+                if(totalItems > 0) {
                     Log.d(TAG, "Farms synced successfully.")
                     createNotificationChannelAndShowCompleteNotification() // Notify sync success
                 }
@@ -121,8 +121,8 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
         val builder = NotificationCompat.Builder(applicationContext, "SYNC_CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_sync_failed)
-            .setContentTitle("Sync Failed")
-            .setContentText("Failed to synchronize Farms Data with the server.")
+            .setContentTitle(applicationContext.getString(R.string.sync_failed))
+            .setContentText(applicationContext.getString(R.string.syncronization_failed))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         with(NotificationManagerCompat.from(applicationContext)) {
@@ -240,7 +240,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
             notificationManager.createNotificationChannel(channel)
         }
 
-        val builder = NotificationCompat.Builder(applicationContext, applicationContext.getString(R.string.sync_channel_id))
+        val builder = NotificationCompat.Builder(applicationContext, "SYNC_CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_sync_complete)
             .setContentTitle(applicationContext.getString(R.string.sync_complete))
             .setContentText(applicationContext.getString(R.string.successfully_syncronized))
