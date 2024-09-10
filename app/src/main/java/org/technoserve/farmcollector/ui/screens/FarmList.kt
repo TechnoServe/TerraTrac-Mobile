@@ -1227,12 +1227,13 @@ fun FarmListHeader(
                 .fillMaxWidth(),
         navigationIcon = {
             IconButton(onClick = onBackClicked) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
         title = {
             Text(
                 text = title,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 22.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
