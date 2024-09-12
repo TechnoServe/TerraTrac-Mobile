@@ -16,15 +16,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +54,10 @@ import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.OutlinedTextField
 
 @Composable
 fun CollectionSiteList(navController: NavController) {
@@ -99,11 +106,13 @@ fun CollectionSiteList(navController: NavController) {
         // After loading data, set isLoading to false
         isLoading.value = false
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp),
+//    ) {
+    Scaffold(
+        topBar = {
         FarmListHeader(
             title = stringResource(id = R.string.collection_site_list),
             onSearchQueryChanged = setSearchQuery,
@@ -113,82 +122,124 @@ fun CollectionSiteList(navController: NavController) {
             showAdd = true,
             showSearch = true,
         )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Show loader while data is loading
-        if (isLoading.value) {
-            // Show loader while data is loading
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    navController.navigate("addSite")
+                },
+                modifier = Modifier.padding(16.dp)
             ) {
-                CircularProgressIndicator()
+                Icon(Icons.Default.Add, contentDescription = "Add a Site")
             }
-        }  else {
-            if (listItems.isNotEmpty()) {
-                // Show list of items after loading is complete
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    // Filter the list based on the search query
-                    val filteredList = listItems.filter {
-                        it.name.contains(searchQuery, ignoreCase = true)
-                    }
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    // Display a message if no results are found
-                    if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.no_results_found),
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
+//                if (isSearchActive) {
+//                    OutlinedTextField(
+//                        value = searchQuery,
+//                        onValueChange = { setSearchQuery = it },
+//                        placeholder = { Text("Search...") },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(horizontal = 8.dp)
+//                            .padding(top = 8.dp),
+//                        singleLine = true,
+//                        leadingIcon = {
+//                            IconButton(onClick = { isSearchActive = false; setSearchQuery = "" }) {
+//                                Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
+//                            }
+//                        },
+//                        trailingIcon = {
+//                            if (searchQuery.isNotEmpty()) {
+//                                IconButton(onClick = { setSearchQuery = "" }) {
+//                                    Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+//                                }
+//                            }
+//                        }
+//                    )
+//                }
+
+                // Show loader while data is loading
+                if (isLoading.value) {
+                    // Show loader while data is loading
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    if (listItems.isNotEmpty()) {
+                        // Show list of items after loading is complete
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            // Filter the list based on the search query
+                            val filteredList = listItems.filter {
+                                it.name.contains(searchQuery, ignoreCase = true)
+                            }
+
+                            // Display a message if no results are found
+                            if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
+                                item {
+                                    Text(
+                                        text = stringResource(R.string.no_results_found),
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                            } else {
+                                // Display the list of filtered items
+                                items(filteredList) { site ->
+                                    siteCard(
+                                        site = site,
+                                        onCardClick = {
+                                            navController.navigate("farmList/${site.siteId}")
+                                        },
+                                        onDeleteClick = {
+                                            selectedIds.add(site.siteId)
+                                            showDeleteDialog.value = true
+                                        },
+                                        farmViewModel = farmViewModel,
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                            }
                         }
                     } else {
-                        // Display the list of filtered items
-                        items(filteredList) { site ->
-                            siteCard(
-                                site = site,
-                                onCardClick = {
-                                    navController.navigate("farmList/${site.siteId}")
-                                },
-                                onDeleteClick = {
-                                    selectedIds.add(site.siteId)
-                                    showDeleteDialog.value = true
-                                },
-                                farmViewModel = farmViewModel,
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp, 8.dp),
+                            painter = painterResource(id = R.drawable.no_data2),
+                            contentDescription = null,
+                        )
                     }
                 }
             }
-
-            else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp, 8.dp),
-                        painter = painterResource(id = R.drawable.no_data2),
-                        contentDescription = null,
-                    )
-                }
         }
+    )
 
         // Display delete dialog if showDeleteDialog is true
         if (showDeleteDialog.value) {
             DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

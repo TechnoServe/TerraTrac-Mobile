@@ -82,7 +82,7 @@ private val LightColorScheme = lightColorScheme(
     error = Red,
     onPrimary = Black,
     onSecondary = Black,
-    onBackground = IceBlue,
+    onBackground = Black,
     onSurface = Black,
     onError = Black
 )

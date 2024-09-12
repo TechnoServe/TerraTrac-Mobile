@@ -392,8 +392,8 @@ fun SetPolygon(
                                     text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}")
-                                Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}")
+                                Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}",style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
+                                Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}",style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
                                 Text(
                                     text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo.size.toString()),9)} ${
                                         stringResource(
