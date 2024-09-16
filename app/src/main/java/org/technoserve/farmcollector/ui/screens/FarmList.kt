@@ -131,6 +131,11 @@ import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.draw.clip
+
+
 
 var siteID = 0L
 
@@ -240,6 +245,8 @@ fun FormatSelectionDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -286,6 +293,8 @@ fun ConfirmationDialog(
                 Text(text = stringResource(R.string.no))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -880,7 +889,7 @@ fun FarmList(
                     sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
                     navController.navigate("addFarm/${siteId}")
                 },
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
             }
@@ -1221,6 +1230,8 @@ fun ImportFileDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -1256,6 +1267,96 @@ fun DeleteAllDialogPresenter(
     }
 }
 
+//@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+//@Composable
+//fun FarmListHeader(
+//    title: String,
+//    onSearchQueryChanged: (String) -> Unit,
+//    onAddFarmClicked: () -> Unit,
+//    onBackClicked: () -> Unit,
+//    onBackSearchClicked: () -> Unit,
+//    showAdd: Boolean,
+//    showSearch: Boolean,
+//) {
+//    // State for holding the search query
+//    var searchQuery by remember { mutableStateOf("") }
+//
+//    var isSearchVisible by remember { mutableStateOf(false) }
+//
+//    TopAppBar(
+//        modifier =
+//            Modifier
+//                .background(MaterialTheme.colorScheme.primary)
+//                .fillMaxWidth(),
+//        navigationIcon = {
+//            IconButton(onClick = onBackClicked) {
+//                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",tint = MaterialTheme.colorScheme.onPrimary)
+//            }
+//        },
+//        title = {
+//            Text(
+//                text = title,
+//                color = MaterialTheme.colorScheme.onPrimary,
+//                fontSize = 22.sp,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
+//            )
+//        },
+//        actions = {
+//            if (showAdd) {
+////                IconButton(onClick = onAddFarmClicked) {
+////                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+////                }
+//            }
+//            if (showSearch) {
+//                IconButton(onClick = {
+//                    isSearchVisible = !isSearchVisible
+//                }) {
+//                    Icon(Icons.Default.Search, contentDescription = "Search")
+//                }
+//            }
+//        },
+//    )
+//    // Conditional rendering of the search field
+//    if (isSearchVisible && showSearch) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier =
+//                Modifier
+//                    .padding(horizontal = 16.dp)
+//                    .fillMaxWidth(),
+//        ) {
+//            OutlinedTextField(
+//                value = searchQuery,
+//                onValueChange = {
+//                    searchQuery = it
+//                    onSearchQueryChanged(it)
+//                },
+//                modifier =
+//                    Modifier
+//                        .padding(start = 8.dp)
+//                        .weight(1f),
+//                label = { Text(stringResource(R.string.search)) },
+//                leadingIcon = {
+//                    IconButton(onClick = {
+//                        // onBackSearchClicked()
+//                        searchQuery = ""
+//                        onSearchQueryChanged("")
+//                        isSearchVisible = !isSearchVisible
+//                    }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                },
+//                singleLine = true,
+//                colors =
+//                    TextFieldDefaults.outlinedTextFieldColors(
+//                        cursorColor = MaterialTheme.colorScheme.onSurface,
+//                    ),
+//            )
+//        }
+//    }
+//}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FarmListHeader(
@@ -1267,84 +1368,133 @@ fun FarmListHeader(
     showAdd: Boolean,
     showSearch: Boolean,
 ) {
-    // State for holding the search query
+    // State to hold the search query
     var searchQuery by remember { mutableStateOf("") }
 
+    // State to determine if the search mode is active
     var isSearchVisible by remember { mutableStateOf(false) }
 
     TopAppBar(
-        modifier =
-            Modifier
-                .background(MaterialTheme.colorScheme.primary)
-                .fillMaxWidth(),
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.primary)
+            .fillMaxWidth(),
         navigationIcon = {
-            IconButton(onClick = onBackClicked) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",tint = MaterialTheme.colorScheme.onPrimary)
+            IconButton(onClick = {
+                if (isSearchVisible) {
+                    // Exit search mode, clear search query
+                    searchQuery = ""
+                    onSearchQueryChanged("")
+                    isSearchVisible = false
+                } else {
+                    // Navigate back normally
+                    onBackClicked()
+                }
+            }) {
+                if (!isSearchVisible) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
         },
         title = {
-            Text(
-                text = title,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontSize = 22.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (!isSearchVisible) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 22.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         },
         actions = {
-            if (showAdd) {
-//                IconButton(onClick = onAddFarmClicked) {
-//                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-//                }
-            }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
                 }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
+                    if (!isSearchVisible) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
         },
     )
-    // Conditional rendering of the search field
-    if (isSearchVisible && showSearch) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
+
+    // Show search field when search mode is active
+    if (isSearchVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center // Center the Row within the Box
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = {
-                    searchQuery = it
-                    onSearchQueryChanged(it)
-                },
-                modifier =
-                    Modifier
-                        .padding(start = 8.dp)
-                        .weight(1f),
-                label = { Text(stringResource(R.string.search)) },
-                leadingIcon = {
-                    IconButton(onClick = {
-                        // onBackSearchClicked()
-                        searchQuery = ""
-                        onSearchQueryChanged("")
-                        isSearchVisible = !isSearchVisible
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                singleLine = true,
-                colors =
-                    TextFieldDefaults.outlinedTextFieldColors(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center, // Center the contents within the Row
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        onSearchQueryChanged(it)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth() // Center with a smaller width
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(16.dp)), // Add rounded corners
+                    placeholder = { Text(stringResource(R.string.search), color = MaterialTheme.colorScheme.onBackground) },
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            // Exit search mode and clear search
+                            searchQuery = ""
+                            onSearchQueryChanged("")
+                            isSearchVisible = false
+                        }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    trailingIcon = {
+                        if (searchQuery != ""){
+                            IconButton(onClick = {
+                                // Exit search mode and clear search
+                                searchQuery = ""
+                                onSearchQueryChanged("")
+                            }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
                         cursorColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-            )
+                    shape = RoundedCornerShape(16.dp) // Set the shape for the field to rounded
+                )
+
+            }
         }
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1372,16 +1522,39 @@ fun FarmListHeaderPlots(
    // Column {
         TopAppBar(
             title = {
+                if (!isSearchVisible) {
                 Text(
                     text = title,
                     fontSize = 22.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                    }
             },
+//            navigationIcon = {
+//                IconButton(onClick = onBackClicked) {
+//                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                }
+//            },
             navigationIcon = {
-                IconButton(onClick = onBackClicked) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                IconButton(onClick = {
+                    if (isSearchVisible) {
+                        // Exit search mode, clear search query
+                        searchQuery = ""
+                        onSearchQueryChanged("")
+                        isSearchVisible = false
+                    } else {
+                        // Navigate back normally
+                        onBackClicked()
+                    }
+                }) {
+                    if ( !isSearchVisible ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             },
             actions = {
@@ -1390,6 +1563,7 @@ fun FarmListHeaderPlots(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.horizontalScroll(rememberScrollState())
                 ) {
+                    if ( !isSearchVisible ){
                     IconButton(
                         onClick = { onRestoreClicked() },
                         modifier = Modifier.size(36.dp)
@@ -1400,7 +1574,8 @@ fun FarmListHeaderPlots(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    if (showExport) {
+                }
+                    if (showExport && !isSearchVisible ) {
                         IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.save),
@@ -1409,7 +1584,7 @@ fun FarmListHeaderPlots(
                             )
                         }
                     }
-                    if (showShare) {
+                    if (showShare && !isSearchVisible) {
                         IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
                             Icon(
                                 imageVector = Icons.Default.Share,
@@ -1418,21 +1593,23 @@ fun FarmListHeaderPlots(
                             )
                         }
                     }
-                    IconButton(
-                        onClick = {
-                            if (!isImportDisabled) {
-                                onImportClicked()
-                                isImportDisabled = true
-                            }
-                        },
-                        modifier = Modifier.size(36.dp),
-                        enabled = !isImportDisabled
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icons8_import_file_48),
-                            contentDescription = "Import",
-                            modifier = Modifier.size(24.dp),
-                        )
+                    if ( !isSearchVisible ) {
+                        IconButton(
+                            onClick = {
+                                if (!isImportDisabled) {
+                                    onImportClicked()
+                                    isImportDisabled = true
+                                }
+                            },
+                            modifier = Modifier.size(36.dp),
+                            enabled = !isImportDisabled
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icons8_import_file_48),
+                                contentDescription = "Import",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
                     }
                     if (showAdd) {
 //                        IconButton(onClick = {
@@ -1448,47 +1625,90 @@ fun FarmListHeaderPlots(
 //                            )
 //                        }
                     }
+
                     if (showSearch) {
                         IconButton(onClick = {
                             isSearchVisible = !isSearchVisible
-                        }, modifier = Modifier.size(36.dp)) {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = "Search",
-                                modifier = Modifier.size(24.dp)
-                            )
+                        },modifier = Modifier.size(36.dp)) {
+                            if (!isSearchVisible) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
                         }
                     }
                 }
             },
         )
 
-        if (isSearchVisible && showSearch) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = {
-                    searchQuery = it
-                    onSearchQueryChanged(it)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                label = { Text(stringResource(R.string.search)) },
-                leadingIcon = {
-                    IconButton(onClick = {
-                        searchQuery = ""
-                        onSearchQueryChanged("")
-                        isSearchVisible = false
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = MaterialTheme.colorScheme.onSurface,
+    // Show search field when search mode is active
+    if (isSearchVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center // Center the Row within the Box
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center, // Center the contents within the Row
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        onSearchQueryChanged(it)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth() // Center with a smaller width
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(16.dp)), // Add rounded corners
+                    placeholder = { Text(stringResource(R.string.search)) },
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            // Exit search mode and clear search
+                            searchQuery = ""
+                            onSearchQueryChanged("")
+                            isSearchVisible = false
+                        }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    trailingIcon = {
+                        if (searchQuery != ""){
+                            IconButton(onClick = {
+                                // Exit search mode and clear search
+                                searchQuery = ""
+                                onSearchQueryChanged("")
+                            }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(16.dp) // Set the shape for the field to rounded
                 )
-            )
+
+            }
         }
+    }
     // }
 }
 
@@ -1517,7 +1737,7 @@ fun FarmCard(
             ),
             modifier =
             Modifier
-                .background(backgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxWidth()
                 .padding(8.dp),
             onClick = {
@@ -1527,7 +1747,7 @@ fun FarmCard(
             Column(
                 modifier =
                 Modifier
-                    .background(backgroundColor)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(16.dp),
             ) {
                 Row(
@@ -1893,7 +2113,7 @@ fun UpdateFarmForm(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(backgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
                 .verticalScroll(state = scrollState),
     ) {

@@ -35,6 +35,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -315,7 +316,9 @@ fun FarmForm(
                 }) {
                     Text(stringResource(id = R.string.no))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -379,7 +382,9 @@ fun FarmForm(
                 }) {
                     Text(text = stringResource(id = R.string.set_polygon))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -439,7 +444,7 @@ fun FarmForm(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(backgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -774,7 +779,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
-                .background(buttonColor)
+                .background(MaterialTheme.colorScheme.background)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
                 .padding(bottom = 5.dp)
@@ -811,7 +816,7 @@ fun FarmForm(
                 }
             },
             modifier = Modifier
-                .background(buttonColor)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
@@ -924,7 +929,9 @@ fun LocationPermissionRequest(
                     }) {
                         Text(stringResource(id = R.string.no))
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
         }
     }

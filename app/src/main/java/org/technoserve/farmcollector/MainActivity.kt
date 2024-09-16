@@ -159,10 +159,12 @@ class MainActivity : ComponentActivity() {
                                 canExitApp = false
                             }
                             if (siteId != null) {
-                                FarmList(
-                                    navController = navController,
-                                    siteId = siteId.toLong(),
-                                )
+                                ScreenWithSidebar(navController) {
+                                    FarmList(
+                                        navController = navController,
+                                        siteId = siteId.toLong(),
+                                    )
+                                }
                             }
                         }
                         composable(Routes.ADD_FARM) { backStackEntry ->

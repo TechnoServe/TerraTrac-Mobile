@@ -320,7 +320,7 @@ fun SetPolygon(
         Column(
             modifier =
                 Modifier
-                    .background(backgroundColor)
+                    .background(MaterialTheme.colorScheme.background)
                     .fillMaxWidth()
                     .fillMaxHeight(),
         ) {
@@ -355,7 +355,7 @@ fun SetPolygon(
                             Column(
                                 modifier =
                                     Modifier
-                                        .background(backgroundColor)
+                                        .background(MaterialTheme.colorScheme.background)
                                         .padding(5.dp),
                             ) {
                                 Text(

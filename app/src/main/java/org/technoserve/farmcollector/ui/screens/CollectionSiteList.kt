@@ -128,7 +128,7 @@ fun CollectionSiteList(navController: NavController) {
                 onClick = {
                     navController.navigate("addSite")
                 },
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add a Site")
             }
@@ -233,7 +233,8 @@ fun CollectionSiteList(navController: NavController) {
                     }
                 }
             }
-        }
+        },
+        modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
     )
 
         // Display delete dialog if showDeleteDialog is true
@@ -278,7 +279,7 @@ fun siteCard(
                 ),
             modifier =
                 Modifier
-                    .background(backgroundColor)
+                    .background(MaterialTheme.colorScheme.background)
                     .fillMaxWidth() // 90% of the screen width
                     .padding(8.dp),
             onClick = {
@@ -288,7 +289,7 @@ fun siteCard(
             Column(
                 modifier =
                     Modifier
-                        .background(backgroundColor)
+                        .background(MaterialTheme.colorScheme.background)
                         .padding(16.dp),
             ) {
                 Row(

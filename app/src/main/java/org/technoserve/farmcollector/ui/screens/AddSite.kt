@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -150,7 +151,7 @@ fun SiteForm(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(backgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -282,7 +283,9 @@ fun SiteForm(navController: NavController) {
                     TextButton(onClick = { showDisclaimerPhone = false }) {
                         Text(stringResource(id=R.string.ok))
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
 
         }
@@ -347,7 +350,9 @@ fun SiteForm(navController: NavController) {
                     TextButton(onClick = { showDisclaimerEmail = false }) {
                         Text("OK")
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
