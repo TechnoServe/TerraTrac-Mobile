@@ -468,13 +468,14 @@ fun CollectionSiteList(navController: NavController) {
                         }
                     }
                 } else {
-
-                    // Show the toast
-                    Toast.makeText(
-                        context,
-                        finalMessage,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    if(showFinalMessage) {
+                        // Show the toast
+                        Toast.makeText(
+                            context,
+                            finalMessage,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
         }

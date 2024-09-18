@@ -133,6 +133,7 @@ import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
 
@@ -874,6 +875,7 @@ fun FarmList(
                     ) { success ->
                         if (success) {
                             finalMessage = context.getString(R.string.data_restored_successfully)
+                            showFinalMessage = true
                         } else {
                             showFinalMessage = true
                             showRestorePrompt = true
@@ -895,6 +897,8 @@ fun FarmList(
                         sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
                         navController.navigate("addFarm/${siteId}")
                     },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(end = 0.dp, bottom = 48.dp)
                         .background(MaterialTheme.colorScheme.background).align(BottomEnd)
                 ) {
@@ -945,16 +949,20 @@ fun FarmList(
 //                    textAlign = TextAlign.Center,
 //                    style = MaterialTheme.typography.bodyMedium
 //                )
-                // Show the toast
-                Toast.makeText(
-                    context,
-                    context.getString(
-                        R.string.restoration_completed,
-                        status.addedCount,
-                        status.sitesCreated
-                    ),
-                    Toast.LENGTH_LONG
-                ).show()
+
+                if (showFinalMessage) {
+                    // Show the toast
+                    Toast.makeText(
+                        context,
+                        context.getString(
+                            R.string.restoration_completed,
+                            status.addedCount,
+                            status.sitesCreated
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                showFinalMessage=false
                 showRestorePrompt = false // Hide the restore prompt if restoration is successful
                 // showDataContent()
             }
@@ -1108,12 +1116,14 @@ fun FarmList(
 //                        style = MaterialTheme.typography.bodyMedium
 //                    )
 
-                    // Show the toast
-                    Toast.makeText(
-                        context,
-                        finalMessage,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    if (showFinalMessage) {
+                        // Show the toast
+                        Toast.makeText(
+                            context,
+                            finalMessage,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
 
                     // showDataContent()
                 }
@@ -1483,18 +1493,20 @@ fun FarmListHeader(
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "Restore",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
-                }) {
+                },modifier = Modifier.size(36.dp)) {
 //                    if (!isSearchVisible) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search",
+                            modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
 //                    }
@@ -1648,7 +1660,8 @@ fun FarmListHeaderPlots(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Restore",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
 //                }
@@ -1660,6 +1673,7 @@ fun FarmListHeaderPlots(
                                 painter = painterResource(id = R.drawable.save),
                                 contentDescription = "Export",
                                 modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary,
                             )
                         }
                     }
@@ -1670,7 +1684,8 @@ fun FarmListHeaderPlots(
                             Icon(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = "Share",
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -1689,6 +1704,7 @@ fun FarmListHeaderPlots(
                                 painter = painterResource(id = R.drawable.icons8_import_file_48),
                                 contentDescription = "Import",
                                 modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary,
                             )
                         }
 //                    }
