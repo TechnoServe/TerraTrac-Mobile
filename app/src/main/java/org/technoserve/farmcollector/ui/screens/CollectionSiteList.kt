@@ -241,6 +241,7 @@ fun CollectionSiteList(navController: NavController) {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .padding(bottom = 90.dp)
                         ) {
                             // Filter the list based on the search query
                             val filteredList = listItems.filter {

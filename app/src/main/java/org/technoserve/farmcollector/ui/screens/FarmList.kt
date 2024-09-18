@@ -758,6 +758,7 @@ fun FarmList(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .padding(bottom = 90.dp)
                         ) {
                             val filteredList = filteredListItems.filter {
                                 it.farmerName.contains(searchQuery, ignoreCase = true)

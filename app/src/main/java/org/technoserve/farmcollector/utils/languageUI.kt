@@ -1,11 +1,13 @@
 package org.technoserve.farmcollector.utils
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,6 +43,7 @@ fun LanguageSelector(viewModel: LanguageViewModel, languages: List<Language>) {
         Text(text = currentLanguage.displayName)
         DropdownMenu(
             expanded = expanded,
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
             onDismissRequest = { expanded = false }
         ) {
             languages.forEach { language ->
@@ -49,7 +52,7 @@ fun LanguageSelector(viewModel: LanguageViewModel, languages: List<Language>) {
                         viewModel.selectLanguage(language, context)
                         expanded = false
                     },
-                    text = { Text(text = language.displayName) }
+                    text = { Text(text = language.displayName, color = MaterialTheme.colorScheme.onBackground) }
                 )
             }
         }
