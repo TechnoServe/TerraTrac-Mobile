@@ -1428,6 +1428,8 @@ fun FarmListHeader(
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
     showSearch: Boolean,
+    showRestore: Boolean,
+    onRestoreClicked: () -> Unit
 ) {
     // State to hold the search query
     var searchQuery by remember { mutableStateOf("") }
@@ -1472,6 +1474,19 @@ fun FarmListHeader(
 //            }
         },
         actions = {
+
+        if (showRestore ){
+            IconButton(
+                onClick = { onRestoreClicked() },
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Restore",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
@@ -2192,6 +2207,8 @@ fun UpdateFarmForm(
                 onBackSearchClicked = {},
                 showAdd = false,
                 showSearch = false,
+                showRestore = false,
+                onRestoreClicked = {}
             )
         Spacer(modifier = Modifier.height(16.dp))
         TextField(

@@ -3,7 +3,9 @@ package org.technoserve.farmcollector.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ContentValues.TAG
 import android.content.Intent
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -69,7 +71,9 @@ fun AddSite(navController: NavController) {
             onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
             showAdd = false,
-            showSearch = false
+            showSearch = false,
+            showRestore = false,
+            onRestoreClicked = {}
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)
@@ -464,6 +468,10 @@ fun addSite(
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addSite(site)
+    farmViewModel.addSite(site){isAdded->
+        if (isAdded) {
+            Log.d(TAG, " site added")
+        }
+    }
     return site
 }

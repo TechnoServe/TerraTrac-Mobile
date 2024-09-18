@@ -60,7 +60,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     }
 
 
-    suspend fun addSite(site: CollectionSite) {
+    suspend fun addSite(site: CollectionSite) : Boolean {
         // Check if the site already exists
         val existingSite = isSiteDuplicate(site)
 
@@ -70,11 +70,14 @@ class FarmRepository(private val farmDAO: FarmDAO) {
             Log.d(TAG, "Insert operation result: $insertResult")
             if (insertResult != -1L) {
                 Log.d(TAG, "New site inserted: $site")
+                return true
             } else {
                 Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
+                return false
             }
         } else {
             Log.d(TAG, "Site already exists: $existingSite")
+            return false
         }
     }
 

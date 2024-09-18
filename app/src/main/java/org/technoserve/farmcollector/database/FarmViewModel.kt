@@ -167,11 +167,21 @@ class FarmViewModel(
         }
     }
 
-    fun addSite(site: CollectionSite) {
+//    fun addSite(site: CollectionSite) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            repository.addSite(site)
+//        }
+//    }
+
+    fun addSite(site: CollectionSite, onSuccess: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.addSite(site)
+            val result = repository.addSite(site)
+            withContext(Dispatchers.Main) {
+                onSuccess(result)  // Return the result to the main thread
+            }
         }
     }
+
 
     fun getLastFarm(): LiveData<List<Farm>> = repository.getLastFarm()
 
@@ -1028,8 +1038,11 @@ class FarmViewModel(
                         if (siteToCreate != null) {
                             val collectionSite = siteToCreate.toCollectionSite()
                             Log.d(TAG, "Creating new site: $collectionSite")
-                            addSite(collectionSite)
-                            createdSiteCount++
+                            addSite(collectionSite){isAdded ->
+                                if (isAdded) {
+                                    createdSiteCount++
+                                }
+                            }
                         }
                     }
 

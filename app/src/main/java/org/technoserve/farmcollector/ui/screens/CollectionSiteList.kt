@@ -1,6 +1,7 @@
 package org.technoserve.farmcollector.ui.screens
 
 import android.app.Application
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -55,11 +56,20 @@ import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.BottomEnd
+import org.technoserve.farmcollector.database.RestoreStatus
+import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionSiteList(navController: NavController) {
     val context = LocalContext.current
@@ -100,6 +110,29 @@ fun CollectionSiteList(navController: NavController) {
     // State to manage the loading status
     val isLoading = remember { mutableStateOf(true) }
 
+
+    var deviceId by remember { mutableStateOf("") }
+    // State variable to observe restore status
+    val restoreStatus by farmViewModel.restoreStatus.observeAsState()
+
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+
+    var showRestorePrompt by remember { mutableStateOf(false) }
+    var finalMessage by remember { mutableStateOf("") }
+    var showFinalMessage by remember { mutableStateOf(false) }
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
+    LaunchedEffect(Unit) {
+        deviceId = DeviceIdUtil.getDeviceId(context)
+    }
+
+
     // Simulate a network request or data loading
     LaunchedEffect(Unit) {
         // Simulate a delay for loading
@@ -122,6 +155,22 @@ fun CollectionSiteList(navController: NavController) {
             onBackClicked = { navController.navigate("home") },
             showAdd = true,
             showSearch = true,
+            showRestore = true,
+            onRestoreClicked = {
+                farmViewModel.restoreData(
+                    deviceId = deviceId,
+                    phoneNumber = "",
+                    email = "",
+                    farmViewModel = farmViewModel
+                ) { success ->
+                    if (success) {
+                        finalMessage = context.getString(R.string.data_restored_successfully)
+                    } else {
+                        showFinalMessage = true
+                        showRestorePrompt = true
+                    }
+                }
+            }
         )
         },
         floatingActionButton = {
@@ -248,6 +297,211 @@ fun CollectionSiteList(navController: NavController) {
             .fillMaxWidth(),
        //  modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
     )
+
+
+
+    when (restoreStatus) {
+        is RestoreStatus.InProgress -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is RestoreStatus.Success -> {
+            Column(
+                modifier = Modifier
+                    .padding(top=72.dp)
+                    .fillMaxSize()
+            ) {
+                // Display a completion message
+                val status = restoreStatus as RestoreStatus.Success
+                // Show the toast
+                Toast.makeText(
+                    context,
+                    context.getString(
+                        R.string.restoration_completed,
+                        status.addedCount,
+                        status.sitesCreated
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+                showRestorePrompt = false // Hide the restore prompt if restoration is successful
+                // showDataContent()
+            }
+        }
+
+        is RestoreStatus.Error -> {
+            // Display an error message
+            val status = restoreStatus as RestoreStatus.Error
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showRestorePrompt) {
+                    Column(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        if(showFinalMessage) {
+                            // Show the toast with the final message
+                            Toast.makeText(
+                                context,
+                                context.getString(
+                                    R.string.no_data_found,
+                                ),
+                                Toast.LENGTH_LONG // Duration of the toast (LONG or SHORT)
+                            ).show()
+                        }
+
+                        showFinalMessage = false
+                        TextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.phone_number,),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (phone.isNotEmpty() && !isValidPhoneNumber(phone)) Text(
+                                    stringResource(R.string.error_invalid_phone_number, phone)
+                                )
+                            },
+                            isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            )
+
+                        )
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.email),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                        email
+                                    ).matches()
+                                )
+                                    Text(stringResource(R.string.error_invalid_email_address))
+                            },
+                            isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                email
+                            ).matches(),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            ),
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                onClick = {
+                                    showRestorePrompt = false
+                                    showFinalMessage = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(id = R.string.cancel))
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    if (phone.isNotBlank() || email.isNotBlank()) {
+                                        showRestorePrompt =
+                                            false // Hide the restore prompt on retry
+                                        farmViewModel.restoreData(
+                                            deviceId = deviceId,
+                                            phoneNumber = phone,
+                                            email = email,
+                                            farmViewModel = farmViewModel
+                                        ) { success ->
+                                            finalMessage = if (success) {
+                                                context.getString(R.string.data_restored_successfully)
+                                            } else {
+                                                context.getString(R.string.no_data_found)
+                                            }
+                                            showFinalMessage = true
+                                        }
+                                    }
+                                },
+                                enabled = email.isNotBlank() || phone.isNotBlank(),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(context.getString(R.string.restore_data))
+                            }
+                        }
+                    }
+                } else {
+
+                    // Show the toast
+                    Toast.makeText(
+                        context,
+                        finalMessage,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
+        null -> {
+            if (isLoading.value) {
+                // Show loader while data is loading
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                   //  CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(top=48.dp)
+//                        .fillMaxSize()
+                ) {
+                    // Display data or no data message if loading is complete
+                    // showDataContent()
+                }
+            }
+        }
+    }
 
         // Display delete dialog if showDeleteDialog is true
         if (showDeleteDialog.value) {

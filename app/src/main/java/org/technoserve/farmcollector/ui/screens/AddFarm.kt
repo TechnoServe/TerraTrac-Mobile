@@ -121,7 +121,9 @@ fun AddFarm(navController: NavController, siteId: Long) {
                 onBackSearchClicked = {},
                 onBackClicked = { navController.popBackStack() },
                 showAdd = false,
-                showSearch = false
+                showSearch = false,
+                showRestore = false,
+                onRestoreClicked = {}
             )
         Spacer(modifier = Modifier.height(16.dp))
         FarmForm(navController, siteId, coordinatesData)
