@@ -467,7 +467,7 @@ fun SetPolygon(
                                 .fillMaxWidth(0.28f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
-                        enabled = isCapturingCoordinates,  // Enable only when capturing coordinates
+//                        enabled = isCapturingCoordinates,  // Enable only when capturing coordinates
                         onClick = {
                             if (!isLocationEnabled(context)) {
                                 showLocationDialog.value = true
@@ -540,7 +540,7 @@ fun SetPolygon(
                     ElevatedButton(
                         modifier = Modifier.fillMaxWidth(0.28f),
                         colors = ButtonDefaults.buttonColors(Color.White),
-                        enabled = hasPointsOnMap,  // Enable only when there are points to drop
+//                        enabled = hasPointsOnMap,  // Enable only when there are points to drop
                         shape = RoundedCornerShape(0.dp),
                         onClick = {
                             coordinates = coordinates.dropLast(1)
@@ -560,7 +560,7 @@ fun SetPolygon(
                             .fillMaxWidth(0.22f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
-                        enabled = hasPointsOnMap,  // Enable only when there are points to reset
+//                        enabled = hasPointsOnMap,  // Enable only when there are points to reset
                         onClick = {
                             showClearMapDialog.value = true
                         },

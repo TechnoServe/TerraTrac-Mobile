@@ -59,7 +59,8 @@ fun AddSite(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .fillMaxWidth()
+//            .padding(16.dp)
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_site),
@@ -177,7 +178,7 @@ fun SiteForm(navController: NavController) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+//                    .padding(bottom = 16.dp)
                     .onKeyEvent {
                         if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                             focusRequester1.requestFocus()
@@ -186,7 +187,7 @@ fun SiteForm(navController: NavController) {
                     }
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -208,7 +209,7 @@ fun SiteForm(navController: NavController) {
             ),
             modifier = Modifier
                     .fillMaxWidth() // Make the element fill the width of its parent
-                    .padding(bottom = 16.dp) // Add bottom padding
+//                    .padding(bottom = 8.dp) // Add bottom padding
                     .focusRequester(focusRequester2) // Attach a focus requester
                     .onKeyEvent { keyEvent ->
                     // Handle key events
@@ -218,7 +219,7 @@ fun SiteForm(navController: NavController) {
                     false // Indicate that the event is not consumed
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -264,7 +265,7 @@ fun SiteForm(navController: NavController) {
             },
             modifier = Modifier
                         .fillMaxWidth() // Make the element fill the width of its parent
-                        .padding(bottom = 16.dp) // Add bottom padding
+//                        .padding(bottom = 16.dp) // Add bottom padding
                         .focusRequester(focusRequester3) // Attach a focus requester
                          .onKeyEvent { keyEvent ->
                         // Handle key events
@@ -289,7 +290,7 @@ fun SiteForm(navController: NavController) {
             )
 
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
@@ -331,7 +332,7 @@ fun SiteForm(navController: NavController) {
             },
             modifier = Modifier
                     .fillMaxWidth() // Make the element fill the width of its parent
-                .padding(bottom = 16.dp) // Add bottom padding
+//                .padding(bottom = 16.dp) // Add bottom padding
                 .focusRequester(focusRequester4) // Attach a focus requester
                 .onKeyEvent { keyEvent ->
                     // Handle key events
@@ -355,7 +356,7 @@ fun SiteForm(navController: NavController) {
                 tonalElevation = 6.dp // Adds a subtle shadow for better UX
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -377,7 +378,7 @@ fun SiteForm(navController: NavController) {
             ),
             modifier = Modifier
                 .fillMaxWidth() // Make the element fill the width of its parent
-                .padding(bottom = 16.dp) // Add bottom padding
+//                .padding(bottom = 16.dp) // Add bottom padding
                 .focusRequester(focusRequester5) // Attach a focus requester
                 .onKeyEvent { keyEvent ->
                     // Handle key events
@@ -387,7 +388,7 @@ fun SiteForm(navController: NavController) {
                     false // Indicate that the event is not consumed
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -410,9 +411,9 @@ fun SiteForm(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester6)
-                .padding(bottom = 16.dp)
+//                .padding(bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
                 if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {

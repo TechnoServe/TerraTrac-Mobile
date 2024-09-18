@@ -17,6 +17,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -110,17 +111,18 @@ fun AddFarm(navController: NavController, siteId: Long) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .fillMaxWidth()
+//            .padding(16.dp)
     ) {
-        FarmListHeader(
-            title = stringResource(id = R.string.add_farm),
-            onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackSearchClicked = {},
-            onBackClicked = { navController.popBackStack() },
-            showAdd = false,
-            showSearch = false
-        )
+            FarmListHeader(
+                title = stringResource(id = R.string.add_farm),
+                onSearchQueryChanged = {},
+                onAddFarmClicked = { /* Handle adding a farm here */ },
+                onBackSearchClicked = {},
+                onBackClicked = { navController.popBackStack() },
+                showAdd = false,
+                showSearch = false
+            )
         Spacer(modifier = Modifier.height(16.dp))
         FarmForm(navController, siteId, coordinatesData)
     }

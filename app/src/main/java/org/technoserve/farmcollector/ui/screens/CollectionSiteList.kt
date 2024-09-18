@@ -58,6 +58,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 
 @Composable
 fun CollectionSiteList(navController: NavController) {
@@ -124,13 +125,21 @@ fun CollectionSiteList(navController: NavController) {
         )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate("addSite")
-                },
-                modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add a Site")
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("addSite")
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(end= 0.dp, bottom = 48.dp)
+                        .background(MaterialTheme.colorScheme.background).align(BottomEnd)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add a Site")
+                }
             }
         },
         content = { paddingValues ->
@@ -215,7 +224,7 @@ fun CollectionSiteList(navController: NavController) {
                                         },
                                         farmViewModel = farmViewModel,
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
                         }
@@ -234,7 +243,10 @@ fun CollectionSiteList(navController: NavController) {
                 }
             }
         },
-        modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.primary)
+            .fillMaxWidth(),
+       //  modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
     )
 
         // Display delete dialog if showDeleteDialog is true

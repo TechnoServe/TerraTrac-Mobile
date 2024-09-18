@@ -133,6 +133,7 @@ import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
 
 
@@ -719,7 +720,7 @@ fun FarmList(
         val hasData = listItems.isNotEmpty() // Check if there's data available
 
         if (hasData) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column {
                 // Only show the TabRow and HorizontalPager if there is data
                 TabRow(
                     selectedTabIndex = pagerState.currentPage,
@@ -743,7 +744,7 @@ fun FarmList(
 
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                 ) { page ->
                     val filteredListItems = when (page) {
                         1 -> listItems.filter { it.needsUpdate }
@@ -874,6 +875,7 @@ fun FarmList(
                         if (success) {
                             finalMessage = context.getString(R.string.data_restored_successfully)
                         } else {
+                            showFinalMessage = true
                             showRestorePrompt = true
                         }
                     }
@@ -882,16 +884,22 @@ fun FarmList(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    val sharedPref =
-                        context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
-                    sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
-                    navController.navigate("addFarm/${siteId}")
-                },
-                modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
+                FloatingActionButton(
+                    onClick = {
+                        val sharedPref =
+                            context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+                        sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
+                        navController.navigate("addFarm/${siteId}")
+                    },
+                    modifier = Modifier.padding(end = 0.dp, bottom = 48.dp)
+                        .background(MaterialTheme.colorScheme.background).align(BottomEnd)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
+                }
             }
         },
         content = { paddingValues ->
@@ -918,152 +926,197 @@ fun FarmList(
         }
 
         is RestoreStatus.Success -> {
-            // Display a completion message
-            val status = restoreStatus as RestoreStatus.Success
-            Text(
-                text = stringResource(
-                    R.string.restoration_completed,
-                    status.addedCount,
-                    status.sitesCreated
-                ),
+            Column(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            showRestorePrompt = false // Hide the restore prompt if restoration is successful
-            showDataContent()
+                    .padding(top=72.dp)
+                    .fillMaxSize()
+            ) {
+                // Display a completion message
+                val status = restoreStatus as RestoreStatus.Success
+//                Text(
+//                    text = stringResource(
+//                        R.string.restoration_completed,
+//                        status.addedCount,
+//                        status.sitesCreated
+//                    ),
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .fillMaxWidth(),
+//                    textAlign = TextAlign.Center,
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+                // Show the toast
+                Toast.makeText(
+                    context,
+                    context.getString(
+                        R.string.restoration_completed,
+                        status.addedCount,
+                        status.sitesCreated
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+                showRestorePrompt = false // Hide the restore prompt if restoration is successful
+                // showDataContent()
+            }
         }
 
         is RestoreStatus.Error -> {
             // Display an error message
             val status = restoreStatus as RestoreStatus.Error
 
-            if (showRestorePrompt) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.no_data_available),
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showRestorePrompt) {
+                    Column(
+                        modifier = Modifier
+//                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+//                        Text(
+//                            text = stringResource(id = R.string.no_data_available),
+//                            modifier = Modifier.padding(bottom = 16.dp),
+//                            textAlign = TextAlign.Center,
+//                            style = MaterialTheme.typography.bodyMedium
+//                        )
 
-                    TextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = {
-                            Text(
-                                stringResource(id = R.string.phone_number,),
-                                color = inputLabelColor
+                    if(showFinalMessage) {
+                        // Show the toast with the final message
+                        Toast.makeText(
+                            context,
+                            context.getString(
+                                R.string.no_data_found,
+                            ),
+                            Toast.LENGTH_LONG // Duration of the toast (LONG or SHORT)
+                        ).show()
+                    }
+
+                        showFinalMessage = false
+                        TextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.phone_number,),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (phone.isNotEmpty() && !isValidPhoneNumber(phone)) Text(
+                                    stringResource(R.string.error_invalid_phone_number, phone)
+                                )
+                            },
+                            isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
                             )
-                        },
-                        supportingText = {
-                            if (phone.isNotEmpty() && !isValidPhoneNumber(phone)) Text(
-                                stringResource(R.string.error_invalid_phone_number, phone)
-                            )
-                        },
-                        isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
-                        colors = TextFieldDefaults.textFieldColors(
-                            errorLeadingIconColor = Color.Red,
-                            cursorColor = inputTextColor,
-                            errorCursorColor = Color.Red,
-                            focusedIndicatorColor = inputBorder,
-                            unfocusedIndicatorColor = inputBorder,
-                            errorIndicatorColor = Color.Red
+
+                        )
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.email),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                        email
+                                    ).matches()
+                                )
+                                    Text(stringResource(R.string.error_invalid_email_address))
+                            },
+                            isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                email
+                            ).matches(),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            ),
                         )
 
-                    )
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = {
-                            Text(
-                                stringResource(id = R.string.email),
-                                color = inputLabelColor
-                            )
-                        },
-                        supportingText = {
-                            if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
-                                    email
-                                ).matches()
-                            )
-                                Text(stringResource(R.string.error_invalid_email_address))
-                        },
-                        isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
-                            email
-                        ).matches(),
-                        colors = TextFieldDefaults.textFieldColors(
-                            errorLeadingIconColor = Color.Red,
-                            cursorColor = inputTextColor,
-                            errorCursorColor = Color.Red,
-                            focusedIndicatorColor = inputBorder,
-                            unfocusedIndicatorColor = inputBorder,
-                            errorIndicatorColor = Color.Red
-                        ),
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Button(
-                            onClick = {
-                                showRestorePrompt = false
-                            },
-                            modifier = Modifier.weight(1f)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(id = R.string.cancel))
-                        }
+                            Button(
+                                onClick = {
+                                    showRestorePrompt = false
+                                    showFinalMessage = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(id = R.string.cancel))
+                            }
 
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                if (phone.isNotBlank() || email.isNotBlank()) {
-                                    showRestorePrompt =
-                                        false // Hide the restore prompt on retry
-                                    farmViewModel.restoreData(
-                                        deviceId = deviceId,
-                                        phoneNumber = phone,
-                                        email = email,
-                                        farmViewModel = farmViewModel
-                                    ) { success ->
-                                        finalMessage = if (success) {
-                                            context.getString(R.string.data_restored_successfully)
-                                        } else {
-                                            context.getString(R.string.no_data_found)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    if (phone.isNotBlank() || email.isNotBlank()) {
+                                        showRestorePrompt =
+                                            false // Hide the restore prompt on retry
+                                        farmViewModel.restoreData(
+                                            deviceId = deviceId,
+                                            phoneNumber = phone,
+                                            email = email,
+                                            farmViewModel = farmViewModel
+                                        ) { success ->
+                                            finalMessage = if (success) {
+                                                context.getString(R.string.data_restored_successfully)
+                                            } else {
+                                                context.getString(R.string.no_data_found)
+                                            }
+                                            showFinalMessage = true
                                         }
-                                        // showFinalMessage = true
                                     }
-                                }
-                            },
-                            enabled = email.isNotBlank() || phone.isNotBlank(),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(context.getString(R.string.restore_data))
+                                },
+                                enabled = email.isNotBlank() || phone.isNotBlank(),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(context.getString(R.string.restore_data))
+                            }
                         }
                     }
+                } else {
+                    // Display a message indicating no data available
+//                    Text(
+//                        text = finalMessage,
+//                        modifier = Modifier.padding(16.dp),
+//                        textAlign = TextAlign.Center,
+//                        style = MaterialTheme.typography.bodyMedium
+//                    )
+
+                    // Show the toast
+                    Toast.makeText(
+                        context,
+                        finalMessage,
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // showDataContent()
                 }
-            } else {
-                // Display a message indicating no data available
-                Text(
-                    text = finalMessage,
-                    modifier = Modifier.padding(16.dp),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                showDataContent()
             }
         }
 
@@ -1079,8 +1132,14 @@ fun FarmList(
                     CircularProgressIndicator()
                 }
             } else {
-                // Display data or no data message if loading is complete
-                // showDataContent()
+                Column(
+                    modifier = Modifier
+                        .padding(top=48.dp)
+//                        .fillMaxSize()
+                ) {
+                    // Display data or no data message if loading is complete
+                    // showDataContent()
+                }
             }
         }
     }
@@ -1263,6 +1322,8 @@ fun DeleteAllDialogPresenter(
                     Text(text = stringResource(id = R.string.no))
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 }
@@ -1390,17 +1451,17 @@ fun FarmListHeader(
                     onBackClicked()
                 }
             }) {
-                if (!isSearchVisible) {
+//                if (!isSearchVisible) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
-                }
+//                }
             }
         },
         title = {
-            if (!isSearchVisible) {
+//            if (!isSearchVisible) {
                 Text(
                     text = title,
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -1408,20 +1469,20 @@ fun FarmListHeader(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
+//            }
         },
         actions = {
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
                 }) {
-                    if (!isSearchVisible) {
+//                    if (!isSearchVisible) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
-                    }
+//                    }
                 }
             }
         },
@@ -1431,6 +1492,7 @@ fun FarmListHeader(
     if (isSearchVisible) {
         Box(
             modifier = Modifier
+                .padding(top=54.dp)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center // Center the Row within the Box
         ) {
@@ -1447,8 +1509,8 @@ fun FarmListHeader(
                     },
                     modifier = Modifier
                         .fillMaxWidth() // Center with a smaller width
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(16.dp)), // Add rounded corners
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(0.dp)), // Add rounded corners
                     placeholder = { Text(stringResource(R.string.search), color = MaterialTheme.colorScheme.onBackground) },
                     leadingIcon = {
                         IconButton(onClick = {
@@ -1486,7 +1548,7 @@ fun FarmListHeader(
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    shape = RoundedCornerShape(16.dp) // Set the shape for the field to rounded
+                    shape = RoundedCornerShape(0.dp) // Set the shape for the field to rounded
                 )
 
             }
@@ -1522,14 +1584,14 @@ fun FarmListHeaderPlots(
    // Column {
         TopAppBar(
             title = {
-                if (!isSearchVisible) {
+//                if (!isSearchVisible) {
                 Text(
                     text = title,
                     fontSize = 22.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                    }
+//                    }
             },
 //            navigationIcon = {
 //                IconButton(onClick = onBackClicked) {
@@ -1548,13 +1610,13 @@ fun FarmListHeaderPlots(
                         onBackClicked()
                     }
                 }) {
-                    if ( !isSearchVisible ) {
+//                    if ( !isSearchVisible ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
-                    }
+//                    }
                 }
             },
             actions = {
@@ -1563,7 +1625,7 @@ fun FarmListHeaderPlots(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.horizontalScroll(rememberScrollState())
                 ) {
-                    if ( !isSearchVisible ){
+//                    if ( !isSearchVisible ){
                     IconButton(
                         onClick = { onRestoreClicked() },
                         modifier = Modifier.size(36.dp)
@@ -1574,8 +1636,10 @@ fun FarmListHeaderPlots(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                }
-                    if (showExport && !isSearchVisible ) {
+//                }
+                    if (showExport
+//                        && !isSearchVisible
+                        ) {
                         IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.save),
@@ -1584,7 +1648,9 @@ fun FarmListHeaderPlots(
                             )
                         }
                     }
-                    if (showShare && !isSearchVisible) {
+                    if (showShare
+//                        && !isSearchVisible
+                        ) {
                         IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
                             Icon(
                                 imageVector = Icons.Default.Share,
@@ -1593,7 +1659,7 @@ fun FarmListHeaderPlots(
                             )
                         }
                     }
-                    if ( !isSearchVisible ) {
+//                    if ( !isSearchVisible ) {
                         IconButton(
                             onClick = {
                                 if (!isImportDisabled) {
@@ -1610,7 +1676,7 @@ fun FarmListHeaderPlots(
                                 modifier = Modifier.size(24.dp),
                             )
                         }
-                    }
+//                    }
                     if (showAdd) {
 //                        IconButton(onClick = {
 //                            val sharedPref =
@@ -1630,14 +1696,14 @@ fun FarmListHeaderPlots(
                         IconButton(onClick = {
                             isSearchVisible = !isSearchVisible
                         },modifier = Modifier.size(36.dp)) {
-                            if (!isSearchVisible) {
+//                            if (!isSearchVisible) {
                                 Icon(
                                     imageVector = Icons.Default.Search,
                                     contentDescription = "Search",
                                     modifier = Modifier.size(24.dp),
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
-                            }
+//                            }
                         }
                     }
                 }
@@ -1648,6 +1714,7 @@ fun FarmListHeaderPlots(
     if (isSearchVisible) {
         Box(
             modifier = Modifier
+                .padding(top=54.dp)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center // Center the Row within the Box
         ) {
@@ -1664,8 +1731,8 @@ fun FarmListHeaderPlots(
                     },
                     modifier = Modifier
                         .fillMaxWidth() // Center with a smaller width
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(16.dp)), // Add rounded corners
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(0.dp)), // Add rounded corners
                     placeholder = { Text(stringResource(R.string.search)) },
                     leadingIcon = {
                         IconButton(onClick = {
@@ -1703,7 +1770,7 @@ fun FarmListHeaderPlots(
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    shape = RoundedCornerShape(16.dp) // Set the shape for the field to rounded
+                    shape = RoundedCornerShape(0.dp) // Set the shape for the field to rounded
                 )
 
             }
@@ -2114,18 +2181,19 @@ fun UpdateFarmForm(
             Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+//                .padding(16.dp)
                 .verticalScroll(state = scrollState),
     ) {
-        FarmListHeader(
-            title = stringResource(id = R.string.update_farm),
-            onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackClicked = { navController.popBackStack() },
-            onBackSearchClicked = {},
-            showAdd = false,
-            showSearch = false,
-        )
+            FarmListHeader(
+                title = stringResource(id = R.string.update_farm),
+                onSearchQueryChanged = {},
+                onAddFarmClicked = { /* Handle adding a farm here */ },
+                onBackClicked = { navController.popBackStack() },
+                onBackSearchClicked = {},
+                showAdd = false,
+                showSearch = false,
+            )
+        Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
