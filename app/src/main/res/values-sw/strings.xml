@@ -83,7 +83,7 @@
     <string name="calculated_area">Eneo Lililokadiriwa (%1$s hekta)</string>
     <string name="entered_size">Ukubwa Ulioingizwa (%1$s hekta)</string>
     <string name="insufficient_coordinates_title">Mikoordi Haijatimia</string>
-    <string name="insufficient_coordinates_message">Poligoni inahitaji angalau pointi 4. Tafadhali jirekebishe upya mikoordi.</string>
+    <string name="insufficient_coordinates_message">Poligoni inahitaji angalau pointi 3. Tafadhali jirekebishe upya mikoordi.</string>
     <string name="ok">Sawa</string>
     <string name="enable_location_services">Washa Huduma za Eneo</string>
     <string name="location_services_required_message">Huduma za eneo zinahitajika kwa kipengele hiki. Tafadhali washa huduma za eneo.</string>

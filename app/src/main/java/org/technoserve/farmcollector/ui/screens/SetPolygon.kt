@@ -109,6 +109,8 @@ fun SetPolygon(
     // Remember the state for showing the dialog
     val showLocationDialog = remember { mutableStateOf(false) }
 
+//    var centerCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
     LaunchedEffect(Unit) {
         mapViewModel.clearCoordinates()
         if (!isLocationEnabled(context)) {
@@ -183,6 +185,52 @@ fun SetPolygon(
         },
         Looper.getMainLooper(),
     )
+
+//    fun saveCenterCoordinates() {
+//        sharedPref.edit().putString("center_coordinates", "${centerCoordinates?.first}, ${centerCoordinates?.second}").apply()
+//    }
+//
+//    fun calculateCenterCoordinates() {
+//        if (coordinates.isNotEmpty()) {
+//            val sumLatitude = coordinates.sumOf { it.first }
+//            val sumLongitude = coordinates.sumOf { it.second }
+//            centerCoordinates = Pair(sumLatitude / coordinates.size, sumLongitude / coordinates.size)
+//            saveCenterCoordinates()
+//        }
+//    }
+
+//    fusedLocationClient.requestLocationUpdates(
+//        locationRequest,
+//        object : LocationCallback() {
+//            override fun onLocationResult(locationResult: LocationResult) {
+//                val location = locationResult.lastLocation ?: return
+//                accuracy = location.accuracy.toString()
+//
+//                coordinates = coordinates + Pair(location.latitude, location.longitude)
+//                viewModel.addMarker(Pair(location.latitude, location.longitude))
+//                hasPointsOnMap = coordinates.isNotEmpty()
+//
+//                // Calculate center coordinates
+//                calculateCenterCoordinates()
+//            }
+//        },
+//        Looper.getMainLooper(),
+//    )
+
+//    fun loadCenterCoordinates(): Pair<Double, Double>? {
+//        val savedCoords = sharedPref.getString("center_coordinates", null)
+//        return if (savedCoords != null) {
+//            val (lat, lon) = savedCoords.split(',').map { it.toDouble() }
+//            Pair(lat, lon)
+//        } else {
+//            null
+//        }
+//    }
+
+//    // Load center coordinates when the composable is initialized
+//    LaunchedEffect(Unit) {
+//        centerCoordinates = loadCenterCoordinates()
+//    }
 
     // Display coordinates of a farm on map
     if (farmInfo != null && !isCapturingCoordinates && !viewSelectFarm) {
@@ -402,6 +450,11 @@ fun SetPolygon(
                                     }",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
+
+//                                // Display center coordinates if available
+//                                if (centerCoordinates != null) {
+//                                    Text(text = "Center Coordinates: (${centerCoordinates?.first}, ${centerCoordinates?.second})")
+//                                }
                             }
                         }
                     }

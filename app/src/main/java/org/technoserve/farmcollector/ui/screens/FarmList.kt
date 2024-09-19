@@ -133,7 +133,10 @@ import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
 
@@ -727,6 +730,13 @@ fun FarmList(
                     selectedTabIndex = pagerState.currentPage,
                     modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                     contentColor = MaterialTheme.colorScheme.onSurface,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]).height(3.dp),
+                            color = MaterialTheme.colorScheme.onPrimary // Color for the indicator
+                        )
+                    },
+                    divider = {  HorizontalDivider() }
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -898,8 +908,8 @@ fun FarmList(
                         sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
                         navController.navigate("addFarm/${siteId}")
                     },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onBackground,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(end = 0.dp, bottom = 48.dp)
                         .background(MaterialTheme.colorScheme.background).align(BottomEnd)
                 ) {
@@ -1695,11 +1705,11 @@ fun FarmListHeaderPlots(
                             onClick = {
                                 if (!isImportDisabled) {
                                     onImportClicked()
-                                    isImportDisabled = true
+                                    // isImportDisabled = true
                                 }
                             },
                             modifier = Modifier.size(36.dp),
-                            enabled = !isImportDisabled
+                            // enabled = !isImportDisabled
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.icons8_import_file_48),

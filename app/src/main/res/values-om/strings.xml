@@ -83,7 +83,7 @@
     <string name="calculated_area">Bal’ina shallagame (%1$s hektaara) .</string>
     <string name="entered_size">Guddina Galfame (%1$s hektaara) .</string>
     <string name="insufficient_coordinates_title">Koordinaatota Hinhafne</string>
-    <string name="insufficient_coordinates_message">Poligooniin koordinaatota 4 gosa xiqqaa barbaada. Koordinaatota deebi\'ee qabachuuf yaali.</string>
+    <string name="insufficient_coordinates_message">Poligooniin koordinaatota 3 gosa xiqqaa barbaada. Koordinaatota deebi\'ee qabachuuf yaali.</string>
     <string name="ok">TOLEE</string>
     <string name="enable_location_services">Tajaajiloota Bakka Buusuu Hojii Galchuu</string>
     <string name="location_services_required_message">Tajaajiloonni Bakka Buusuu hojii kanaaf barbaachisu. Tajaajiloota Bakka Buusuu Hojii Galchuu</string>

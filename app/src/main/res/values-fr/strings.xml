@@ -83,7 +83,7 @@
     <string name="calculated_area">l\'aire  calculée (%1$s hectares)</string>
     <string name="entered_size">Taille saisie (%1$s hectares)</string>
     <string name="insufficient_coordinates_title">Coordonnées Insuffisantes</string>
-    <string name="insufficient_coordinates_message">Le polygone nécessite au moins 4 points. Veuillez capturer à nouveau les coordonnées.</string>
+    <string name="insufficient_coordinates_message">Le polygone nécessite au moins 3 points. Veuillez capturer à nouveau les coordonnées.</string>
     <string name="ok">OK</string>
     <string name="enable_location_services">Activer les Services de Localisation</string>
     <string name="location_services_required_message">Les services de localisation sont nécessaires pour cette fonctionnalité. Veuillez activer les services de localisation.</string>

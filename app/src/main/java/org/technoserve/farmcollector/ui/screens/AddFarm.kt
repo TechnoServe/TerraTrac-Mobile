@@ -647,6 +647,15 @@ fun FarmForm(
         }
 
         Spacer(modifier = Modifier.height(16.dp)) // Add space between the latitude and longitude input fields
+
+        // If coordinatesData exists and latitude/longitude are empty, calculate the center
+        if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
+            val center = coordinatesData.toLatLngList().getCenterOfPolygon()
+            val bounds: LatLngBounds = center
+            longitude = bounds.northeast.longitude.toString()
+            latitude = bounds.southwest.latitude.toString()
+            // Show an overview of the polygon captured, if needed.
+        }
 //        if ((size.toFloatOrNull() ?: 0f) < 4f) {
         if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) < 4f) {
             Row(
@@ -744,50 +753,131 @@ fun FarmForm(
             )
         }
 
-        // Button to trigger the location permission request
+//        // Button to trigger the location permission request
+//        Button(
+//            onClick = {
+//                val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+//                if (isLocationEnabled(context) && context.hasLocationPermission()) {
+//                    if (enteredSize < 4f) {
+//                        val locationRequest = LocationRequest.create().apply {
+//                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+//                            interval = 10000 // Update interval in milliseconds
+//                            fastestInterval = 5000 // Fastest update interval in milliseconds
+//                        }
+//
+//                        fusedLocationClient.requestLocationUpdates(
+//                            locationRequest,
+//                            object : LocationCallback() {
+//                                override fun onLocationResult(locationResult: LocationResult) {
+//                                    locationResult.lastLocation?.let { lastLocation ->
+//                                        // Handle the new location
+//                                        latitude = "${lastLocation.latitude}"
+//                                        longitude = "${lastLocation.longitude}"
+//                                    }
+//                                }
+//                            },
+//                            Looper.getMainLooper()
+//                        )
+//                    } else {
+//                        navController.currentBackStackEntry?.arguments?.putParcelable(
+//                            "farmData",
+//                            null
+//                        )
+//                        navController.navigate("setPolygon")
+//                        mapViewModel.clearCoordinates()
+//                    }
+//                } else {
+//                    showPermissionRequest.value = true
+//                    showLocationDialog.value = true
+//                }
+//            },
+//            modifier = Modifier
+//                .background(MaterialTheme.colorScheme.background)
+//                .align(Alignment.CenterHorizontally)
+//                .fillMaxWidth(0.7f)
+//                .padding(bottom = 5.dp)
+//                .height(50.dp),
+//            enabled = size.isNotBlank()
+//        ) {
+//            val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+//
+//            Text(
+//                text = if (enteredSize >= 4f) {
+//                    stringResource(id = R.string.set_polygon)
+//                } else {
+//                    stringResource(id = R.string.get_coordinates)
+//                }
+//            )
+//        }
+
+
+        // Function to request location permission and update coordinates
+        fun requestLocationPermissionAndUpdateCoordinates(enteredSize: Float) {
+            if (isLocationEnabled(context) && context.hasLocationPermission()) {
+                val locationRequest = LocationRequest.create().apply {
+                    priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                    interval = 5000 // Update interval in milliseconds
+                    fastestInterval = 2000 // Fastest update interval in milliseconds
+                }
+
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    object : LocationCallback() {
+                        override fun onLocationResult(locationResult: LocationResult) {
+                            locationResult.lastLocation?.let { lastLocation ->
+                                // Update latitude and longitude
+                                latitude = "${lastLocation.latitude}"
+                                longitude = "${lastLocation.longitude}"
+                            }
+                        }
+                    },
+                    Looper.getMainLooper()
+                )
+            } else {
+                showPermissionRequest.value = true
+                showLocationDialog.value = true
+            }
+
+            // Navigate to polygon capture if entered size is valid
+            if (enteredSize >= 4f) {
+                navController.currentBackStackEntry?.arguments?.putParcelable(
+                    "farmData",
+                    null
+                )
+                navController.navigate("setPolygon")
+                mapViewModel.clearCoordinates()
+            }
+        }
+
+        // Function to handle location permission and coordinate calculation
+        fun handleLocationAndNavigate(size: String, selectedUnit: String) {
+            val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+
+            // Check if coordinatesData exists and is not empty
+            if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
+                // Calculate the center of the polygon from coordinatesData
+                val center = coordinatesData.toLatLngList().getCenterOfPolygon()
+
+                // Update latitude and longitude based on the calculated center
+                val bounds: LatLngBounds = center
+                longitude = bounds.northeast.longitude.toString()
+                latitude = bounds.southwest.latitude.toString()
+            }
+
+            // Request location permission and handle location update logic
+            requestLocationPermissionAndUpdateCoordinates(enteredSize)
+        }
+
+        // Button click handler
         Button(
             onClick = {
-                val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
-                if (isLocationEnabled(context) && context.hasLocationPermission()) {
-                    if (enteredSize < 4f) {
-                        val locationRequest = LocationRequest.create().apply {
-                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                            interval = 10000 // Update interval in milliseconds
-                            fastestInterval = 5000 // Fastest update interval in milliseconds
-                        }
-
-                        fusedLocationClient.requestLocationUpdates(
-                            locationRequest,
-                            object : LocationCallback() {
-                                override fun onLocationResult(locationResult: LocationResult) {
-                                    locationResult.lastLocation?.let { lastLocation ->
-                                        // Handle the new location
-                                        latitude = "${lastLocation.latitude}"
-                                        longitude = "${lastLocation.longitude}"
-                                    }
-                                }
-                            },
-                            Looper.getMainLooper()
-                        )
-                    } else {
-                        navController.currentBackStackEntry?.arguments?.putParcelable(
-                            "farmData",
-                            null
-                        )
-                        navController.navigate("setPolygon")
-                        mapViewModel.clearCoordinates()
-                    }
-                } else {
-                    showPermissionRequest.value = true
-                    showLocationDialog.value = true
-                }
+                handleLocationAndNavigate(size, selectedUnit)
             },
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
-                .padding(bottom = 5.dp)
-                .height(50.dp),
+                .padding(bottom = 5.dp),
             enabled = size.isNotBlank()
         ) {
             val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f

@@ -182,8 +182,8 @@ fun CollectionSiteList(navController: NavController) {
                     onClick = {
                         navController.navigate("addSite")
                     },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onBackground,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(end= 0.dp, bottom = 48.dp)
                         .background(MaterialTheme.colorScheme.background).align(BottomEnd)
                 ) {
