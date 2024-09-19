@@ -810,6 +810,11 @@ fun FarmForm(
 //            )
 //        }
 
+        fun roundToSixDecimalPlaces(value: Double): String {
+            val bigDecimal = BigDecimal.valueOf(value)
+            return bigDecimal.setScale(6, BigDecimal.ROUND_DOWN).toString()
+        }
+
 
         // Function to request location permission and update coordinates
         fun requestLocationPermissionAndUpdateCoordinates(enteredSize: Float) {
@@ -826,8 +831,8 @@ fun FarmForm(
                         override fun onLocationResult(locationResult: LocationResult) {
                             locationResult.lastLocation?.let { lastLocation ->
                                 // Update latitude and longitude
-                                latitude = "${lastLocation.latitude}"
-                                longitude = "${lastLocation.longitude}"
+                                latitude = roundToSixDecimalPlaces(lastLocation.latitude)
+                                longitude = roundToSixDecimalPlaces(lastLocation.longitude)
                             }
                         }
                     },
@@ -860,8 +865,9 @@ fun FarmForm(
 
                 // Update latitude and longitude based on the calculated center
                 val bounds: LatLngBounds = center
-                longitude = bounds.northeast.longitude.toString()
-                latitude = bounds.southwest.latitude.toString()
+                // Round latitude and longitude to 6 decimal places
+                latitude = roundToSixDecimalPlaces(bounds.northeast.longitude.toString().toDouble())
+                longitude = roundToSixDecimalPlaces(bounds.southwest.latitude.toString().toDouble())
             }
 
             // Request location permission and handle location update logic
@@ -877,6 +883,7 @@ fun FarmForm(
                 .background(MaterialTheme.colorScheme.background)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.7f)
+                .height(50.dp)
                 .padding(bottom = 5.dp),
             enabled = size.isNotBlank()
         ) {
