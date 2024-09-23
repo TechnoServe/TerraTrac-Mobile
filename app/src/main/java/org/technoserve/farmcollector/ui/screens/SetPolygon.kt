@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -85,7 +86,7 @@ fun SetPolygon(
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     var hasPointsOnMap by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    val showConfirmDialog = remember { mutableStateOf(false) }
+    var showConfirmDialog = remember { mutableStateOf(false) }
     val showClearMapDialog = remember { mutableStateOf(false) }
     //  Getting farm details such as polygon or single pair of lat and long if shared from farm list
     val farmData = navController.previousBackStackEntry?.arguments?.getParcelable<ParcelableFarmData>("farmData")
@@ -248,25 +249,78 @@ fun SetPolygon(
     val selectedUnit = sharedPref.getString("selectedUnit", "Ha")?:"Ha"
     val enteredAreaConverted= convertSize(enteredArea,selectedUnit)
     val calculatedArea = mapViewModel.calculateArea(coordinates)
+//    if (showConfirmDialog.value) {
+//        ConfirmDialog(
+//            title = stringResource(id = R.string.set_polygon),
+//            message = stringResource(id = R.string.confirm_set_polygon),
+//            showConfirmDialog,
+//            fun() {
+//                // Check if coordinates size is greater than 4
+//                if (coordinates.size >= 3) {
+//                    mapViewModel.clearCoordinates()
+//                    mapViewModel.addCoordinates(coordinates)
+//                    val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
+//                    navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
+//                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
+//                } else {
+//                    showAlertDialog.value = true
+//                }
+//            },
+//        )
+//    }
+
+    var showSaveButton by remember { mutableStateOf(false) } // To track if save button should be shown
+
+    // Confirm dialog to finalize the polygon
     if (showConfirmDialog.value) {
         ConfirmDialog(
             title = stringResource(id = R.string.set_polygon),
             message = stringResource(id = R.string.confirm_set_polygon),
             showConfirmDialog,
-            fun() {
-                // Check if coordinates size is greater than 4
+            onProceedFn = {
                 if (coordinates.size >= 3) {
+//                    // Close the polygon by adding the first point as the last point
+//                    coordinates = coordinates + coordinates.first()
+//                    mapViewModel.clearCoordinates()
+//                    mapViewModel.addCoordinates(coordinates)
+//
+//                    // Preview the polygon on the map
+//                    mapViewModel.showPolygonOnMap(coordinates)
+
                     mapViewModel.clearCoordinates()
                     mapViewModel.addCoordinates(coordinates)
-                    val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
-                    navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
-                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
+
+                    if (coordinates.isNotEmpty()) {
+
+                        // update map camera position
+                        val coordinate = coordinates.first()
+
+                        coordinates = coordinates + coordinate
+                        viewModel.addMarker(coordinate)
+
+                        // add camera position
+                        viewModel.addCoordinate(
+                            coordinates.first().first,
+                            coordinates.first().second,
+                        )
+                    }
+
+                    // Show the save button after preview
+                    showSaveButton = true
                 } else {
-                    showAlertDialog.value = true
+                    showAlertDialog.value = true // Handle if there aren't enough points
                 }
-            },
+                // Hide the confirmation dialog after clicking yes
+                showConfirmDialog.value = false
+            }
         )
     }
+
+
+
+
+
+
 
     // Alert dialog for insufficient coordinates
     if (showAlertDialog.value) {
@@ -487,37 +541,127 @@ fun SetPolygon(
                         }
                     }
                 } else {
-                    ElevatedButton(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth(0.22f),
-                        shape = RoundedCornerShape(0.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White),
-                        onClick = {
-                            if (!isLocationEnabled(context)) {
-                                showLocationDialog.value = true
-                            } else {
-                                if (!isCapturingCoordinates && !showConfirmDialog.value) {
+//                    ElevatedButton(
+//                        modifier =
+//                            Modifier
+//                                .fillMaxWidth(0.22f),
+//                        shape = RoundedCornerShape(0.dp),
+//                        colors = ButtonDefaults.buttonColors(Color.White),
+//                        onClick = {
+//                            if (!isLocationEnabled(context)) {
+//                                showLocationDialog.value = true
+//                            } else {
+//                                if (!isCapturingCoordinates && !showConfirmDialog.value) {
+//                                    coordinates = listOf() // Clear coordinates array when starting
+//                                    viewModel.clearCoordinates()
+//                                    isCapturingCoordinates = true
+//                                } else if (isCapturingCoordinates && !showConfirmDialog.value) {
+//                                    showConfirmDialog.value = true
+//                                }
+//                            }
+//                        },
+//                    ) {
+//                        Icon(
+//                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
+//                            contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
+//                            tint = Color.Black,
+//                            modifier = Modifier.padding(4.dp),
+//                        )
+//                    }
+
+
+                    // "Start" button - visible only when not capturing coordinates and the "Finish" button hasn't been clicked
+                    if (!isCapturingCoordinates && !showConfirmDialog.value && !showSaveButton) {
+                        ElevatedButton(
+                            modifier = Modifier.fillMaxWidth(0.25f),
+                            shape = RoundedCornerShape(0.dp),
+                            colors = ButtonDefaults.buttonColors(Color.White),
+                            onClick = {
+                                if (!isLocationEnabled(context)) {
+                                    showLocationDialog.value = true
+                                } else {
                                     coordinates = listOf() // Clear coordinates array when starting
                                     viewModel.clearCoordinates()
                                     isCapturingCoordinates = true
-                                } else if (isCapturingCoordinates && !showConfirmDialog.value) {
-                                    showConfirmDialog.value = true
                                 }
                             }
-                        },
-                    ) {
-                        Icon(
-                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
-                            contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
-                            tint = Color.Black,
-                            modifier = Modifier.padding(4.dp),
-                        )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Start",
+                                tint = Color.Black,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
                     }
+
+                    // "Finish" button - visible when capturing coordinates but not yet finished or saved
+                    if (isCapturingCoordinates && !showSaveButton) {
+                        ElevatedButton(
+                            modifier = Modifier.fillMaxWidth(0.25f),
+                            shape = RoundedCornerShape(0.dp),
+                            colors = ButtonDefaults.buttonColors(Color.White),
+                            onClick = {
+                                if (coordinates.isNotEmpty()) {
+
+//                                    // update map camera position
+//                                    val coordinate = coordinates.first()
+//
+//                                    coordinates = coordinates + coordinate
+//                                    viewModel.addMarker(coordinate)
+//
+//                                    // add camera position
+//                                    viewModel.addCoordinate(
+//                                        coordinates.first().first,
+//                                        coordinates.first().second,
+//                                    )
+                                    showConfirmDialog.value = true // Show confirm dialog to finish capturing
+                                    isCapturingCoordinates = false // Stop capturing when "Finish" is clicked
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Done,
+                                contentDescription = "Finish",
+                                tint = Color.Black,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
+                    }
+
+                    // "Save" button - visible after finishing the polygon and previewing it
+                    if (showSaveButton) {
+                        ElevatedButton(
+                            modifier = Modifier.fillMaxWidth(0.25f),
+                            shape = RoundedCornerShape(0.dp),
+                            colors = ButtonDefaults.buttonColors(Color.Green),
+                            onClick = {
+                                mapViewModel.addCoordinates(coordinates)
+                                // Show the polygon on the map for review
+                                val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
+                                navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
+                                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
+                                Toast.makeText(context, "Polygon saved successfully", Toast.LENGTH_LONG).show()
+                            },
+                            enabled = hasPointsOnMap
+                        ) {
+                            // Text(text = stringResource(id = R.string.save_polygon), color = Color.White, fontSize =10.sp)
+                             Icon(
+                                 painter = painterResource(id = R.drawable.save),
+                                 contentDescription = "Save Polygon",
+                                 tint = Color.Black,
+                                 modifier = Modifier.padding(4.dp)
+                            )
+                        }
+                    }
+
+
+
+
                     ElevatedButton(
                         modifier =
                             Modifier
-                                .fillMaxWidth(0.28f),
+                                .fillMaxWidth(0.25f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
 //                        enabled = isCapturingCoordinates,  // Enable only when capturing coordinates
@@ -591,7 +735,7 @@ fun SetPolygon(
                         )
                     }
                     ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.28f),
+                        modifier = Modifier.fillMaxWidth(0.25f),
                         colors = ButtonDefaults.buttonColors(Color.White),
 //                        enabled = hasPointsOnMap,  // Enable only when there are points to drop
                         shape = RoundedCornerShape(0.dp),
@@ -610,7 +754,7 @@ fun SetPolygon(
                     ElevatedButton(
                         modifier =
                         Modifier
-                            .fillMaxWidth(0.22f),
+                            .fillMaxWidth(0.25f),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
 //                        enabled = hasPointsOnMap,  // Enable only when there are points to reset

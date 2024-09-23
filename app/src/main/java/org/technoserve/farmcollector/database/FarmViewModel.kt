@@ -196,6 +196,16 @@ class FarmViewModel(
         }
     }
 
+    // Update farm size and keep existing polygon coordinates
+    fun updateFarmSizeAndKeepPolygon(newSize: String) {
+        // Logic to update size but retain the existing polygon/coordinates
+    }
+
+    // Capture a new polygon (or update coordinates)
+    fun captureNewPolygon(newSize: String) {
+        // Logic to capture new coordinates or polygon after updating size
+    }
+
     fun updateSite(site: CollectionSite) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateSite(site)

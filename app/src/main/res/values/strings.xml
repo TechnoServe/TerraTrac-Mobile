@@ -153,6 +153,5 @@
     <string name="restoration_error">Failed to restore data: %1$s</string>
     <string name="sync_failed">Sync Failed</string>
     <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
-
-
+    <string name="save_polygon">Save</string>
 </resources>

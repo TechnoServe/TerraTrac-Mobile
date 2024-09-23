@@ -12,6 +12,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.PolygonOptions
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.ktx.model.polygonOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -239,4 +240,38 @@ class MapViewModel @Inject constructor() : ViewModel() {
     fun onMapTypeChange(mapType: MapType) {
         state.value = state.value.copy(mapType = mapType)
     }
+
+    fun showPolygonOnMap(coordinates: List<Pair<Double, Double>>) {
+        // Check if the coordinates list is valid
+        if (coordinates.isEmpty()) return
+
+        // Convert the list of coordinate pairs into LatLng for map
+        val latLngList = coordinates.map { (lat, lng) -> LatLng(lat, lng) }
+
+        // Create polygon options
+        val polygonOptions = PolygonOptions().apply {
+            addAll(latLngList) // Add all points to the polygon
+            fillColor(POLYGON_FILL_COLOR) // Set the fill color of the polygon
+            strokeColor(Color.BLACK) // Set the border/stroke color of the polygon
+            strokeWidth(5f) // Set the stroke width
+        }
+
+        // Update the clusterItems in the state with the new polygon
+        val currentClusterItems = state.value.clusterItems.toMutableList()
+        val lastItemId = currentClusterItems.lastOrNull()?.id?.substringAfter("-")?.toIntOrNull() ?: 0
+
+        val newClusterItem = ZoneClusterItem(
+            id = "polygon-${lastItemId + 1}",
+            title = "Polygon Preview",
+            snippet = "Coordinates: ${latLngList.first()} to ${latLngList.last()}",
+            polygonOptions = polygonOptions
+        )
+
+        // Add the new polygon to the map by updating the state
+        currentClusterItems.add(newClusterItem)
+        state.value = state.value.copy(clusterItems = currentClusterItems)
+    }
+
+
+
 }

@@ -199,6 +199,33 @@ data class ParcelableFarmData(val farm: Farm, val view: String) : Parcelable {
     }
 }
 
+@Composable
+fun KeepPolygonDialog(
+    onDismiss: () -> Unit,
+    onKeepExisting: () -> Unit,
+    onCaptureNew: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Update Polygon?")
+        },
+        text = {
+            Text("Would you like to keep the existing polygon or capture a new one?")
+        },
+        confirmButton = {
+            Button(onClick = onKeepExisting) {
+                Text("Keep Existing")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onCaptureNew) {
+                Text("Capture New")
+            }
+        }
+    )
+}
+
 
 @Composable
 fun isSystemInDarkTheme(): Boolean {
@@ -2022,6 +2049,11 @@ fun UpdateFarmForm(
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
     var coordinates by remember { mutableStateOf(item.coordinates) }
+
+    // Flag to track if the polygon was modified
+    var hasPolygonChanged by remember { mutableStateOf(false) }
+    var showKeepPolygonDialog by remember { mutableStateOf(false) }
+
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel =
         viewModel(
@@ -2122,6 +2154,7 @@ fun UpdateFarmForm(
      */
 
     fun updateFarmInstance() {
+
         val isValid = validateForm()
         if (isValid) {
             item.farmerPhoto = ""
@@ -2131,19 +2164,58 @@ fun UpdateFarmForm(
             item.village = village
             item.district = district
             item.longitude = longitude
+//            if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
+//                if ((coordinates?.size ?: 0) < 3) {
+//                    Toast
+//                        .makeText(
+//                            context,
+//                            R.string.error_polygon_points,
+//                            Toast.LENGTH_SHORT,
+//                        ).show()
+//                    return
+//                }
+//                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+//            } else {
+//                item.coordinates = listOf(Pair(item.longitude.toDoubleOrNull() ?: 0.0, item.latitude.toDoubleOrNull() ?: 0.0)) // Example default value
+//            }
+            // Updated condition handling
             if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
+                // Check if coordinates are valid for a polygon
                 if ((coordinates?.size ?: 0) < 3) {
-                    Toast
-                        .makeText(
-                            context,
-                            R.string.error_polygon_points,
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                    Toast.makeText(
+                        context,
+                        R.string.error_polygon_points,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                     return
                 }
-                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+
+                // Show the dialog to ask whether to keep or capture new coordinates
+                showKeepPolygonDialog = true
+
             } else {
-                item.coordinates = listOf(Pair(item.longitude.toDoubleOrNull() ?: 0.0, item.latitude.toDoubleOrNull() ?: 0.0)) // Example default value
+                // Handle case where size is less than 4
+                if ((coordinates?.size ?: 0) < 3) {
+                    // Size is less than 4 and not enough points for a polygon
+                    Toast.makeText(
+                        context,
+                        R.string.error_polygon_points,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    return
+                } else if ((coordinates?.size ?: 0) >= 3) {
+                    // Size is less than 4 but valid polygon coordinates are present
+                    // Show the dialog to ask whether to keep or capture new coordinates
+                    showKeepPolygonDialog = true
+                } else if ((coordinates?.size ?: 0) == 1) {
+                    // Handle the case where size is less than the threshold and only one coordinate is present
+                    item.coordinates = listOf(
+                        Pair(
+                            item.longitude.toDoubleOrNull() ?: 0.0,
+                            item.latitude.toDoubleOrNull() ?: 0.0
+                        )
+                    ) // Example default value
+                }
             }
             item.size = convertSize(size.toDouble(), selectedUnit).toFloat()
             item.purchases = 0.toFloat()
@@ -2157,7 +2229,30 @@ fun UpdateFarmForm(
             Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
         }
     }
-    // Confirm farm update and ask if they wish to capture new polygon
+
+    // If changes are detected, show dialog to confirm
+    if (showKeepPolygonDialog) {
+        KeepPolygonDialog(
+            onDismiss = { showKeepPolygonDialog = false },
+            onKeepExisting = {
+//                // Keep the existing polygon
+//                hasPolygonChanged = false
+//                farmViewModel.updateFarmSizeAndKeepPolygon(size)
+//                showKeepPolygonDialog = false
+
+                // Keep the existing polygon
+                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+                updateFarmInstance()
+                showKeepPolygonDialog = false // Close dialog
+            },
+            onCaptureNew = {
+                navController.navigate("SetPolygon")
+                showKeepPolygonDialog = false // Close dialog
+            }
+        )
+    }
+
+// Confirm farm update and ask if they wish to capture new polygon
     if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -2170,7 +2265,8 @@ fun UpdateFarmForm(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    updateFarmInstance()
+                    // updateFarmInstance();
+                    showKeepPolygonDialog=true
                 }) {
                     Text(text = stringResource(id = R.string.update_farm))
                 }
@@ -2186,8 +2282,14 @@ fun UpdateFarmForm(
                     Text(text = stringResource(id = R.string.set_polygon))
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
+
+
+
+
 
     val scrollState = rememberScrollState()
     val (focusRequester1) = FocusRequester.createRefs()
