@@ -157,7 +157,9 @@
     <string name="sync_failed">ማስተካከያው አልተሳካም</string>
     <string name="syncronization_failed">የእርሻ መረጃን ከአገልጋይ ጋር ማስተካከል አልተሳካም</string>
 
-
-
+    <string name="update_polygon">ፖሊጎን አድስ?</string>
+    <string name="keep_existing_polygon_or_capture_new">ያለውን ፖሊጎን መጠቀም ወይም አዲስ መቆጣጠር ትፈልጋለህ?</string>
+    <string name="keep_existing">ያለውን ግበር</string>
+    <string name="capture_new">አዲስ አንሳ</string>
 
 </resources>

@@ -156,7 +156,9 @@
     <string name="sync_failed">Échec de la synchronisation</string>
     <string name="syncronization_failed">Échec de la synchronisation des données des fermes avec le serveur</string>
 
-
-
+    <string name="update_polygon">Mettre à jour le polygone?</string>
+    <string name="keep_existing_polygon_or_capture_new">Voulez-vous garder le polygone existant ou en capturer un nouveau?</string>
+    <string name="keep_existing">Garder l\'existant</string>
+    <string name="capture_new">Capturer un nouveau</string>
 
 </resources>

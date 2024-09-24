@@ -157,4 +157,10 @@
     <string name="sync_failed">Sincronización fallida</string>
     <string name="syncronization_failed">Error al sincronizar los datos de las granjas con el servidor</string>
 
+    <string name="update_polygon">¿Actualizar polígono?</string>
+    <string name="keep_existing_polygon_or_capture_new">¿Te gustaría mantener el polígono existente o capturar uno nuevo?</string>
+    <string name="keep_existing">Mantener existente</string>
+    <string name="capture_new">Capturar nuevo</string>
+
+
 </resources>

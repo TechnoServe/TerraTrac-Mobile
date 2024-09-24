@@ -156,4 +156,10 @@
     <string name="sync_failed">Usawazishaji Umeshindwa</string>
     <string name="syncronization_failed">Imeshindwa kusawazisha Data za Mashamba na seva</string>
 
+    <string name="update_polygon">Sasisha Poligoni?</string>
+    <string name="keep_existing_polygon_or_capture_new">Je, ungependa kuweka poligoni iliyopo au kunasa mpya?</string>
+    <string name="keep_existing">Weka Iliyoopo</string>
+    <string name="capture_new">Nasa Mpya</string>
+
+
 </resources>

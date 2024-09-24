@@ -133,13 +133,14 @@ import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
-
+import org.technoserve.farmcollector.map.MapViewModel
 
 
 var siteID = 0L
@@ -203,26 +204,34 @@ data class ParcelableFarmData(val farm: Farm, val view: String) : Parcelable {
 fun KeepPolygonDialog(
     onDismiss: () -> Unit,
     onKeepExisting: () -> Unit,
-    onCaptureNew: () -> Unit
+    onCaptureNew: () -> Unit,
 ) {
+
+    val mapViewModel: MapViewModel = viewModel()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Update Polygon?")
+            Text(text = stringResource(id=R.string.update_polygon), color = MaterialTheme.colorScheme.onBackground )
         },
         text = {
-            Text("Would you like to keep the existing polygon or capture a new one?")
+            Text(text = stringResource(id=R.string.keep_existing_polygon_or_capture_new), color = MaterialTheme.colorScheme.onBackground )
         },
         confirmButton = {
-            Button(onClick = onKeepExisting) {
-                Text("Keep Existing")
+            Button(onClick = onKeepExisting, modifier = Modifier.background(MaterialTheme.colorScheme.background),colors = ButtonDefaults.buttonColors()) {
+                Text(text = stringResource(id=R.string.keep_existing), color = MaterialTheme.colorScheme.onBackground )
             }
         },
         dismissButton = {
-            Button(onClick = onCaptureNew) {
-                Text("Capture New")
+            Button(onClick = {
+                mapViewModel.clearCoordinates() // Clear coordinates
+                onCaptureNew()
+            }, modifier = Modifier.background(MaterialTheme.colorScheme.background),colors = ButtonDefaults.buttonColors()) {
+                Text(text = stringResource(id=R.string.capture_new), color = MaterialTheme.colorScheme.onBackground )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -2194,20 +2203,21 @@ fun UpdateFarmForm(
                 showKeepPolygonDialog = true
 
             } else {
-                // Handle case where size is less than 4
-                if ((coordinates?.size ?: 0) < 3) {
-                    // Size is less than 4 and not enough points for a polygon
-                    Toast.makeText(
-                        context,
-                        R.string.error_polygon_points,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                    return
-                } else if ((coordinates?.size ?: 0) >= 3) {
+//                // Handle case where size is less than 4
+//                if ((coordinates?.size ?: 0) < 3) {
+//                    // Size is less than 4 and not enough points for a polygon
+//                    Toast.makeText(
+//                        context,
+//                        R.string.error_polygon_points,
+//                        Toast.LENGTH_SHORT,
+//                    ).show()
+//                    return
+//                } else
+                    if ((coordinates?.size ?: 0) >= 3) {
                     // Size is less than 4 but valid polygon coordinates are present
                     // Show the dialog to ask whether to keep or capture new coordinates
                     showKeepPolygonDialog = true
-                } else if ((coordinates?.size ?: 0) == 1) {
+                } else {
                     // Handle the case where size is less than the threshold and only one coordinate is present
                     item.coordinates = listOf(
                         Pair(
@@ -2246,6 +2256,7 @@ fun UpdateFarmForm(
                 showKeepPolygonDialog = false // Close dialog
             },
             onCaptureNew = {
+                coordinates = listOf() // Clear coordinates array when starting to capture new polygon
                 navController.navigate("SetPolygon")
                 showKeepPolygonDialog = false // Close dialog
             }
@@ -2265,8 +2276,12 @@ fun UpdateFarmForm(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    // updateFarmInstance();
-                    showKeepPolygonDialog=true
+                    if ((coordinates?.size ?: 0) >= 3) {
+                        showKeepPolygonDialog = true
+                    }
+                    else{
+                        updateFarmInstance();
+                    }
                 }) {
                     Text(text = stringResource(id = R.string.update_farm))
                 }

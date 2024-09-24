@@ -153,5 +153,9 @@
     <string name="restoration_error">Failed to restore data: %1$s</string>
     <string name="sync_failed">Sync Failed</string>
     <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
-    <string name="save_polygon">Save</string>
+
+    <string name="update_polygon">Update Polygon?"</string>
+    <string name="keep_existing_polygon_or_capture_new">Would you like to keep the existing polygon or capture a new one?</string>
+    <string name="keep_existing">Keep Existing</string>
+    <string name="capture_new">Capture New</string>
 </resources>
