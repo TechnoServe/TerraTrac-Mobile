@@ -569,7 +569,6 @@ fun SetPolygon(
 //                        )
 //                    }
 
-
                     // "Start" button - visible only when not capturing coordinates and the "Finish" button hasn't been clicked
                     if (!isCapturingCoordinates && !showConfirmDialog.value && !showSaveButton) {
                         ElevatedButton(
@@ -603,18 +602,6 @@ fun SetPolygon(
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
                                 if (coordinates.isNotEmpty()) {
-
-//                                    // update map camera position
-//                                    val coordinate = coordinates.first()
-//
-//                                    coordinates = coordinates + coordinate
-//                                    viewModel.addMarker(coordinate)
-//
-//                                    // add camera position
-//                                    viewModel.addCoordinate(
-//                                        coordinates.first().first,
-//                                        coordinates.first().second,
-//                                    )
                                     showConfirmDialog.value = true // Show confirm dialog to finish capturing
                                     isCapturingCoordinates = false // Stop capturing when "Finish" is clicked
                                 }
@@ -629,8 +616,8 @@ fun SetPolygon(
                         }
                     }
 
-                    // "Save" button - visible after finishing the polygon and previewing it
-                    if (showSaveButton) {
+                    // "Save" button - visible after finishing the polygon and previewing it, but only when there are at least 3 points
+                    if (showSaveButton && coordinates.size > 3) {
                         ElevatedButton(
                             modifier = Modifier.fillMaxWidth(0.25f),
                             shape = RoundedCornerShape(0.dp),
@@ -645,15 +632,23 @@ fun SetPolygon(
                             },
                             enabled = hasPointsOnMap
                         ) {
-                            // Text(text = stringResource(id = R.string.save_polygon), color = Color.White, fontSize =10.sp)
-                             Icon(
-                                 painter = painterResource(id = R.drawable.save),
-                                 contentDescription = "Save Polygon",
-                                 tint = Color.Black,
-                                 modifier = Modifier.padding(4.dp)
+                            Icon(
+                                painter = painterResource(id = R.drawable.save),
+                                contentDescription = "Save Polygon",
+                                tint = Color.Black,
+                                modifier = Modifier.padding(4.dp)
                             )
                         }
                     }
+
+                    // Logic to handle when a point is deleted
+                    LaunchedEffect(coordinates.size) {
+                        if (coordinates.size < 3) {
+                            showSaveButton = false
+                           //  isCapturingCoordinates = true // Show "Finish" button again when points are deleted
+                        }
+                    }
+
 
 
 

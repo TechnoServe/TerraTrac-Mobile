@@ -458,7 +458,7 @@ fun FarmList(
                                 }
 
                         val line =
-                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                            "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},\"${getSiteById?.name}\",\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
                                 Date(
                                     farm.createdAt,
                                 )
@@ -489,7 +489,7 @@ fun FarmList(
                                         "type": "Feature",
                                         "properties": {
                                             "remote_id": "${farm.remoteId ?: ""}",
-                                            "farmer_name": "${farm.farmerName ?: ""}",
+                                            "farmer_name":"${farm.farmerName.split(" ").joinToString(" ") ?: ""}",
                                             "member_id": "${farm.memberId ?: ""}",
                                             "collection_site": "${getSiteById?.name ?: ""}",
                                             "agent_name": "${getSiteById?.agentName ?: ""}",
@@ -566,7 +566,7 @@ fun FarmList(
                                     }
 
                             val line =
-                                "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},${getSiteById?.name},\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
                                     Date(farm.createdAt)
                                 },${Date(farm.updatedAt)}\n"
                             writer.write(line)
@@ -596,7 +596,7 @@ fun FarmList(
                                             "type": "Feature",
                                             "properties": {
                                                 "remote_id": "${farm.remoteId ?: ""}",
-                                                "farmer_name": "${farm.farmerName ?: ""}",
+                                                "farmer_name": "${farm.farmerName.split(" ").joinToString(" ") ?: ""}",
                                                 "member_id": "${farm.memberId ?: ""}",
                                                 "collection_site": "${getSiteById?.name ?: ""}",
                                                 "agent_name": "${getSiteById?.agentName ?: ""}",
@@ -2294,9 +2294,9 @@ fun UpdateFarmForm(
             confirmButton = {
                 TextButton(onClick = {
                     if ((coordinates?.size ?: 0) >= 3) {
-                        if (!hasNewPolygon) {
+//                        if (!hasNewPolygon) {
                             showKeepPolygonDialog = true
-                        }
+//                        }
                     }
                     else{
                         updateFarmInstance();
