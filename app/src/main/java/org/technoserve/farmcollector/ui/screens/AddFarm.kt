@@ -184,6 +184,13 @@ fun validateSize(size: String): Boolean {
     return size.matches(regex) && size.toFloatOrNull() != null && size.toFloat() > 0 && size.isNotBlank()
 }
 
+fun validateNumber(number: String): Boolean {
+    // Check if the input matches the allowed pattern: digits and at most one dot
+    val regex = Regex("^[0-9]*\\.?[0-9]*$")
+    return number.matches(regex) && number.toFloatOrNull() != null && number.toFloat() > 0 && number.isNotBlank()
+}
+
+
 
 
 @SuppressLint("MissingPermission")
@@ -664,23 +671,46 @@ fun FarmForm(
             ) {
                 TextField(
                     readOnly = true,
-                    value = latitude,
-                    onValueChange = {
-                        val parts = it.split(".")
-                        if (parts.size == 2 && parts.last().length == 5 ) {
-                            val decimalPlaces = parts.last().length
-                            val requiredZeros = 6 - decimalPlaces
-                            // Append the required number of zeros
-                            val formattedLatitude = it.padEnd(it.length + requiredZeros, '0')
-                            latitude = formattedLatitude
-                        } else if (parts.size == 2 && parts.last().length >= 6) {
+//                    value = latitude,
+//                    onValueChange = {
+//                        val parts = it.split(".")
+//                        if (parts.size == 2 && parts.last().length == 5 ) {
+//                            val decimalPlaces = parts.last().length
+//                            val requiredZeros = 6 - decimalPlaces
+//                            // Append the required number of zeros
+//                            val formattedLatitude = it.padEnd(it.length + requiredZeros, '0')
+//                            latitude = formattedLatitude
+//                        } else if (parts.size == 2 && parts.last().length >= 6) {
+//                            latitude = it
+//                        } else {
+//                            Toast.makeText(
+//                                context,
+//                                R.string.error_latitude_decimal_places,
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+//                        }
+//                    },
+                    value = truncateToDecimalPlaces(latitude, 6),
+                    onValueChange = { it ->
+                        val formattedValue = when {
+                            validateNumber(it) -> it
+                            scientificNotationPattern.matcher(it).matches() -> {
+                                truncateToDecimalPlaces(formatInput(it), 6)
+                            }
+                            else -> {
+                                // Show a Toast message if the input does not meet the requirements
+                                Toast.makeText(
+                                    context,
+                                    R.string.error_latitude_decimal_places,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                null // Return null to indicate that the input is invalid
+                            }
+                        }
+
+                        // Update the longitude state only if the formatted value is valid (i.e., not null)
+                        formattedValue?.let {
                             latitude = it
-                        } else {
-                            Toast.makeText(
-                                context,
-                                R.string.error_latitude_decimal_places,
-                                Toast.LENGTH_SHORT
-                            ).show()
                         }
                     },
                     label = { Text(stringResource(id = R.string.latitude) + " (*)",color = inputLabelColor) },
@@ -700,24 +730,47 @@ fun FarmForm(
                 Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
                 TextField(
                     readOnly = true,
-                    value = longitude,
-                    onValueChange = {
-                        val parts = it.split(".")
-                        if (parts.size == 2) {
-                            val decimalPlaces = parts.last().length
-                            val formattedLongitude = if (decimalPlaces == 5 ) {
-                                // Append the required number of zeros to the decimal part
-                                it.padEnd(it.length + (6 - decimalPlaces), '0')
-                            } else {
-                                it
+//                    value = longitude,
+//                    onValueChange = {
+//                        val parts = it.split(".")
+//                        if (parts.size == 2) {
+//                            val decimalPlaces = parts.last().length
+//                            val formattedLongitude = if (decimalPlaces == 5 ) {
+//                                // Append the required number of zeros to the decimal part
+//                                it.padEnd(it.length + (6 - decimalPlaces), '0')
+//                            } else {
+//                                it
+//                            }
+//                            longitude = formattedLongitude
+//                        } else {
+//                            Toast.makeText(
+//                                context,
+//                                R.string.error_longitude_decimal_places,
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+//                        }
+//                    },
+
+                    value = truncateToDecimalPlaces(longitude, 6),
+                    onValueChange = { it ->
+                        val formattedValue = when {
+                            validateNumber(it) -> it
+                            scientificNotationPattern.matcher(it).matches() -> {
+                                truncateToDecimalPlaces(formatInput(it), 6)
                             }
-                            longitude = formattedLongitude
-                        } else {
-                            Toast.makeText(
-                                context,
-                                R.string.error_longitude_decimal_places,
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            else -> {
+                                // Show a Toast message if the input does not meet the requirements
+                                Toast.makeText(
+                                    context,
+                                    R.string.error_longitude_decimal_places,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                null // Return null to indicate that the input is invalid
+                            }
+                        }
+                        // Update the longitude state only if the formatted value is valid (i.e., not null)
+                        formattedValue?.let {
+                            longitude = it
                         }
                     },
                     label = { Text(stringResource(id = R.string.longitude) + " (*)",color = inputLabelColor) },

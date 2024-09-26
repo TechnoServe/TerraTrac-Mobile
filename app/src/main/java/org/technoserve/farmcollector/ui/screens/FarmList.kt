@@ -138,8 +138,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import org.technoserve.farmcollector.map.MapViewModel
 
 
@@ -149,6 +153,8 @@ enum class Action {
     Export,
     Share,
 }
+
+private const val KEY_HAS_NEW_POLYGON = "has_new_polygon"
 
 data class ParcelablePair(val first: Double, val second: Double) : Parcelable {
     constructor(parcel: Parcel) : this(
@@ -2054,20 +2060,31 @@ fun UpdateFarmForm(
     var farmerPhoto by remember { mutableStateOf(item.farmerPhoto) }
     var village by remember { mutableStateOf(item.village) }
     var district by remember { mutableStateOf(item.district) }
-    var size by remember { mutableStateOf(item.size.toString()) }
+//    var size by remember { mutableStateOf(item.size.toString()) }
+
+    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+    var isValidSize by remember { mutableStateOf(true) }
+    var size by remember {
+        mutableStateOf(sharedPref.getString("plot_size", item.size.toString()) ?: item.size.toString())
+    }
+
+    val hasNewPolygon: Boolean = sharedPref.getBoolean(KEY_HAS_NEW_POLYGON,false)
+
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
     var coordinates by remember { mutableStateOf(item.coordinates) }
 
     // Flag to track if the polygon was modified
-    var hasPolygonChanged by remember { mutableStateOf(false) }
     var showKeepPolygonDialog by remember { mutableStateOf(false) }
+
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel =
         viewModel(
             factory = FarmViewModelFactory(context.applicationContext as Application),
         )
+
+
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }
@@ -2241,15 +2258,10 @@ fun UpdateFarmForm(
     }
 
     // If changes are detected, show dialog to confirm
-    if (showKeepPolygonDialog) {
+    if (showKeepPolygonDialog)  {
         KeepPolygonDialog(
             onDismiss = { showKeepPolygonDialog = false },
             onKeepExisting = {
-//                // Keep the existing polygon
-//                hasPolygonChanged = false
-//                farmViewModel.updateFarmSizeAndKeepPolygon(size)
-//                showKeepPolygonDialog = false
-
                 // Keep the existing polygon
                 item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
                 updateFarmInstance()
@@ -2258,6 +2270,11 @@ fun UpdateFarmForm(
             onCaptureNew = {
                 coordinates = listOf() // Clear coordinates array when starting to capture new polygon
                 navController.navigate("SetPolygon")
+
+                with(sharedPref.edit()) {
+                    putBoolean(KEY_HAS_NEW_POLYGON, true)
+                    apply()
+                }
                 showKeepPolygonDialog = false // Close dialog
             }
         )
@@ -2277,7 +2294,9 @@ fun UpdateFarmForm(
             confirmButton = {
                 TextButton(onClick = {
                     if ((coordinates?.size ?: 0) >= 3) {
-                        showKeepPolygonDialog = true
+                        if (!hasNewPolygon) {
+                            showKeepPolygonDialog = true
+                        }
                     }
                     else{
                         updateFarmInstance();
@@ -2438,8 +2457,24 @@ fun UpdateFarmForm(
             TextField(
                 singleLine = true,
                 value = truncateToDecimalPlaces(size,9),
-                onValueChange = {
-                    size = it
+                onValueChange = { it ->
+                    val formattedValue = when {
+                        validateSize(it) -> it
+                        scientificNotationPattern.matcher(it).matches() -> {
+                            truncateToDecimalPlaces(formatInput(it), 9)
+                        }
+                        else -> it
+                    }
+
+                    // Update the size state with the formatted value
+                    size = formattedValue
+                    isValidSize = validateSize(formattedValue)
+
+                    // Save to SharedPreferences
+                    with(sharedPref.edit()) {
+                        putString("plot_size", formattedValue)
+                        apply()
+                    }
                 },
                 keyboardOptions =
                     KeyboardOptions.Default.copy(
@@ -2513,7 +2548,31 @@ fun UpdateFarmForm(
                 TextField(
                     readOnly = true,
                     value = latitude,
-                    onValueChange = { latitude = it },
+//                    onValueChange = { latitude = it },
+                    onValueChange = { it ->
+                        val formattedValue = when {
+                            validateNumber(it) -> {
+                                truncateToDecimalPlaces(it, 6) // Valid number, truncate to 6 decimal places
+                            }
+                            scientificNotationPattern.matcher(it).matches() -> {
+                                truncateToDecimalPlaces(formatInput(it), 6) // Convert scientific notation and truncate
+                            }
+                            else -> {
+                                // Show a Toast message if the input does not meet the requirements
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_latitude_decimal_places),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                null // Return null to reject invalid input
+                            }
+                        }
+
+                        // Update the latitude state only if the formatted value is valid (not null)
+                        formattedValue?.let {
+                            latitude = it
+                        }
+                    },
                     label = { Text(stringResource(id = R.string.latitude), color = inputLabelColor) },
                     modifier =
                         Modifier
@@ -2524,7 +2583,31 @@ fun UpdateFarmForm(
                 TextField(
                     readOnly = true,
                     value = longitude,
-                    onValueChange = { longitude = it },
+//                    onValueChange = { longitude = it },
+                    onValueChange = { it ->
+                        val formattedValue = when {
+                            validateNumber(it) -> {
+                                truncateToDecimalPlaces(it, 6) // Valid number, truncate to 6 decimal places
+                            }
+                            scientificNotationPattern.matcher(it).matches() -> {
+                                truncateToDecimalPlaces(formatInput(it), 6) // Convert scientific notation and truncate
+                            }
+                            else -> {
+                                // Show a Toast message if the input does not meet the requirements
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_longitude_decimal_places),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                null // Return null to reject invalid input
+                            }
+                        }
+
+                        // Update the latitude state only if the formatted value is valid (not null)
+                        formattedValue?.let {
+                            longitude = it
+                        }
+                    },
                     label = { Text(stringResource(id = R.string.longitude), color = inputLabelColor) },
                     modifier =
                         Modifier
