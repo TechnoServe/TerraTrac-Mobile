@@ -162,5 +162,7 @@
     <string name="keep_existing">Mantener existente</string>
     <string name="capture_new">Capturar nuevo</string>
 
+    <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f). Considere usar el valor calculado en su lugar.</string>
+
 
 </resources>

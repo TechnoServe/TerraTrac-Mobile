@@ -2049,6 +2049,7 @@ fun UpdateFarmForm(
             latitude = "Default Village",
             longitude = "Default Village",
             coordinates = null,
+            accuracyArray = null,
             size = floatValue,
             purchases = floatValue,
             createdAt = 1L,

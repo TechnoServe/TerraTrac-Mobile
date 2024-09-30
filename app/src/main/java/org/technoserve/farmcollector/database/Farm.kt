@@ -9,6 +9,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
+import org.technoserve.farmcollector.database.converters.AccuracyListConvert
 import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
 import org.technoserve.farmcollector.ui.screens.ParcelablePair
@@ -26,7 +27,7 @@ import java.util.UUID
     ],
 )
 @Parcelize
-@TypeConverters(CoordinateListConvert::class)
+@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class)
 data class Farm(
     @ColumnInfo(name = "siteId")
     var siteId: Long,
@@ -52,6 +53,8 @@ data class Farm(
     var longitude: String,
     @ColumnInfo(name = "coordinates")
     var coordinates: List<Pair<Double?, Double?>>?,
+    @ColumnInfo(name = "accuracyArray")  // New field
+    var accuracyArray: List<Float?>?,     // List to store accuracies
     @ColumnInfo(name = "synced", defaultValue = "0")
     val synced: Boolean = false,
     @ColumnInfo(name = "scheduledForSync",defaultValue = "0")
@@ -92,6 +95,7 @@ data class Farm(
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.createTypedArrayList(ParcelablePair.CREATOR)?.map { Pair(it.first, it.second) },
+        parcel.createFloatArray()?.toList(),  // Read accuracyArray as a List<Float?>
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readLong(),
@@ -122,6 +126,7 @@ data class Farm(
                     it2
                 )
             } } })
+            parcel.writeFloatArray(accuracyArray?.filterNotNull()?.toFloatArray())  // Write accuracyArray
             parcel.writeByte(if (synced) 1 else 0)
             parcel.writeByte(if (scheduledForSync) 1 else 0)
             parcel.writeLong(createdAt)

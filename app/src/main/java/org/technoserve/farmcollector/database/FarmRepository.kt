@@ -190,7 +190,7 @@ class FarmRepository(private val farmDAO: FarmDAO) {
                 newFarm.latitude == "0.0" ||
                 newFarm.longitude == "0.0" ||
                 newFarm.size == 0.0f ||
-                newFarm.remoteId.toString().isEmpty() ||
-                newFarm.coordinates.isNullOrEmpty()
+                newFarm.remoteId.toString().isEmpty()
+                // || newFarm.coordinates.isNullOrEmpty()
     }
 }

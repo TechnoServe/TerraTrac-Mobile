@@ -162,4 +162,6 @@
     <string name="keep_existing">ያለውን ግበር</string>
     <string name="capture_new">አዲስ አንሳ</string>
 
+    <string name="warning_difference">ማስጠንቀቂያ: እንደገና ያስገቡትና ተንተናውን የተሰራ አካባቢ ብዙ ነው (%.2f)። እባክዎን የተሰራውን እሴት አጠቃቋሚ ይሁን በማለት ይህን እንድታስቡ እባካችሁ።</string>
+
 </resources>

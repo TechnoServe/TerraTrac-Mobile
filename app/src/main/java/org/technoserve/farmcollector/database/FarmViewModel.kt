@@ -320,6 +320,7 @@ class FarmViewModel(
                     }
 
                 var coordinates: List<Pair<Double, Double>>? = null
+                var accuracyArray : List<Float?>? = null
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
                     // Handle Point geometry
@@ -352,6 +353,7 @@ class FarmViewModel(
                             latitude = latitude ?: "0.0",
                             longitude = longitude ?: "0.0",
                             coordinates = it,
+                            accuracyArray = accuracyArray,
                             synced = false,
                             scheduledForSync = false,
                             createdAt = createdAt,
@@ -518,12 +520,12 @@ class FarmViewModel(
                                     UUID.randomUUID()
                                 }
 
-                            val farmerName = values.getOrNull(1) ?: ""
-                            val memberId = values.getOrNull(2) ?: ""
-                            val siteName = values.getOrNull(3) ?: ""
-                            val agentName = values.getOrNull(4) ?: ""
-                            val village = values.getOrNull(5) ?: ""
-                            val district = values.getOrNull(6) ?: ""
+                            val farmerName = values.getOrNull(1)?.removeSurrounding("\"", "\"") ?: ""
+                            val memberId = values.getOrNull(2)?.removeSurrounding("\"", "\"") ?: ""
+                            val siteName = values.getOrNull(3)?.removeSurrounding("\"", "\"") ?: ""
+                            val agentName = values.getOrNull(4)?.removeSurrounding("\"", "\"") ?: ""
+                            val village = values.getOrNull(5)?.removeSurrounding("\"", "\"") ?: ""
+                            val district = values.getOrNull(6)?.removeSurrounding("\"", "\"") ?: ""
                             val size = values.getOrNull(7)?.toFloatOrNull()
                             val latitude = values.getOrNull(8)
                             val longitude = values.getOrNull(9)
@@ -533,6 +535,8 @@ class FarmViewModel(
                                 values.getOrNull(10)?.removeSurrounding("\"", "\"") ?: ""
                             val coordinates = parseCoordinates(coordinatesString)
                             println("Coordinates $coordinates")
+
+                            var accuracyArray : List<Float?>? = null
 
                             val currentTime = System.currentTimeMillis()
                             val createdAt =
@@ -589,6 +593,7 @@ class FarmViewModel(
                                         coordinates
                                             ?: emptyList(),
                                     // Use empty list if coordinates are null
+                                    accuracyArray = accuracyArray,
                                     synced = false,
                                     scheduledForSync = false,
                                     createdAt = createdAt,
@@ -920,6 +925,8 @@ class FarmViewModel(
 
         Log.d(TAG, "Converted coordinates: $formattedCoordinates")
 
+        var accuracyArray : List<Float?>? = null
+
 
         // Convert size from Double to Float
         val sizeFloat: Float = this.size.toFloat()
@@ -952,6 +959,7 @@ class FarmViewModel(
             latitude = latitudeStr,
             longitude = longitudeStr,
             coordinates = coordinatesMapped,
+            accuracyArray = accuracyArray,
             synced = false,
             scheduledForSync = false,
             createdAt = createdAt,

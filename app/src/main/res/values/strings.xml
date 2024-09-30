@@ -158,4 +158,6 @@
     <string name="keep_existing_polygon_or_capture_new">Would you like to keep the existing polygon or capture a new one?</string>
     <string name="keep_existing">Keep Existing</string>
     <string name="capture_new">Capture New</string>
+    <string name="warning_difference">Warning: The difference between the entered area and the calculated area is significant (%.2f). Consider using the calculated value instead.</string>
+
 </resources>

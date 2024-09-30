@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.location.LocationManager
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -211,6 +212,7 @@ fun FarmForm(
 
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
+    var accuracyArray by rememberSaveable { mutableStateOf(listOf<Float>()) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
@@ -250,35 +252,35 @@ fun FarmForm(
             }
         }
 
-    fun fetchLocationAndNavigate() {
-        val locationRequest = LocationRequest.create().apply {
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            interval = 10000 // Update interval in milliseconds
-            fastestInterval = 5000 // Fastest update interval in milliseconds
-        }
-
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult) {
-                    locationResult.lastLocation?.let { lastLocation ->
-                        // Handle the new location
-                        latitude = "${lastLocation.latitude}"
-                        longitude = "${lastLocation.longitude}"
-
-                        // Navigate to 'setPolygon' if conditions are met
-                        navController.currentBackStackEntry?.arguments?.putParcelable(
-                            "farmData",
-                            null
-                        )
-                        navController.navigate("setPolygon")
-                        mapViewModel.clearCoordinates()
-                    }
-                }
-            },
-            Looper.getMainLooper()
-        )
-    }
+//    fun fetchLocationAndNavigate() {
+//        val locationRequest = LocationRequest.create().apply {
+//            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+//            interval = 10000 // Update interval in milliseconds
+//            fastestInterval = 5000 // Fastest update interval in milliseconds
+//        }
+//
+//        fusedLocationClient.requestLocationUpdates(
+//            locationRequest,
+//            object : LocationCallback() {
+//                override fun onLocationResult(locationResult: LocationResult) {
+//                    locationResult.lastLocation?.let { lastLocation ->
+//                        // Handle the new location
+//                        latitude = "${lastLocation.latitude}"
+//                        longitude = "${lastLocation.longitude}"
+//
+//                        // Navigate to 'setPolygon' if conditions are met
+//                        navController.currentBackStackEntry?.arguments?.putParcelable(
+//                            "farmData",
+//                            null
+//                        )
+//                        navController.navigate("setPolygon")
+//                        mapViewModel.clearCoordinates()
+//                    }
+//                }
+//            },
+//            Looper.getMainLooper()
+//        )
+//    }
 
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -358,7 +360,8 @@ fun FarmForm(
             sizeInHa.toFloat(),
             latitude,
             longitude,
-            coordinates = coordinatesData?.plus(coordinatesData.first())
+            coordinates = coordinatesData?.plus(coordinatesData.first()),
+            accuracyArray
         )
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
@@ -886,6 +889,27 @@ fun FarmForm(
                                 // Update latitude and longitude
                                 latitude = roundToSixDecimalPlaces(lastLocation.latitude)
                                 longitude = roundToSixDecimalPlaces(lastLocation.longitude)
+                                // Get accuracy of the location
+                                val accuracy = lastLocation.accuracy.toString()
+
+                                val accuracyFloat = lastLocation.accuracy // accuracy is a Float
+                                accuracyArray = accuracyArray + accuracyFloat
+
+//                                accuracyArray = listOf(accuracyArray[0])
+
+                                // Calculate the mean of all values in accuracyArray
+                                val meanAccuracy = if (accuracyArray.isNotEmpty()) {
+                                    accuracyArray.average().toFloat() // average() returns a Double, so convert to Float
+                                } else {
+                                    0f // Handle the case where the array is empty
+                                }
+
+                                // Log coordinates and accuracy
+                                Log.d("Coordinates", "Coordinates: Lat = $latitude, Long = $longitude")
+                                Log.d("Accuracy", "Accuracy set to: $accuracy")
+
+                                // Now you can use meanAccuracy as needed
+                                Log.d("MeanAccuracy", "Mean accuracy is: $meanAccuracy")
                             }
                         }
                     },
@@ -992,8 +1016,19 @@ fun addFarm(
     size: Float,
     latitude: String,
     longitude: String,
-    coordinates: List<Pair<Double, Double>>?
+    coordinates: List<Pair<Double, Double>>?,
+    accuracyArray : List<Float?>?
 ): Farm {
+    var coordinatesSize = 0
+    if( coordinates != null) {
+        coordinatesSize = coordinates.size
+    }
+    // Ensure accuracyArray is always stored as a list
+    val finalAccuracyArray = when {
+        accuracyArray.isNullOrEmpty() -> emptyList() // If null or empty, store an empty list
+        coordinates.isNullOrEmpty() -> listOf(accuracyArray[0]) // If one value, store it as a single-element list
+        else -> listOf(accuracyArray[coordinatesSize])// Store the provided list of multiple values
+    }
     val farm = Farm(
         siteId,
         remote_id,
@@ -1007,6 +1042,7 @@ fun addFarm(
         latitude,
         longitude,
         coordinates,
+        finalAccuracyArray,
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )

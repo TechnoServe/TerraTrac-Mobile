@@ -161,4 +161,7 @@
     <string name="keep_existing">Kan Jiru Qabadhu</string>
     <string name="capture_new">Haaraa Qabsiisi</string>
 
+    <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f). Gatii herreeffame fayyadamuuf yaadaa.</string>
+
+
 </resources>

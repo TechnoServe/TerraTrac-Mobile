@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.location.Location
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,6 +85,7 @@ fun SetPolygon(
 ) {
     val context = LocalContext.current as Activity
     var coordinates by remember { mutableStateOf(listOf<Pair<Double, Double>>()) }
+    var accuracyArray by remember { mutableStateOf(listOf<Float>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     var hasPointsOnMap by remember { mutableStateOf(false) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -621,7 +624,7 @@ fun SetPolygon(
                         ElevatedButton(
                             modifier = Modifier.fillMaxWidth(0.25f),
                             shape = RoundedCornerShape(0.dp),
-                            colors = ButtonDefaults.buttonColors(Color.Green),
+                            colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
                                 mapViewModel.addCoordinates(coordinates)
                                 // Show the polygon on the map for review
@@ -643,11 +646,15 @@ fun SetPolygon(
 
                     // Logic to handle when a point is deleted
                     LaunchedEffect(coordinates.size) {
-                        if (coordinates.size < 3) {
+                        if (coordinates.size < 3 ) {
                             showSaveButton = false
-                           //  isCapturingCoordinates = true // Show "Finish" button again when points are deleted
+                            if (coordinates.size > 1 ) {
+                                isCapturingCoordinates =
+                                    true // Show "Finish" button again when points are deleted
+                            }
                         }
                     }
+
 
 
 
@@ -707,8 +714,18 @@ fun SetPolygon(
                                                     Pair(location.latitude, location.longitude)
                                                 accuracy = location.accuracy.toString()
 
+                                                val accuracyFloat = location.accuracy // accuracy is a Float
+
+
+                                                // accuracyArray = listOf(accuracyArray[0])
+
+                                                Log.d("Coordinates", "Coordinates : $coordinate")
+
+                                                Log.d("Accuracy", "Accuracy set to : $accuracy")
+
                                                 coordinates = coordinates + coordinate
                                                 viewModel.addMarker(coordinate)
+                                                accuracyArray = accuracyArray + accuracyFloat
 
                                                 // add camera position
                                                 viewModel.addCoordinate(

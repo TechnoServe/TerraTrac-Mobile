@@ -161,5 +161,8 @@
     <string name="keep_existing">Weka Iliyoopo</string>
     <string name="capture_new">Nasa Mpya</string>
 
+    <string name="warning_difference">Tahadhari: Tofauti kati ya eneo lililoingizwa na eneo lililohesabiwa ni kubwa (%.2f). Fikiria kutumia thamani iliyohesabiwa badala yake.</string>
+
+
 
 </resources>
