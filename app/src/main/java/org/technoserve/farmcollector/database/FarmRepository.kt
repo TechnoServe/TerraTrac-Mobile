@@ -28,30 +28,67 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getFarmById(farmId)
     }
 
+//    suspend fun addFarm(farm: Farm) {
+//        val existingFarm = isFarmDuplicate(farm)
+//
+//     // Check if the farm already exists
+//        if (existingFarm == null) {
+//            Log.d(TAG, "Attempting to insert new farm: $farm")
+//            val insertResult = farmDAO.insert(farm)
+//            Log.d(TAG, "Insert operation result: $insertResult")
+//            if (insertResult != -1L) {
+//                Log.d(TAG, "New farm inserted: $farm")
+//            } else {
+//                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
+//            }
+//        } else {
+//            Log.d(TAG, "Farm already exists: $existingFarm")
+//
+//            if (farmNeedsUpdate(existingFarm, farm)) {
+//                Log.d(TAG, "Updating existing farm: $farm")
+//                farmDAO.update(farm)
+//            } else {
+//                Log.d(TAG, "No update needed for farm: $farm")
+//            }
+//        }
+//    }
+
     suspend fun addFarm(farm: Farm) {
-        val existingFarm = isFarmDuplicate(farm)
-
-     // Check if the farm already exists
-        if (existingFarm == null) {
-            Log.d(TAG, "Attempting to insert new farm: $farm")
-            val insertResult = farmDAO.insert(farm)
-            Log.d(TAG, "Insert operation result: $insertResult")
-            if (insertResult != -1L) {
-                Log.d(TAG, "New farm inserted: $farm")
-            } else {
-                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
+        try {
+            // Step 1: Ensure that the CollectionSite exists for the farm's siteId
+            val collectionSite = farmDAO.getCollectionSiteById(farm.siteId)
+            if (collectionSite == null) {
+                Log.e(TAG, "Failed to insert farm. CollectionSite with siteId ${farm.siteId} does not exist.")
+                return  // Exit if the CollectionSite doesn't exist
             }
-        } else {
-            Log.d(TAG, "Farm already exists: $existingFarm")
 
-            if (farmNeedsUpdate(existingFarm, farm)) {
-                Log.d(TAG, "Updating existing farm: $farm")
-                farmDAO.update(farm)
+            // Step 2: Check if the farm already exists
+            val existingFarm = isFarmDuplicate(farm)
+            if (existingFarm == null) {
+                Log.d(TAG, "Attempting to insert new farm: $farm")
+                val insertResult = farmDAO.insert(farm)
+
+                if (insertResult != -1L) {
+                    Log.d(TAG, "New farm inserted successfully: $farm")
+                } else {
+                    Log.e(TAG, "Farm insertion failed, insertResult: $insertResult")
+                }
             } else {
-                Log.d(TAG, "No update needed for farm: $farm")
+                Log.d(TAG, "Farm already exists: $existingFarm")
+
+                // Step 3: Check if the farm needs an update
+                if (farmNeedsUpdate(existingFarm, farm)) {
+                    Log.d(TAG, "Updating existing farm: $farm")
+                    farmDAO.update(farm)
+                } else {
+                    Log.d(TAG, "No update needed for farm: $farm")
+                }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during farm insertion or update: ${e.message}", e)
         }
     }
+
 
 
 
