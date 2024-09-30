@@ -320,7 +320,23 @@ class FarmViewModel(
                     }
 
                 var coordinates: List<Pair<Double, Double>>? = null
-                var accuracyArray : List<Float?>? = null
+                var accuracyArray: List<Float?>? = null
+                val accuracyArrayString = properties.optString("accuracyArray")
+
+                println("Accuracy Array $accuracyArrayString")
+
+                // Check if accuracyArrayString is not empty or null
+                if (!accuracyArrayString.isNullOrEmpty()) {
+                    // Remove square brackets and split the string by commas
+                    val cleanAccuracyArrayString = accuracyArrayString.replace("[", "").replace("]", "")
+                    val accuracyValues = cleanAccuracyArrayString.split(",").map { it.trim() }
+
+                    // Convert to a list of floats
+                    accuracyArray = accuracyValues.map { it.toFloatOrNull() }
+                }
+
+                println("Parsed Accuracy Array $accuracyArray")
+
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
                     // Handle Point geometry
@@ -538,6 +554,10 @@ class FarmViewModel(
 
                             var accuracyArray : List<Float?>? = null
 
+                            val accuraciesString = values.getOrNull(11)?.removeSurrounding("\"", "\"") ?: ""
+                            if (!accuraciesString.isNullOrBlank()) {
+                                accuracyArray = accuraciesString.split(",").map { it.toFloatOrNull() }
+                            }
                             val currentTime = System.currentTimeMillis()
                             val createdAt =
                                 try {

@@ -435,7 +435,7 @@ fun FarmList(
             file.bufferedWriter().use { writer ->
                 if (exportFormat == "CSV") {
                     writer.write(
-                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
                     )
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
@@ -458,7 +458,7 @@ fun FarmList(
                                 }
 
                         val line =
-                            "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},\"${getSiteById?.name}\",\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                            "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},\"${getSiteById?.name}\",\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",\"${farm.accuracyArray}\",${
                                 Date(
                                     farm.createdAt,
                                 )
@@ -498,9 +498,9 @@ fun FarmList(
                                              "farm_size": ${farm.size ?: 0.0},
                                             "latitude": $latitude,
                                             "longitude": $longitude,
+                                             "accuracyArray": "${farm.accuracyArray ?: ""}",
                                             "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
-                                            
+                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
@@ -539,7 +539,7 @@ fun FarmList(
                 BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
                     if (exportFormat == "CSV") {
                         writer.write(
-                            "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                            "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
                         )
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
@@ -566,7 +566,7 @@ fun FarmList(
                                     }
 
                             val line =
-                                "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},${getSiteById?.name},\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},${getSiteById?.name},\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",\"${farm.accuracyArray}\",${
                                     Date(farm.createdAt)
                                 },${Date(farm.updatedAt)}\n"
                             writer.write(line)
@@ -605,6 +605,7 @@ fun FarmList(
                                                  "farm_size": ${farm.size ?: 0.0},
                                                 "latitude": $latitude,
                                                 "longitude": $longitude,
+                                                "accuracyArray": "${farm.accuracyArray ?: ""}",
                                                 "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
                                                 "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
                                                 
