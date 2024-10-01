@@ -190,52 +190,6 @@ fun SetPolygon(
         Looper.getMainLooper(),
     )
 
-//    fun saveCenterCoordinates() {
-//        sharedPref.edit().putString("center_coordinates", "${centerCoordinates?.first}, ${centerCoordinates?.second}").apply()
-//    }
-//
-//    fun calculateCenterCoordinates() {
-//        if (coordinates.isNotEmpty()) {
-//            val sumLatitude = coordinates.sumOf { it.first }
-//            val sumLongitude = coordinates.sumOf { it.second }
-//            centerCoordinates = Pair(sumLatitude / coordinates.size, sumLongitude / coordinates.size)
-//            saveCenterCoordinates()
-//        }
-//    }
-
-//    fusedLocationClient.requestLocationUpdates(
-//        locationRequest,
-//        object : LocationCallback() {
-//            override fun onLocationResult(locationResult: LocationResult) {
-//                val location = locationResult.lastLocation ?: return
-//                accuracy = location.accuracy.toString()
-//
-//                coordinates = coordinates + Pair(location.latitude, location.longitude)
-//                viewModel.addMarker(Pair(location.latitude, location.longitude))
-//                hasPointsOnMap = coordinates.isNotEmpty()
-//
-//                // Calculate center coordinates
-//                calculateCenterCoordinates()
-//            }
-//        },
-//        Looper.getMainLooper(),
-//    )
-
-//    fun loadCenterCoordinates(): Pair<Double, Double>? {
-//        val savedCoords = sharedPref.getString("center_coordinates", null)
-//        return if (savedCoords != null) {
-//            val (lat, lon) = savedCoords.split(',').map { it.toDouble() }
-//            Pair(lat, lon)
-//        } else {
-//            null
-//        }
-//    }
-
-//    // Load center coordinates when the composable is initialized
-//    LaunchedEffect(Unit) {
-//        centerCoordinates = loadCenterCoordinates()
-//    }
-
     // Display coordinates of a farm on map
     if (farmInfo != null && !isCapturingCoordinates && !viewSelectFarm) {
         viewModel.clearCoordinates()
@@ -252,26 +206,6 @@ fun SetPolygon(
     val selectedUnit = sharedPref.getString("selectedUnit", "Ha")?:"Ha"
     val enteredAreaConverted= convertSize(enteredArea,selectedUnit)
     val calculatedArea = mapViewModel.calculateArea(coordinates)
-//    if (showConfirmDialog.value) {
-//        ConfirmDialog(
-//            title = stringResource(id = R.string.set_polygon),
-//            message = stringResource(id = R.string.confirm_set_polygon),
-//            showConfirmDialog,
-//            fun() {
-//                // Check if coordinates size is greater than 4
-//                if (coordinates.size >= 3) {
-//                    mapViewModel.clearCoordinates()
-//                    mapViewModel.addCoordinates(coordinates)
-//                    val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
-//                    navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
-//                    mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
-//                } else {
-//                    showAlertDialog.value = true
-//                }
-//            },
-//        )
-//    }
-
     var showSaveButton by remember { mutableStateOf(false) } // To track if save button should be shown
 
     // Confirm dialog to finalize the polygon
@@ -282,13 +216,6 @@ fun SetPolygon(
             showConfirmDialog,
             onProceedFn = {
                 if (coordinates.size >= 3) {
-//                    // Close the polygon by adding the first point as the last point
-//                    coordinates = coordinates + coordinates.first()
-//                    mapViewModel.clearCoordinates()
-//                    mapViewModel.addCoordinates(coordinates)
-//
-//                    // Preview the polygon on the map
-//                    mapViewModel.showPolygonOnMap(coordinates)
 
                     mapViewModel.clearCoordinates()
                     mapViewModel.addCoordinates(coordinates)
@@ -507,11 +434,6 @@ fun SetPolygon(
                                     }",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-
-//                                // Display center coordinates if available
-//                                if (centerCoordinates != null) {
-//                                    Text(text = "Center Coordinates: (${centerCoordinates?.first}, ${centerCoordinates?.second})")
-//                                }
                             }
                         }
                     }
@@ -544,33 +466,6 @@ fun SetPolygon(
                         }
                     }
                 } else {
-//                    ElevatedButton(
-//                        modifier =
-//                            Modifier
-//                                .fillMaxWidth(0.22f),
-//                        shape = RoundedCornerShape(0.dp),
-//                        colors = ButtonDefaults.buttonColors(Color.White),
-//                        onClick = {
-//                            if (!isLocationEnabled(context)) {
-//                                showLocationDialog.value = true
-//                            } else {
-//                                if (!isCapturingCoordinates && !showConfirmDialog.value) {
-//                                    coordinates = listOf() // Clear coordinates array when starting
-//                                    viewModel.clearCoordinates()
-//                                    isCapturingCoordinates = true
-//                                } else if (isCapturingCoordinates && !showConfirmDialog.value) {
-//                                    showConfirmDialog.value = true
-//                                }
-//                            }
-//                        },
-//                    ) {
-//                        Icon(
-//                            imageVector = if (isCapturingCoordinates) Icons.Default.Done else Icons.Default.PlayArrow,
-//                            contentDescription = if (isCapturingCoordinates) "Finish" else "Start",
-//                            tint = Color.Black,
-//                            modifier = Modifier.padding(4.dp),
-//                        )
-//                    }
 
                     // "Start" button - visible only when not capturing coordinates and the "Finish" button hasn't been clicked
                     if (!isCapturingCoordinates && !showConfirmDialog.value && !showSaveButton) {
@@ -630,6 +525,7 @@ fun SetPolygon(
                                 // Show the polygon on the map for review
                                 val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
                                 navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
+                                navController.previousBackStackEntry?.savedStateHandle?.set("accuracyArray", accuracyArray)
                                 mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
                                 Toast.makeText(context, "Polygon saved successfully", Toast.LENGTH_LONG).show()
                             },
@@ -710,23 +606,23 @@ fun SetPolygon(
                                                 }
 
                                             // update map camera position
-                                                val coordinate =
-                                                    Pair(location.latitude, location.longitude)
+                                                val coordinate = Pair(location.latitude, location.longitude)
                                                 accuracy = location.accuracy.toString()
 
                                                 val accuracyFloat = location.accuracy // accuracy is a Float
 
-
-                                                // accuracyArray = listOf(accuracyArray[0])
-
                                                 Log.d("Coordinates", "Coordinates : $coordinate")
+                                                Log.d("Accuracy", "Accuracy set to : $accuracyFloat")
 
-                                                Log.d("Accuracy", "Accuracy set to : $accuracy")
+
 
                                                 coordinates = coordinates + coordinate
-                                                viewModel.addMarker(coordinate)
                                                 accuracyArray = accuracyArray + accuracyFloat
 
+                                                // Log the updated arrays
+                                                Log.d("Accuracy Array", "Accuracy Array is set to : $accuracyArray")
+
+                                                viewModel.addMarker(coordinate)
                                                 // add camera position
                                                 viewModel.addCoordinate(
                                                     location.latitude,

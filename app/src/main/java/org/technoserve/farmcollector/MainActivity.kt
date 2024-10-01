@@ -198,14 +198,14 @@ class MainActivity : ComponentActivity() {
 
                         composable(Routes.SET_POLYGON,
                             arguments = listOf(
-                                navArgument("coordinates") { type = NavType.StringType }
+                                navArgument("coordinates") { type = NavType.StringType },
+                                navArgument("accuracyArray") { type = NavType.StringType }
                             )
                         ) { backStackEntry ->
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
-                            val coordinates = backStackEntry.arguments?.getString("coordinates")
-                            SetPolygon(navController, viewModel,)
+                            SetPolygon(navController, viewModel)
                         }
                         composable(Routes.SETTINGS,) {
                             LaunchedEffect(Unit) {

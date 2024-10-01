@@ -101,12 +101,13 @@ import javax.inject.Inject
 @Composable
 fun AddFarm(navController: NavController, siteId: Long) {
     var coordinatesData: List<Pair<Double, Double>>? = null
+    var accuracyArrayData: List<Float?>? = null
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
         val parcelableCoordinates = navController.currentBackStackEntry!!
             .savedStateHandle
             .get<List<ParcelablePair>>("coordinates")
-
         coordinatesData = parcelableCoordinates?.map { Pair(it.first, it.second) }
+        accuracyArrayData = navController.currentBackStackEntry!!.savedStateHandle.get<List<Float?>>("accuracyArray")
     }
 
     Column(
@@ -127,7 +128,7 @@ fun AddFarm(navController: NavController, siteId: Long) {
                 onRestoreClicked = {}
             )
         Spacer(modifier = Modifier.height(16.dp))
-        FarmForm(navController, siteId, coordinatesData)
+        FarmForm(navController, siteId, coordinatesData,accuracyArrayData)
     }
 }
 // Helper function to truncate a string representation of a number to a specific number of decimal places
@@ -200,7 +201,8 @@ fun validateNumber(number: String): Boolean {
 fun FarmForm(
     navController: NavController,
     siteId: Long,
-    coordinatesData: List<Pair<Double, Double>>?
+    coordinatesData: List<Pair<Double, Double>>?,
+    accuracyArrayData: List<Float?>?
 ) {
     val context = LocalContext.current as Activity
     var isValid by remember { mutableStateOf(true) }
@@ -347,6 +349,30 @@ fun FarmForm(
         // Generating a UUID for a new farm before saving it
         val newUUID = UUID.randomUUID()
 
+
+        val coordinatesSize = coordinatesData?.size ?: 0 // Safely get the size of coordinates, or 0 if null
+
+        Log.d("coordinatesSize", "coordinatesSize : $coordinatesSize")
+
+
+        val finalAccuracyArray = when {
+            accuracyArray.isEmpty() -> emptyList()
+            coordinatesSize == 0 -> listOf(accuracyArray[0])
+            else -> {
+                val result = accuracyArrayData!!.toMutableList()
+                if (coordinatesSize > 1) {
+                    result.add(accuracyArrayData.last())
+                }
+                result
+            }
+        }
+
+        Log.d("Accuracy Array Before", "Accuracy Array Before Saving The farm is set to : $accuracyArray")
+
+        Log.d("finalAccuracyArray", "finalAccuracyArray is set to : $finalAccuracyArray")
+
+
+
         addFarm(
             farmViewModel,
             siteId,
@@ -360,8 +386,9 @@ fun FarmForm(
             sizeInHa.toFloat(),
             latitude,
             longitude,
-            coordinates = coordinatesData?.plus(coordinatesData.first()),
-            accuracyArray
+//            coordinates = coordinatesData?.plus(coordinatesData.first()),
+            coordinates = coordinatesData,
+            accuracyArray = finalAccuracyArray
         )
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
@@ -904,9 +931,11 @@ fun FarmForm(
                                     0f // Handle the case where the array is empty
                                 }
 
+                                accuracyArray = listOf(meanAccuracy)
+
                                 // Log coordinates and accuracy
                                 Log.d("Coordinates", "Coordinates: Lat = $latitude, Long = $longitude")
-                                Log.d("Accuracy", "Accuracy set to: $accuracy")
+                                Log.d("Accuracy Array", "Accuracy set to: $accuracyArray")
 
                                 // Now you can use meanAccuracy as needed
                                 Log.d("MeanAccuracy", "Mean accuracy is: $meanAccuracy")
@@ -1019,16 +1048,6 @@ fun addFarm(
     coordinates: List<Pair<Double, Double>>?,
     accuracyArray : List<Float?>?
 ): Farm {
-    var coordinatesSize = 0
-    if( coordinates != null) {
-        coordinatesSize = coordinates.size
-    }
-    // Ensure accuracyArray is always stored as a list
-    val finalAccuracyArray = when {
-        accuracyArray.isNullOrEmpty() -> emptyList() // If null or empty, store an empty list
-        coordinates.isNullOrEmpty() -> listOf(accuracyArray[0]) // If one value, store it as a single-element list
-        else -> listOf(accuracyArray[coordinatesSize])// Store the provided list of multiple values
-    }
     val farm = Farm(
         siteId,
         remote_id,
@@ -1042,7 +1061,7 @@ fun addFarm(
         latitude,
         longitude,
         coordinates,
-        finalAccuracyArray,
+        accuracyArray,
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )

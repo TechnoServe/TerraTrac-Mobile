@@ -340,10 +340,11 @@ class FarmViewModel(
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
                     // Handle Point geometry
-                    val coordArray = geometry.getJSONArray("coordinates")
-                    val lon = coordArray.getDouble(1)
-                    val lat = coordArray.getDouble(0)
-                    coordinates = listOf(Pair(lon, lat))
+//                    val coordArray = geometry.getJSONArray("coordinates")
+//                    val lon = coordArray.getDouble(1)
+//                    val lat = coordArray.getDouble(0)
+//                    coordinates = listOf(Pair(lon, lat))
+                    coordinates = null
                 } else if (geoType == "Polygon") {
                     val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
                     val coordList = mutableListOf<Pair<Double, Double>>()
@@ -355,7 +356,7 @@ class FarmViewModel(
                 }
 
                 val newFarm =
-                    coordinates?.let {
+                    // coordinates?.let {
                         Farm(
                             siteId = siteId,
                             remoteId = remoteId,
@@ -368,20 +369,15 @@ class FarmViewModel(
                             size = size.takeIf { !it.isNaN() } ?: 0f,
                             latitude = latitude ?: "0.0",
                             longitude = longitude ?: "0.0",
-                            coordinates = it,
+                            coordinates = coordinates,
                             accuracyArray = accuracyArray,
                             synced = false,
                             scheduledForSync = false,
                             createdAt = createdAt,
                             updatedAt = updatedAt,
                         )
-                    }
-                if (newFarm != null) {
-                    validFarms.add(newFarm)
-                }
-                else {
-                    invalidFarms.add(feature.toString())
-                }
+                   // }
+                validFarms.add(newFarm)
             }
         } catch (e: Exception) {
             e.printStackTrace()

@@ -451,9 +451,10 @@ fun FarmList(
                                         // Always include brackets, even for a single point
                                         coordinates.joinToString(", ", prefix = "[", postfix = "]")
                                     } else {
-                                        val lon = farm.longitude ?: "0.0"
-                                        val lat = farm.latitude ?: "0.0"
-                                        "[$lon, $lat]"
+//                                        val lon = farm.longitude ?: "0.0"
+//                                        val lat = farm.latitude ?: "0.0"
+//                                        "[$lon, $lat]"
+                                        ""
                                     }
                                 }
 
@@ -504,7 +505,7 @@ fun FarmList(
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[]"}
                                         }
                                     }
                                     """.trimIndent()
@@ -559,9 +560,10 @@ fun FarmList(
                                                 postfix = "]"
                                             )
                                         } else {
-                                            val lon = farm.longitude ?: "0.0"
-                                            val lat = farm.latitude ?: "0.0"
-                                            "[$lon, $lat]"
+//                                            val lon = farm.longitude ?: "0.0"
+//                                            val lat = farm.latitude ?: "0.0"
+//                                            "[$lon, $lat]"
+                                            ""
                                         }
                                     }
 
@@ -612,7 +614,7 @@ fun FarmList(
                                             },
                                             "geometry": {
                                                 "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                                "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                                "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[]"}
                                             }
                                         }
                                         """.trimIndent()
