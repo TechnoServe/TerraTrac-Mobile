@@ -162,7 +162,8 @@ data class FarmDetailDto(
     val size: Float,
     val latitude: Double,
     val longitude: Double,
-    val coordinates: List<List<Double?>>?
+    val coordinates: List<List<Double?>>?,
+    val accuracies: List<Float?>?,
 )
 
 data class DeviceFarmDto(
@@ -204,7 +205,8 @@ fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<Dev
                         size = farm.size,
                         latitude = latitude,
                         longitude = longitude,
-                        coordinates = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() // Convert coordinate pairs
+                        coordinates = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() ,// Convert coordinate pairs
+                        accuracies = farm.accuracyArray?.filterNotNull() // Filter out null values
                     )
                 }
             }

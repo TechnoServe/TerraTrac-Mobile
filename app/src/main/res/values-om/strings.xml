@@ -120,17 +120,17 @@
     <string name="geojson_import_successful">Galchi GeoJSON milkaa\'aa ta\'eera</string>
     <string name="csv_import_successful">Galchi CSV milkaa\'aa ta\'eera</string>
     <string name="import_failed_with_error">Galchi harkifataa: %1$s</string>
-    <string name="error_site_name_empty">Maqaan bakka hojii hin duwwaa ta\'uu qaba</string>
-    <string name="error_agent_name_empty">Maqaan agntii hin duwwaa ta\'uu qaba</string>
+    <string name="error_site_name_empty">Maqaan Saayitii duwwaa ta\'uu hin qabu ykn lakkoofsa qofa qabaachuu hin qabu</string>
+    <string name="error_agent_name_empty">Maqaan Bakka Bu\'aa duwwaa ta\'uu hin qabu ykn lakkoofsota qofa qabaachuu hin qabu</string>
     <string name="error_invalid_phone_number">Lakkofsa bilbilaa dogoggora</string>
     <string name="error_invalid_email_address">I-meelii dogoggora</string>
     <string name="error_village_empty">Gandaan hin duwwaa ta\'uu qaba</string>
-    <string name="error_district_empty">Aanaawwan hin duwwaa ta\'uu qaba</string>
-    <string name="error_farmer_name_empty">Maqaan qonnaan bulaa hin duwwaa ta\'uu qaba</string>
+    <string name="error_district_empty">Aanaan duwwaa ta\'uu ykn lakkoofsa qofa of keessaa qabaachuu hin qabu</string>
+    <string name="error_farmer_name_empty">Maqaan Qonnaan Bulaa duwwaa ykn lakkoofsa qofa of keessaa qabaachuu hin qabu</string>
     <string name="error_farm_size_empty">Bal\'inni lafa qonnaa hin duwwaa ta\'uu qaba</string>
     <string name="error_latitude_decimal_places">Bal\'inni kaabaa miilxirraa 6 akka ta\'u qaba</string>
     <string name="error_longitude_decimal_places">Bal\'inni kibbaa miilxirraa 6 akka ta\'u qaba</string>
-    <string name="error_polygon_points">Giddugaleessa meetiraa 4 ta\'u yoo xiqqaate foorisaaniirra seenuu qaba.</string>
+    <string name="error_polygon_points">Giddugaleessa meetiraa 3 ta\'u yoo xiqqaate foorisaaniirra seenuu qaba.</string>
     <string name="error_farm_size_invalid">Gatii Dirree Dogoggoraa</string>
     <string name="invalid_farms">%1$d Waraqaa qabeenya beeyladaa dogoggoraa hin galmoofne</string>
     <string name="invalid_farms_with_names">%1$d qabeenya ispoortii dogongoraa hin taasifamne. Barsiisota: %2$s</string>
@@ -162,6 +162,11 @@
     <string name="capture_new">Haaraa Qabsiisi</string>
 
     <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f). Gatii herreeffame fayyadamuuf yaadaa.</string>
+
+    <string name="polygon_saved">"Poligooniin milkaa'inaan kuusameera"</string>
+    <string name="invalid_polygon_title">"Poligoonii sirrii hin ta'in"</string>
+    <string name="invalid_polygon_message">"Qarqara qabaman sirrii miti yookiinis sarara qajeelaa uumu. Mee irra deebi'ii yaali."</string>
+
 
 
 </resources>

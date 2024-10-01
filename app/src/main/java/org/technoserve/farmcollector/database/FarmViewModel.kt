@@ -88,6 +88,7 @@ data class FarmRestore(
     val latitude: Double,
     val longitude: Double,
     val coordinates: List<List<Double>>,
+    val accuracyArray: List<Float?>?,
     val created_at: String,
     val updated_at: String,
     val site_id: Long
@@ -551,8 +552,10 @@ class FarmViewModel(
                             var accuracyArray : List<Float?>? = null
 
                             val accuraciesString = values.getOrNull(11)?.removeSurrounding("\"", "\"") ?: ""
-                            if (!accuraciesString.isNullOrBlank()) {
-                                accuracyArray = accuraciesString.split(",").map { it.toFloatOrNull() }
+                            accuracyArray = if (accuraciesString.isNotBlank()) {
+                                accuraciesString.split(",").map { it.toFloatOrNull() }
+                            } else {
+                                listOf(null)
                             }
                             val currentTime = System.currentTimeMillis()
                             val createdAt =
@@ -561,7 +564,7 @@ class FarmViewModel(
                                             .getOrNull(11)
                                             ?.isNotEmpty() == true
                                     ) {
-                                        parseDateStringToTimestamp(values[11])
+                                        parseDateStringToTimestamp(values[12])
                                     } else {
                                         currentTime
                                     }
@@ -572,10 +575,10 @@ class FarmViewModel(
                             val updatedAt =
                                 try {
                                     if (values
-                                            .getOrNull(12)
+                                            .getOrNull(13)
                                             ?.isNotEmpty() == true
                                     ) {
-                                        parseDateStringToTimestamp(values[12])
+                                        parseDateStringToTimestamp(values[14])
                                     } else {
                                         currentTime
                                     }
@@ -941,7 +944,9 @@ class FarmViewModel(
 
         Log.d(TAG, "Converted coordinates: $formattedCoordinates")
 
-        var accuracyArray : List<Float?>? = null
+
+        val accuracyArray = this.accuracyArray
+        Log.d(TAG, "Converted accuracy Array: $accuracyArray")
 
 
         // Convert size from Double to Float

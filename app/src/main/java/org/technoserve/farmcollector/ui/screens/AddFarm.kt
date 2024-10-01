@@ -431,17 +431,18 @@ fun FarmForm(
 
     fun validateForm(): Boolean {
         isValid = true
-        if (farmerName.isBlank()) {
+        val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+        if (farmerName.isBlank() || !farmerName.matches(textWithNumbersRegex)) {
             isValid = false
             // You can display an error message for this field if needed
         }
 
-        if (village.isBlank()) {
+        if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
             isValid = false
             // You can display an error message for this field if needed
         }
 
-        if (district.isBlank()) {
+        if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
             isValid = false
             // You can display an error message for this field if needed
         }
@@ -482,6 +483,12 @@ fun FarmForm(
     val buttonColor = if (isDarkTheme) Color.Black else Color.White
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
+    val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+
+    var isfarmerNameValid by remember { mutableStateOf(true) }
+    var isvillageValid by remember { mutableStateOf(true) }
+    var isDistrictValid by remember { mutableStateOf(true) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -496,10 +503,16 @@ fun FarmForm(
                 onDone = { focusRequester1.requestFocus() }
             ),
             value = farmerName,
-            onValueChange = { farmerName = it },
+            onValueChange = {
+                farmerName = it
+                isfarmerNameValid = farmerName.isNotBlank() && farmerName.matches(textWithNumbersRegex)
+                            },
             label = { Text(stringResource(id = R.string.farm_name) + " (*)",color = inputLabelColor)},
-            supportingText = { if (!isValid && farmerName.isBlank()) Text(stringResource(R.string.error_farmer_name_empty) + " (*)") },
-            isError = !isValid && farmerName.isBlank(),
+            supportingText = { if (!isfarmerNameValid) {
+                Text(stringResource(R.string.error_farmer_name_empty) + " (*)")
+                }
+            },
+            isError =!isfarmerNameValid,
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
@@ -544,10 +557,13 @@ fun FarmForm(
                 onDone = { focusRequester2.requestFocus() }
             ),
             value = village,
-            onValueChange = { village = it },
+            onValueChange = {
+                village = it
+                isvillageValid = village.isNotBlank() && village.matches(textWithNumbersRegex)
+                            },
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
-            supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
-            isError = !isValid && village.isBlank(),
+            supportingText = { if (!isvillageValid){ Text(stringResource(R.string.error_village_empty))} },
+            isError = !isvillageValid,
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
@@ -568,10 +584,15 @@ fun FarmForm(
                 onDone = { focusRequester3.requestFocus() }
             ),
             value = district,
-            onValueChange = { district = it },
+            onValueChange = {
+                district = it
+                isDistrictValid = district.isNotBlank() && district.matches(textWithNumbersRegex)
+                            },
             label = { Text(stringResource(id = R.string.district) + " (*)", color =inputLabelColor) },
-            supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
-            isError = !isValid && district.isBlank(),
+            supportingText = { if (!isDistrictValid) {
+                Text(text = stringResource(R.string.error_district_empty))
+            }},
+            isError = !isDistrictValid,
             colors = TextFieldDefaults.textFieldColors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
@@ -701,25 +722,6 @@ fun FarmForm(
             ) {
                 TextField(
                     readOnly = true,
-//                    value = latitude,
-//                    onValueChange = {
-//                        val parts = it.split(".")
-//                        if (parts.size == 2 && parts.last().length == 5 ) {
-//                            val decimalPlaces = parts.last().length
-//                            val requiredZeros = 6 - decimalPlaces
-//                            // Append the required number of zeros
-//                            val formattedLatitude = it.padEnd(it.length + requiredZeros, '0')
-//                            latitude = formattedLatitude
-//                        } else if (parts.size == 2 && parts.last().length >= 6) {
-//                            latitude = it
-//                        } else {
-//                            Toast.makeText(
-//                                context,
-//                                R.string.error_latitude_decimal_places,
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                        }
-//                    },
                     value = truncateToDecimalPlaces(latitude, 6),
                     onValueChange = { it ->
                         val formattedValue = when {
@@ -760,27 +762,6 @@ fun FarmForm(
                 Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
                 TextField(
                     readOnly = true,
-//                    value = longitude,
-//                    onValueChange = {
-//                        val parts = it.split(".")
-//                        if (parts.size == 2) {
-//                            val decimalPlaces = parts.last().length
-//                            val formattedLongitude = if (decimalPlaces == 5 ) {
-//                                // Append the required number of zeros to the decimal part
-//                                it.padEnd(it.length + (6 - decimalPlaces), '0')
-//                            } else {
-//                                it
-//                            }
-//                            longitude = formattedLongitude
-//                        } else {
-//                            Toast.makeText(
-//                                context,
-//                                R.string.error_longitude_decimal_places,
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                        }
-//                    },
-
                     value = truncateToDecimalPlaces(longitude, 6),
                     onValueChange = { it ->
                         val formattedValue = when {
@@ -836,62 +817,6 @@ fun FarmForm(
             )
         }
 
-//        // Button to trigger the location permission request
-//        Button(
-//            onClick = {
-//                val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
-//                if (isLocationEnabled(context) && context.hasLocationPermission()) {
-//                    if (enteredSize < 4f) {
-//                        val locationRequest = LocationRequest.create().apply {
-//                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//                            interval = 10000 // Update interval in milliseconds
-//                            fastestInterval = 5000 // Fastest update interval in milliseconds
-//                        }
-//
-//                        fusedLocationClient.requestLocationUpdates(
-//                            locationRequest,
-//                            object : LocationCallback() {
-//                                override fun onLocationResult(locationResult: LocationResult) {
-//                                    locationResult.lastLocation?.let { lastLocation ->
-//                                        // Handle the new location
-//                                        latitude = "${lastLocation.latitude}"
-//                                        longitude = "${lastLocation.longitude}"
-//                                    }
-//                                }
-//                            },
-//                            Looper.getMainLooper()
-//                        )
-//                    } else {
-//                        navController.currentBackStackEntry?.arguments?.putParcelable(
-//                            "farmData",
-//                            null
-//                        )
-//                        navController.navigate("setPolygon")
-//                        mapViewModel.clearCoordinates()
-//                    }
-//                } else {
-//                    showPermissionRequest.value = true
-//                    showLocationDialog.value = true
-//                }
-//            },
-//            modifier = Modifier
-//                .background(MaterialTheme.colorScheme.background)
-//                .align(Alignment.CenterHorizontally)
-//                .fillMaxWidth(0.7f)
-//                .padding(bottom = 5.dp)
-//                .height(50.dp),
-//            enabled = size.isNotBlank()
-//        ) {
-//            val enteredSize = size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
-//
-//            Text(
-//                text = if (enteredSize >= 4f) {
-//                    stringResource(id = R.string.set_polygon)
-//                } else {
-//                    stringResource(id = R.string.get_coordinates)
-//                }
-//            )
-//        }
 
         fun roundToSixDecimalPlaces(value: Double): String {
             val bigDecimal = BigDecimal.valueOf(value)

@@ -42,20 +42,21 @@ fun validateForm(
     district: String,
 ): Boolean {
     var isValid = true // Reset isValid to true before starting validation
+    val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
 
-    if (name.isBlank()) {
+    if (name.isBlank() || !name.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
-    if (agentName.isBlank()) {
+    if (agentName.isBlank() || !agentName.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
-    if (village.isBlank()) {
+    if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
         isValid = false
     }
 
-    if (district.isBlank()) {
+    if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
         isValid = false
     }
 

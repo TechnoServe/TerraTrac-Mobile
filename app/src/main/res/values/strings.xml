@@ -119,17 +119,17 @@
     <string name="csv_import_successful">CSV import successful</string>
     <string name="import_failed_with_error">Import failed: %1$s</string>
 
-    <string name="error_site_name_empty">Site Name should not be empty</string>
-    <string name="error_agent_name_empty">Agent Name should not be empty</string>
+    <string name="error_site_name_empty">Site Name should not be empty or contain numbers only</string>
+    <string name="error_agent_name_empty">Agent Name should not be empty or contain numbers only</string>
     <string name="error_invalid_phone_number">Invalid Phone Number</string>
     <string name="error_invalid_email_address">Invalid Email Address</string>
-    <string name="error_village_empty">Village should not be empty</string>
-    <string name="error_district_empty">District should not be empty</string>
-    <string name="error_farmer_name_empty">Farmer Name should not be empty</string>
+    <string name="error_village_empty">Village should not be empty or contain numbers only</string>
+    <string name="error_district_empty">District should not be empty or contain numbers only</string>
+    <string name="error_farmer_name_empty">Farmer Name should not be empty or contain numbers only</string>
     <string name="error_farm_size_empty">Farm Size should not be empty</string>
     <string name="error_latitude_decimal_places">Latitude must have at least 6 decimal places</string>
     <string name="error_longitude_decimal_places">Longitude must have at least 6 decimal places</string>
-    <string name="error_polygon_points">Please capture at least 4 points for the polygon when the size is greater than 4 hectares.</string>
+    <string name="error_polygon_points">Please capture at least 3 points for the polygon when the size is greater than 4 hectares.</string>
     <string name="error_farm_size_invalid">Invalid Farm Size</string>
     <string name="invalid_farms">%1$d Invalid farm Records were not Imported</string>
     <string name="invalid_farms_with_names">%1$d Invalid farm records were not imported. Farmers: %2$s</string>
@@ -159,5 +159,9 @@
     <string name="keep_existing">Keep Existing</string>
     <string name="capture_new">Capture New</string>
     <string name="warning_difference">Warning: The difference between the entered area and the calculated area is significant (%.2f). Consider using the calculated value instead.</string>
+    <string name="polygon_saved">"Polygon saved successfully"</string>
+    <string name="invalid_polygon_title">Invalid Polygon</string>
+    <string name="invalid_polygon_message">The captured points are invalid or form a straight line. Please try again.</string>
+
 
 </resources>

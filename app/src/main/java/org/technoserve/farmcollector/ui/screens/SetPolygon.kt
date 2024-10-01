@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,13 +33,14 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,10 +113,17 @@ fun SetPolygon(
     // Remember the state for showing the dialog
     val showLocationDialog = remember { mutableStateOf(false) }
 
-//    var centerCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     LaunchedEffect(Unit) {
         mapViewModel.clearCoordinates()
+
+        //  Get the accuracyArrayData from savedStateHandle
+        val accuracyArrayData = navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>("accuracyArray")
+
+        // If the accuracyArrayData exists, clear it
+        accuracyArrayData?.let {
+            navController.currentBackStackEntry?.savedStateHandle?.set("accuracyArray", emptyList<Float?>())
+        }
         if (!isLocationEnabled(context)) {
             showLocationDialog.value = true
         }
@@ -154,6 +161,8 @@ fun SetPolygon(
                     Text(stringResource(id = R.string.cancel))
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -208,6 +217,9 @@ fun SetPolygon(
     val calculatedArea = mapViewModel.calculateArea(coordinates)
     var showSaveButton by remember { mutableStateOf(false) } // To track if save button should be shown
 
+    // State to show invalid polygon dialog
+    val showInvalidPolygonDialog = remember { mutableStateOf(false) }
+
     // Confirm dialog to finalize the polygon
     if (showConfirmDialog.value) {
         ConfirmDialog(
@@ -242,6 +254,13 @@ fun SetPolygon(
                 }
                 // Hide the confirmation dialog after clicking yes
                 showConfirmDialog.value = false
+            },
+            onCancelFn = {
+                // Set capturing state even if user cancels
+                isCapturingCoordinates = true
+
+                // Hide the dialog after user clicks "No"
+                showConfirmDialog.value = false
             }
         )
     }
@@ -271,10 +290,13 @@ fun SetPolygon(
                     },
                 ) {
                     Text(text = stringResource(id = R.string.ok))
+                    isCapturingCoordinates= true
                     showConfirmDialog.value = false
                     mapViewModel.clearCoordinates()
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 
@@ -314,6 +336,7 @@ fun SetPolygon(
                 viewModel.clearCoordinates() // Clear google map
                 showClearMapDialog.value = false
             },
+            onCancelFn = {showClearMapDialog.value = false}
         )
     }
 
@@ -470,13 +493,20 @@ fun SetPolygon(
                     // "Start" button - visible only when not capturing coordinates and the "Finish" button hasn't been clicked
                     if (!isCapturingCoordinates && !showConfirmDialog.value && !showSaveButton) {
                         ElevatedButton(
-                            modifier = Modifier.fillMaxWidth(0.25f),
+                            modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
                                 if (!isLocationEnabled(context)) {
                                     showLocationDialog.value = true
                                 } else {
+                                    //  Get the accuracyArrayData from savedStateHandle
+                                    val accuracyArrayData = navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>("accuracyArray")
+
+                                    // If the accuracyArrayData exists, clear it
+                                    accuracyArrayData?.let {
+                                        navController.currentBackStackEntry?.savedStateHandle?.set("accuracyArray", emptyList<Float?>())
+                                    }
                                     coordinates = listOf() // Clear coordinates array when starting
                                     viewModel.clearCoordinates()
                                     isCapturingCoordinates = true
@@ -495,7 +525,7 @@ fun SetPolygon(
                     // "Finish" button - visible when capturing coordinates but not yet finished or saved
                     if (isCapturingCoordinates && !showSaveButton) {
                         ElevatedButton(
-                            modifier = Modifier.fillMaxWidth(0.25f),
+                            modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
@@ -517,7 +547,7 @@ fun SetPolygon(
                     // "Save" button - visible after finishing the polygon and previewing it, but only when there are at least 3 points
                     if (showSaveButton && coordinates.size > 3) {
                         ElevatedButton(
-                            modifier = Modifier.fillMaxWidth(0.25f),
+                            modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
@@ -526,19 +556,32 @@ fun SetPolygon(
                                 val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
                                 navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
                                 navController.previousBackStackEntry?.savedStateHandle?.set("accuracyArray", accuracyArray)
-                                mapViewModel.showAreaDialog(calculatedArea.toString(), enteredAreaConverted.toString())
-                                Toast.makeText(context, "Polygon saved successfully", Toast.LENGTH_LONG).show()
+                                if(calculatedArea > 0.000001) {
+                                    mapViewModel.showAreaDialog(
+                                        calculatedArea.toString(),
+                                        enteredAreaConverted.toString()
+                                    )
+                                }
+                                else{
+                                    // Show the dialog for invalid points
+                                    showInvalidPolygonDialog.value = true
+                                }
                             },
                             enabled = hasPointsOnMap
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.save),
+                                painter = painterResource(id = R.drawable.save_polygon),
                                 contentDescription = "Save Polygon",
                                 tint = Color.Black,
                                 modifier = Modifier.padding(4.dp)
                             )
                         }
                     }
+                    // Invalid Polygon Dialog
+                    InvalidPolygonDialog(
+                        showDialog = showInvalidPolygonDialog,
+                        onDismiss = { showInvalidPolygonDialog.value = false }
+                    )
 
                     // Logic to handle when a point is deleted
                     LaunchedEffect(coordinates.size) {
@@ -559,7 +602,7 @@ fun SetPolygon(
                     ElevatedButton(
                         modifier =
                             Modifier
-                                .fillMaxWidth(0.25f),
+                                .fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
 //                        enabled = isCapturingCoordinates,  // Enable only when capturing coordinates
@@ -643,7 +686,7 @@ fun SetPolygon(
                         )
                     }
                     ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.25f),
+                        modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
 //                        enabled = hasPointsOnMap,  // Enable only when there are points to drop
                         shape = RoundedCornerShape(0.dp),
@@ -662,7 +705,7 @@ fun SetPolygon(
                     ElevatedButton(
                         modifier =
                         Modifier
-                            .fillMaxWidth(0.25f),
+                            .fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
 //                        enabled = hasPointsOnMap,  // Enable only when there are points to reset
@@ -682,3 +725,27 @@ fun SetPolygon(
         }
     }
 }
+@Composable
+fun InvalidPolygonDialog(
+    showDialog: MutableState<Boolean>,
+    onDismiss: () -> Unit
+) {
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(text = stringResource(id = R.string.invalid_polygon_title)) },
+            text = { Text(text = stringResource(id = R.string.invalid_polygon_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDismiss()
+                }) {
+                    Text(text = stringResource(id = R.string.ok))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 6.dp
+        )
+    }
+}
+
+

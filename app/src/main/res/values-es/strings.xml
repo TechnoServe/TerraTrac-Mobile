@@ -120,17 +120,17 @@
     <string name="geojson_import_successful">Importación de GeoJSON exitosa</string>
     <string name="csv_import_successful">Importación de CSV exitosa</string>
     <string name="import_failed_with_error">Error en la importación: %1$s</string>
-    <string name="error_site_name_empty">El nombre del sitio no debe estar vacío</string>
-    <string name="error_agent_name_empty">El nombre del agente no debe estar vacío</string>
+    <string name="error_site_name_empty">El nombre del sitio no debe estar vacío o contener solo números</string>
+    <string name="error_agent_name_empty">El nombre del agente no debe estar vacío o contener solo números</string>
     <string name="error_invalid_phone_number">Número de teléfono no válido</string>
     <string name="error_invalid_email_address">Dirección de correo electrónico no válida</string>
-    <string name="error_village_empty">El pueblo no debe estar vacío</string>
-    <string name="error_district_empty">El distrito no debe estar vacío</string>
-    <string name="error_farmer_name_empty">El nombre del agricultor no debe estar vacío</string>
+    <string name="error_village_empty">El pueblo no debe estar vacío o contener solo números</string>
+    <string name="error_district_empty">El distrito no debe estar vacío o contener solo números</string>
+    <string name="error_farmer_name_empty">El nombre del agricultor no debe estar vacío o contener solo números</string>
     <string name="error_farm_size_empty">El tamaño de la finca no debe estar vacío</string>
     <string name="error_latitude_decimal_places">La latitud debe tener al menos 6 decimales</string>
     <string name="error_longitude_decimal_places">La longitud debe tener al menos 6 decimales</string>
-    <string name="error_polygon_points">Por favor, capture al menos 4 puntos para el polígono cuando el tamaño sea superior a 4 hectáreas.</string>
+    <string name="error_polygon_points">Por favor, capture al menos 3 puntos para el polígono cuando el tamaño sea superior a 4 hectáreas.</string>
     <string name="error_farm_size_invalid">Tamaño de granja inválido</string>
     <string name="invalid_farms">%1$d Registros de granjas inválidos no fueron importados</string>
     <string name="invalid_farms_with_names">%1$d registros de granjas inválidos no fueron importados. Agricultores: %2$s</string>
@@ -163,6 +163,11 @@
     <string name="capture_new">Capturar nuevo</string>
 
     <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f). Considere usar el valor calculado en su lugar.</string>
+
+    <string name="polygon_saved">"Polígono guardado con éxito"</string>
+    <string name="invalid_polygon_title">"Polígono inválido"</string>
+    <string name="invalid_polygon_message">"Los puntos capturados son inválidos o forman una línea recta. Por favor, inténtalo de nuevo."</string>
+
 
 
 </resources>

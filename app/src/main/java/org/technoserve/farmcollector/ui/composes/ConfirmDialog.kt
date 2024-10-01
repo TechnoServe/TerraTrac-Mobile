@@ -22,6 +22,7 @@ fun ConfirmDialog(
     message: String,
     showDialog: MutableState<Boolean>,
     onProceedFn: () -> Unit,
+    onCancelFn: () -> Unit,  // Add cancel callback
 ) {
     if (showDialog.value) {
         AlertDialog(
@@ -39,7 +40,7 @@ fun ConfirmDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog.value = false }) {
+                TextButton(onClick = { onCancelFn() }) {
                     Text(text = stringResource(id = R.string.no))
                 }
             },

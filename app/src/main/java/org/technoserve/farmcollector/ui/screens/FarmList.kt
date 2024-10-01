@@ -130,20 +130,13 @@ import java.util.regex.Pattern
 import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import org.technoserve.farmcollector.map.MapViewModel
 
 
@@ -2154,16 +2147,16 @@ fun UpdateFarmForm(
 
     fun validateForm(): Boolean {
         var isValid = true
-
-        if (farmerName.isBlank()) {
+        val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+        if (farmerName.isBlank() || !farmerName.matches(textWithNumbersRegex)) {
             isValid = false
         }
 
-        if (village.isBlank()) {
+        if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
             isValid = false
         }
 
-        if (district.isBlank()) {
+        if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
             isValid = false
         }
 

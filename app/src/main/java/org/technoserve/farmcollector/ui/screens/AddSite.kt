@@ -108,23 +108,22 @@ fun SiteForm(navController: NavController) {
     fun validateForm(): Boolean {
         isValid = true  // Reset isValid to true before starting validation
 
-        if (name.isBlank()) {
+        val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+
+        if (name.isBlank() || !name.matches(textWithNumbersRegex)) {
             isValid = false
-            // You can display an error message for this field if needed
         }
 
-        if (agentName.isBlank()) {
+        if (agentName.isBlank() || !agentName.matches(textWithNumbersRegex)) {
             isValid = false
-            // You can display an error message for this field if needed
-        }
-        if (village.isBlank()) {
-            isValid = false
-            // You can display an error message for this field if needed
         }
 
-        if (district.isBlank()) {
+        if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
             isValid = false
-            // You can display an error message for this field if needed
+        }
+
+        if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
+            isValid = false
         }
 
         if (email.isNotBlank() && !email.contains("@")) {
