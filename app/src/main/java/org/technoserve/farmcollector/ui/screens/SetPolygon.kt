@@ -556,7 +556,7 @@ fun SetPolygon(
                                 val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
                                 navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
                                 navController.previousBackStackEntry?.savedStateHandle?.set("accuracyArray", accuracyArray)
-                                if(calculatedArea > 0.000001) {
+                                if(calculatedArea > 0.000000001) {
                                     mapViewModel.showAreaDialog(
                                         calculatedArea.toString(),
                                         enteredAreaConverted.toString()

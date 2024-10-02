@@ -254,36 +254,6 @@ fun FarmForm(
             }
         }
 
-//    fun fetchLocationAndNavigate() {
-//        val locationRequest = LocationRequest.create().apply {
-//            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//            interval = 10000 // Update interval in milliseconds
-//            fastestInterval = 5000 // Fastest update interval in milliseconds
-//        }
-//
-//        fusedLocationClient.requestLocationUpdates(
-//            locationRequest,
-//            object : LocationCallback() {
-//                override fun onLocationResult(locationResult: LocationResult) {
-//                    locationResult.lastLocation?.let { lastLocation ->
-//                        // Handle the new location
-//                        latitude = "${lastLocation.latitude}"
-//                        longitude = "${lastLocation.longitude}"
-//
-//                        // Navigate to 'setPolygon' if conditions are met
-//                        navController.currentBackStackEntry?.arguments?.putParcelable(
-//                            "farmData",
-//                            null
-//                        )
-//                        navController.navigate("setPolygon")
-//                        mapViewModel.clearCoordinates()
-//                    }
-//                }
-//            },
-//            Looper.getMainLooper()
-//        )
-//    }
-
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -722,12 +692,12 @@ fun FarmForm(
             ) {
                 TextField(
                     readOnly = true,
-                    value = truncateToDecimalPlaces(latitude, 6),
+                    value = truncateToDecimalPlaces(latitude, 9),
                     onValueChange = { it ->
                         val formattedValue = when {
                             validateNumber(it) -> it
                             scientificNotationPattern.matcher(it).matches() -> {
-                                truncateToDecimalPlaces(formatInput(it), 6)
+                                truncateToDecimalPlaces(formatInput(it), 9)
                             }
                             else -> {
                                 // Show a Toast message if the input does not meet the requirements
@@ -762,12 +732,12 @@ fun FarmForm(
                 Spacer(modifier = Modifier.width(16.dp)) // Add space between the latitude and longitude input fields
                 TextField(
                     readOnly = true,
-                    value = truncateToDecimalPlaces(longitude, 6),
+                    value = truncateToDecimalPlaces(longitude, 9),
                     onValueChange = { it ->
                         val formattedValue = when {
                             validateNumber(it) -> it
                             scientificNotationPattern.matcher(it).matches() -> {
-                                truncateToDecimalPlaces(formatInput(it), 6)
+                                truncateToDecimalPlaces(formatInput(it), 9)
                             }
                             else -> {
                                 // Show a Toast message if the input does not meet the requirements
@@ -820,7 +790,7 @@ fun FarmForm(
 
         fun roundToSixDecimalPlaces(value: Double): String {
             val bigDecimal = BigDecimal.valueOf(value)
-            return bigDecimal.setScale(6, BigDecimal.ROUND_DOWN).toString()
+            return bigDecimal.setScale(9, BigDecimal.ROUND_DOWN).toString()
         }
 
 
