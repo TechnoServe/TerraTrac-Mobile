@@ -50,7 +50,7 @@
     <string name="accuracy">Dogoggoraala</string>
     <string name="confirm_set_polygon">Pooligoonii saaguu xumurteettaa? Yoo akkas ta\'e, itti fufii qaree \'Eeyyee\' filachuudhaan saagi.</string>
     <string name="clear_map">Kaartaa qulqulleessuu barbaadduu?</string>
-    <string name="confirm_update_site">Yoo maqaa saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
+    <string name="confirm_update_site">Yoo saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
     <string name="update_site">Saayitii Walitti Qabuu Fooyyessi</string>
     <string name="farm_info">Odeeffannoo Lafaa</string>
     <string name="finish">Xumuruu</string>
@@ -167,6 +167,11 @@
     <string name="invalid_polygon_title">"Poligoonii sirrii hin ta'in"</string>
     <string name="invalid_polygon_message">"Qarqara qabaman sirrii miti yookiinis sarara qajeelaa uumu. Mee irra deebi'ii yaali."</string>
 
+    <string name="delete_this_farm">Qonna kana haqi</string>
+    <string name="farm_will_be_deleted">Qonni kun ni haqama</string>
+    <string name="delete_this_site">Bakka kana haqi</string>
+    <string name="site_will_be_deleted">Bakka kana fi qonnaa walitti dhufeenya qabaniin ni haqamu</string>
+    <string name="warning">Eegumsa</string>
 
 
 </resources>

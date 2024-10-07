@@ -148,7 +148,7 @@ fun SiteForm(navController: NavController) {
 
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputLabelColor = MaterialTheme.colorScheme.onBackground
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
@@ -282,7 +282,7 @@ fun SiteForm(navController: NavController) {
             AlertDialog(
                 onDismissRequest = { showDisclaimerPhone = false },
                 title = {Text(stringResource(id=R.string.phone_number)) },
-                text = { Text(stringResource(id=R.string.phone_info)) },
+                text = { Text(stringResource(id=R.string.phone_info), color = MaterialTheme.colorScheme.onBackground) },
                 confirmButton = {
                     TextButton(onClick = { showDisclaimerPhone = false }) {
                         Text(stringResource(id=R.string.ok))
@@ -349,7 +349,7 @@ fun SiteForm(navController: NavController) {
             AlertDialog(
                 onDismissRequest = { showDisclaimerEmail = false },
                 title = {Text(stringResource(id=R.string.email)) },
-                text = { Text(stringResource(id=R.string.email_info)) },
+                text = { Text(stringResource(id=R.string.email_info),color = MaterialTheme.colorScheme.onBackground) },
                 confirmButton = {
                     TextButton(onClick = { showDisclaimerEmail = false }) {
                         Text("OK")

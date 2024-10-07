@@ -131,6 +131,7 @@ import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TabRowDefaults
@@ -398,6 +399,9 @@ fun FarmList(
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val iconColor = MaterialTheme.colorScheme.onBackground
+
     LaunchedEffect(Unit) {
         deviceId = DeviceIdUtil.getDeviceId(context)
     }
@@ -498,7 +502,7 @@ fun FarmList(
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[]"}
+                                             "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
                                         }
                                     }
                                     """.trimIndent()
@@ -607,7 +611,7 @@ fun FarmList(
                                             },
                                             "geometry": {
                                                 "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                                "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[]"}
+                                                 "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
                                             }
                                         }
                                         """.trimIndent()
@@ -1364,11 +1368,22 @@ fun DeleteAllDialogPresenter(
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDeleteDialog.value = false },
-            title = { Text(text = stringResource(id = R.string.delete_this_item)) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Warning, // Use a built-in warning icon
+                        contentDescription = stringResource(id = R.string.warning),
+                        tint = MaterialTheme.colorScheme.error, // Use error color for the icon
+                        modifier = Modifier.size(24.dp) // Adjust the size of the icon
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(id = R.string.delete_this_farm))
+                }
+            },
             text = {
                 Column {
                     Text(stringResource(id = R.string.are_you_sure))
-                    Text(stringResource(id = R.string.item_will_be_deleted))
+                    Text(stringResource(id = R.string.farm_will_be_deleted))
                 }
             },
             confirmButton = {
@@ -1387,95 +1402,50 @@ fun DeleteAllDialogPresenter(
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-//@Composable
-//fun FarmListHeader(
-//    title: String,
-//    onSearchQueryChanged: (String) -> Unit,
-//    onAddFarmClicked: () -> Unit,
-//    onBackClicked: () -> Unit,
-//    onBackSearchClicked: () -> Unit,
-//    showAdd: Boolean,
-//    showSearch: Boolean,
-//) {
-//    // State for holding the search query
-//    var searchQuery by remember { mutableStateOf("") }
-//
-//    var isSearchVisible by remember { mutableStateOf(false) }
-//
-//    TopAppBar(
-//        modifier =
-//            Modifier
-//                .background(MaterialTheme.colorScheme.primary)
-//                .fillMaxWidth(),
-//        navigationIcon = {
-//            IconButton(onClick = onBackClicked) {
-//                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",tint = MaterialTheme.colorScheme.onPrimary)
-//            }
-//        },
-//        title = {
-//            Text(
-//                text = title,
-//                color = MaterialTheme.colorScheme.onPrimary,
-//                fontSize = 22.sp,
-//                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
-//            )
-//        },
-//        actions = {
-//            if (showAdd) {
-////                IconButton(onClick = onAddFarmClicked) {
-////                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-////                }
-//            }
-//            if (showSearch) {
-//                IconButton(onClick = {
-//                    isSearchVisible = !isSearchVisible
-//                }) {
-//                    Icon(Icons.Default.Search, contentDescription = "Search")
-//                }
-//            }
-//        },
-//    )
-//    // Conditional rendering of the search field
-//    if (isSearchVisible && showSearch) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier =
-//                Modifier
-//                    .padding(horizontal = 16.dp)
-//                    .fillMaxWidth(),
-//        ) {
-//            OutlinedTextField(
-//                value = searchQuery,
-//                onValueChange = {
-//                    searchQuery = it
-//                    onSearchQueryChanged(it)
-//                },
-//                modifier =
-//                    Modifier
-//                        .padding(start = 8.dp)
-//                        .weight(1f),
-//                label = { Text(stringResource(R.string.search)) },
-//                leadingIcon = {
-//                    IconButton(onClick = {
-//                        // onBackSearchClicked()
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                },
-//                singleLine = true,
-//                colors =
-//                    TextFieldDefaults.outlinedTextFieldColors(
-//                        cursorColor = MaterialTheme.colorScheme.onSurface,
-//                    ),
-//            )
-//        }
-//    }
-//}
+@Composable
+fun SiteDeleteAllDialogPresenter(
+    showDeleteDialog: MutableState<Boolean>,
+    onProceedFn: () -> Unit,
+) {
+    if (showDeleteDialog.value) {
+        AlertDialog(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            onDismissRequest = { showDeleteDialog.value = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Warning, // Use a built-in warning icon
+                        contentDescription = stringResource(id = R.string.warning),
+                        tint = MaterialTheme.colorScheme.error, // Use error color for the icon
+                        modifier = Modifier.size(24.dp) // Adjust the size of the icon
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(id = R.string.delete_this_site))
+                }
+            },
+            text = {
+                Column {
+                    Text(stringResource(id = R.string.are_you_sure))
+                    Text(stringResource(id = R.string.site_will_be_deleted))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onProceedFn() }) {
+                    Text(text = stringResource(id = R.string.yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog.value = false }) {
+                    Text(text = stringResource(id = R.string.no))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
+        )
+    }
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -1865,9 +1835,10 @@ fun FarmCard(
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val textColor = if (isDarkTheme) Color.White else Color.Black
+
+
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val iconColor = MaterialTheme.colorScheme.onBackground
 
     Column(
         modifier =

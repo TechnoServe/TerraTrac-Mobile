@@ -50,8 +50,8 @@
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">Avez-vous fini de définir le polygone? Si tel est le cas, continuez et enregistrez en sélectionnant le bouton « Oui ».</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continúe con \'oui\' si desea actualizar el nombre del sitio de la colección.</string>
-    <string name="update_site">Actualizar el sitio de recopilación</string>
+    <string name="confirm_update_site">Continuez avec \'oui\' si vous souhaitez mettre à jour depuis le site de collecte.</string>
+    <string name="update_site">Mettre à jour le site de collecte</string>
     <string name="farm_info">Informations sur le parcelle</string>
     <string name="finish">Finir</string>
     <string name="start">Commencer</string>
@@ -165,6 +165,13 @@
     <string name="polygon_saved">"Polygone enregistré avec succès"</string>
     <string name="invalid_polygon_title">"Polygone invalide"</string>
     <string name="invalid_polygon_message">"Les points capturés sont invalides ou forment une ligne droite. Veuillez réessayer."</string>
+
+    <string name="delete_this_farm">Supprimer cette ferme</string>
+    <string name="farm_will_be_deleted">Cette ferme sera supprimée</string>
+    <string name="delete_this_site">Supprimer ce site</string>
+    <string name="site_will_be_deleted">Ce site et toutes les fermes associées seront supprimés</string>
+    <string name="warning">Avertissements</string>
+
 
 
 

@@ -448,7 +448,7 @@ fun FarmForm(
 
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputLabelColor = MaterialTheme.colorScheme.onBackground
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val buttonColor = if (isDarkTheme) Color.Black else Color.White
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
@@ -658,6 +658,7 @@ fun FarmForm(
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background),
                     onDismissRequest = { expanded = false }
                 ) {
                     items.forEach { selectionOption ->
@@ -852,6 +853,7 @@ fun FarmForm(
                 )
                 navController.navigate("setPolygon")
                 mapViewModel.clearCoordinates()
+                // mapViewModel.clearPolygon()
             }
         }
 

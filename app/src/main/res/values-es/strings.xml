@@ -50,7 +50,7 @@
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">Has terminado de configurar el polígono? Si es así, proceda y guarde seleccionando el botón \'Sí\'.</string>
     <string name="clear_map">Quieres borrar el mapa?</string>
-    <string name="confirm_update_site">Continúe con yes si desea actualizar el nombre del sitio de la colección.</string>
+    <string name="confirm_update_site">Continúe con sí si desea actualizar el sitio de recopilación.</string>
     <string name="update_site">Actualizar el sitio de recopilación</string>
     <string name="farm_info">Información de la trama</string>
     <string name="finish">Terminar</string>
@@ -167,6 +167,13 @@
     <string name="polygon_saved">"Polígono guardado con éxito"</string>
     <string name="invalid_polygon_title">"Polígono inválido"</string>
     <string name="invalid_polygon_message">"Los puntos capturados son inválidos o forman una línea recta. Por favor, inténtalo de nuevo."</string>
+
+    <string name="delete_this_farm">Eliminar esta granja</string>
+    <string name="farm_will_be_deleted">Esta granja será eliminada</string>
+    <string name="delete_this_site">Eliminar este sitio</string>
+    <string name="site_will_be_deleted">Este sitio y todas las granjas asociadas serán eliminados</string>
+    <string name="warning">Advertencias</string>
+
 
 
 

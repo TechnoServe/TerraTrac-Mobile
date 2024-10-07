@@ -43,7 +43,7 @@
     <string name="accuracy">Accuracy</string>
     <string name="confirm_set_polygon">Have you finished setting the polygon? If so, proceed and save by selecting the \'Yes\' button.</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site name.</string>
+    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site.</string>
     <string name="update_site">Update Collection Site</string>
     <string name="unit">Unit</string>
     <string name="agent_name">Agent Name</string>
@@ -165,5 +165,11 @@
     <string name="polygon_saved">"Polygon saved successfully"</string>
     <string name="invalid_polygon_title">Invalid Polygon</string>
     <string name="invalid_polygon_message">The captured points are invalid or form a straight line. Please try again.</string>
+
+    <string name="delete_this_farm">Delete this Farm</string>
+    <string name="farm_will_be_deleted">This Farm will be deleted</string>
+    <string name="delete_this_site">Delete this Site</string>
+    <string name="site_will_be_deleted">This site and all associated farms will be deleted</string>
+    <string name="warning">Warnings</string>
 
 </resources>

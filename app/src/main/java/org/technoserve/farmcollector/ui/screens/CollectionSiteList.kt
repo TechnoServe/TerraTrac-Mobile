@@ -507,7 +507,7 @@ fun CollectionSiteList(navController: NavController) {
 
         // Display delete dialog if showDeleteDialog is true
         if (showDeleteDialog.value) {
-            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+            SiteDeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
 }
 
@@ -527,10 +527,8 @@ fun siteCard(
             farmViewModel = farmViewModel,
         )
     }
-    val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val textColor = if (isDarkTheme) Color.White else Color.Black
-    val iconColor = if (isDarkTheme) Color.White else Color.Black
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val iconColor = MaterialTheme.colorScheme.onBackground
 
     Column(
         modifier =

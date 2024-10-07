@@ -116,6 +116,7 @@ fun SetPolygon(
 
     LaunchedEffect(Unit) {
         mapViewModel.clearCoordinates()
+        // mapViewModel.clearPolygon()
 
         //  Get the accuracyArrayData from savedStateHandle
         val accuracyArrayData = navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>("accuracyArray")
@@ -202,6 +203,7 @@ fun SetPolygon(
     // Display coordinates of a farm on map
     if (farmInfo != null && !isCapturingCoordinates && !viewSelectFarm) {
         viewModel.clearCoordinates()
+        // mapViewModel.clearPolygon()
         if (farmInfo.coordinates?.isNotEmpty() == true) {
             viewModel.addCoordinates(farmInfo.coordinates!!)
         } else if (farmInfo.latitude.isNotEmpty() && farmInfo.longitude.isNotEmpty()) {
@@ -230,6 +232,7 @@ fun SetPolygon(
                 if (coordinates.size >= 3) {
 
                     mapViewModel.clearCoordinates()
+                    // mapViewModel.clearPolygon()
                     mapViewModel.addCoordinates(coordinates)
 
                     if (coordinates.isNotEmpty()) {
@@ -293,6 +296,7 @@ fun SetPolygon(
                     isCapturingCoordinates= true
                     showConfirmDialog.value = false
                     mapViewModel.clearCoordinates()
+                   //  mapViewModel.clearPolygon()
                 }
             },
             containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
@@ -318,6 +322,7 @@ fun SetPolygon(
             }
             coordinates = listOf() // Clear coordinates array when starting
             mapViewModel.clearCoordinates()
+            // mapViewModel.clearPolygon()
             navController.navigateUp()
         },
         calculatedArea = calculatedArea,
@@ -334,6 +339,7 @@ fun SetPolygon(
                 coordinates = listOf() // Clear coordinates array when starting
                 accuracy = ""
                 viewModel.clearCoordinates() // Clear google map
+                // mapViewModel.clearPolygon()
                 showClearMapDialog.value = false
             },
             onCancelFn = {showClearMapDialog.value = false}
@@ -342,7 +348,7 @@ fun SetPolygon(
 
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val textColor = if (isDarkTheme) Color.White else Color.Black
+    val textColor = MaterialTheme.colorScheme.onBackground
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -469,6 +475,7 @@ fun SetPolygon(
                                     .fillMaxWidth(0.23f),
                             onClick = {
                                 viewModel.clearCoordinates()
+                               //  mapViewModel.clearPolygon()
                                 navController.navigateUp()
                             },
                         ) {
@@ -509,6 +516,7 @@ fun SetPolygon(
                                     }
                                     coordinates = listOf() // Clear coordinates array when starting
                                     viewModel.clearCoordinates()
+                                    // mapViewModel.clearPolygon()
                                     isCapturingCoordinates = true
                                 }
                             }

@@ -39,6 +39,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolygonOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
@@ -122,6 +123,11 @@ fun MapScreen(
                     // map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
                         map.addPolygon(clusterItem.polygonOptions)
+//                            .apply {
+//                            strokeColor(android.graphics.Color.BLUE) // Highlight the stroke
+//                            strokeWidth(5f)
+//                            fillColor(android.graphics.Color.argb(128, 255, 255, 0)) // Semi-transparent fill
+//                        })
                     }
                     map.setOnMapLoadedCallback {
                         if (state.clusterItems.isNotEmpty()) {

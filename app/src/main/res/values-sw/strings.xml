@@ -43,7 +43,7 @@
     <string name="accuracy">Usahihi</string>
     <string name="confirm_set_polygon">Je, umemaliza kuweka poligoni? Ikiwa ndio, endelea na uhifadhi kwa kubofya ‘Ndio’.</string>
     <string name="clear_map">Je, unataka kufuta ramani?</string>
-    <string name="confirm_update_site">Endelea kwa ‘ndio’ ikiwa unataka kusasisha jina la tovuti ya mkusanyiko.</string>
+    <string name="confirm_update_site">Endelea \'ndiyo\' ikiwa ungependa kusasisha tovuti ya mkusanyiko.</string>
     <string name="update_site">Sasisha Tovuti ya Mkusanyiko</string>
     <string name="unit">Kipimo</string>
     <string name="agent_name">Jina la Wakala</string>
@@ -166,6 +166,13 @@
     <string name="polygon_saved">"Poligoni imehifadhiwa kwa mafanikio"</string>
     <string name="invalid_polygon_title">"Poligoni Batili"</string>
     <string name="invalid_polygon_message">"Nukta zilizorekodiwa ni batili au zinaunda mstari ulionyooka. Tafadhali jaribu tena."</string>
+
+    <string name="delete_this_farm">Futa shamba hili</string>
+    <string name="farm_will_be_deleted">Shamba hili litafutwa</string>
+    <string name="delete_this_site">Futa tovuti hii</string>
+    <string name="site_will_be_deleted">Tovuti hii na mashamba yote yanayohusiana yatafutwa</string>
+    <string name="warning">Onyo</string>
+
 
 
 

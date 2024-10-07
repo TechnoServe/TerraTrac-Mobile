@@ -50,7 +50,7 @@
     <string name="accuracy">ትክክለኝነት</string>
     <string name="confirm_set_polygon">ብዙ ጊዜ ማመቻቸትህን ጨርሰሃል? ከሆነ የ አዎ የሚለውን ቁልፍ በመምረጥ አስቀምጥና አስቀምጥ።</string>
     <string name="clear_map">ካርታውን ማጽዳት ትፈልጋለህ?</string>
-    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ስም ማሻሻል ከፈለጋችሁ አዎ ጋር ይቀጥሉ።</string>
+    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ማዘመን ከፈለጉ \'አዎ\' ይቀጥሉ</string>
     <string name="update_site">የውሂብ ማሰባሰቢያ ስሪት</string>
     <string name="farm_info">ሴራ መረጃ</string>
     <string name="finish">ጨርስ</string>
@@ -166,6 +166,13 @@
     <string name="polygon_saved">"ፖሊጎኑ በተሳካ ሁኔታ ተቀምጧል"</string>
     <string name="invalid_polygon_title">"ልክ ያልሆነ ፖሊጎን"</string>
     <string name="invalid_polygon_message">"የተያዙት ነጥቦች ልክ አይደሉም ወይም ቀጥ ሰር ይፈጥራሉ። እባኮትን እንደገና ይሞክሩ።"</string>
+
+    <string name="delete_this_farm">ይህን እርሻ ሰርዝ</string>
+    <string name="farm_will_be_deleted">ይህ እርሻ ተሰርዞ ይጠፋል</string>
+    <string name="delete_this_site">ይህን ስፍራ ሰርዝ</string>
+    <string name="site_will_be_deleted">ይህ ስፍራ እና አካባቢ እርሻዎች ሁሉ ተሰርዘው ይጠፋሉ</string>
+    <string name="warning">ማስጠንቀቂያዎች</string>
+
 
 
 </resources>

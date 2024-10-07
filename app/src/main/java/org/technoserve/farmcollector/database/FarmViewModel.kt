@@ -168,12 +168,6 @@ class FarmViewModel(
         }
     }
 
-//    fun addSite(site: CollectionSite) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            repository.addSite(site)
-//        }
-//    }
-
     fun addSite(site: CollectionSite, onSuccess: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val result = repository.addSite(site)

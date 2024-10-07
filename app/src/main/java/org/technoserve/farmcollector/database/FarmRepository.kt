@@ -28,31 +28,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getFarmById(farmId)
     }
 
-//    suspend fun addFarm(farm: Farm) {
-//        val existingFarm = isFarmDuplicate(farm)
-//
-//     // Check if the farm already exists
-//        if (existingFarm == null) {
-//            Log.d(TAG, "Attempting to insert new farm: $farm")
-//            val insertResult = farmDAO.insert(farm)
-//            Log.d(TAG, "Insert operation result: $insertResult")
-//            if (insertResult != -1L) {
-//                Log.d(TAG, "New farm inserted: $farm")
-//            } else {
-//                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
-//            }
-//        } else {
-//            Log.d(TAG, "Farm already exists: $existingFarm")
-//
-//            if (farmNeedsUpdate(existingFarm, farm)) {
-//                Log.d(TAG, "Updating existing farm: $farm")
-//                farmDAO.update(farm)
-//            } else {
-//                Log.d(TAG, "No update needed for farm: $farm")
-//            }
-//        }
-//    }
-
     suspend fun addFarm(farm: Farm) {
         try {
             // Step 1: Ensure that the CollectionSite exists for the farm's siteId

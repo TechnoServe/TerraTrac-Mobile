@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.ui.theme.DarkGray
+import org.technoserve.farmcollector.ui.theme.Navy
 import org.technoserve.farmcollector.ui.theme.Teal
 import org.technoserve.farmcollector.ui.theme.Turquoise
 import org.technoserve.farmcollector.ui.theme.White
@@ -120,7 +121,7 @@ fun Home(
                 text = stringResource(id = R.string.app_intro),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black // Use DarkGray for the intro text
+                    color = MaterialTheme.colorScheme.onBackground // Use DarkGray for the intro text
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.align(Alignment.Center)
