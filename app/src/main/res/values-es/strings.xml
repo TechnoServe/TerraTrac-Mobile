@@ -162,7 +162,7 @@
     <string name="keep_existing">Mantener existente</string>
     <string name="capture_new">Capturar nuevo</string>
 
-    <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f). Considere usar el valor calculado en su lugar.</string>
+    <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f) ha. Considere usar el valor calculado en su lugar.</string>
 
     <string name="polygon_saved">"Polígono guardado con éxito"</string>
     <string name="invalid_polygon_title">"Polígono inválido"</string>

@@ -161,7 +161,7 @@
     <string name="keep_existing">Kan Jiru Qabadhu</string>
     <string name="capture_new">Haaraa Qabsiisi</string>
 
-    <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f). Gatii herreeffame fayyadamuuf yaadaa.</string>
+    <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f) ha. Gatii herreeffame fayyadamuuf yaadaa.</string>
 
     <string name="polygon_saved">"Poligooniin milkaa'inaan kuusameera"</string>
     <string name="invalid_polygon_title">"Poligoonii sirrii hin ta'in"</string>

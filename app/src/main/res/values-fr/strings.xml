@@ -161,7 +161,7 @@
     <string name="keep_existing">Garder l\'existant</string>
     <string name="capture_new">Capturer un nouveau</string>
 
-    <string name="warning_difference">Attention : La différence entre la surface saisie et la surface calculée est significative (%.2f). Envisagez d\'utiliser la valeur calculée à la place.</string>
+    <string name="warning_difference">Attention : La différence entre la surface saisie et la surface calculée est significative (%.2f) ha. Envisagez d\'utiliser la valeur calculée à la place.</string>
     <string name="polygon_saved">"Polygone enregistré avec succès"</string>
     <string name="invalid_polygon_title">"Polygone invalide"</string>
     <string name="invalid_polygon_message">"Les points capturés sont invalides ou forment une ligne droite. Veuillez réessayer."</string>

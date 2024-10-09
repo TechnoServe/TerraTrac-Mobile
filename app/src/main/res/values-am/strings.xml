@@ -162,7 +162,7 @@
     <string name="keep_existing">ያለውን ግበር</string>
     <string name="capture_new">አዲስ አንሳ</string>
 
-    <string name="warning_difference">ማስጠንቀቂያ: እንደገና ያስገቡትና ተንተናውን የተሰራ አካባቢ ብዙ ነው (%.2f)። እባክዎን የተሰራውን እሴት አጠቃቋሚ ይሁን በማለት ይህን እንድታስቡ እባካችሁ።</string>
+    <string name="warning_difference">ማስጠንቀቂያ፡ በገባው ቦታ እና በተሰላው ቦታ መካከል ያለው ልዩነት ከፍተኛ ነው (%2f) ሄክታር። በምትኩ የተሰላውን እሴት ለመጠቀም ያስቡበት።</string>
     <string name="polygon_saved">"ፖሊጎኑ በተሳካ ሁኔታ ተቀምጧል"</string>
     <string name="invalid_polygon_title">"ልክ ያልሆነ ፖሊጎን"</string>
     <string name="invalid_polygon_message">"የተያዙት ነጥቦች ልክ አይደሉም ወይም ቀጥ ሰር ይፈጥራሉ። እባኮትን እንደገና ይሞክሩ።"</string>

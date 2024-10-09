@@ -161,7 +161,7 @@
     <string name="keep_existing">Weka Iliyoopo</string>
     <string name="capture_new">Nasa Mpya</string>
 
-    <string name="warning_difference">Tahadhari: Tofauti kati ya eneo lililoingizwa na eneo lililohesabiwa ni kubwa (%.2f). Fikiria kutumia thamani iliyohesabiwa badala yake.</string>
+    <string name="warning_difference">Tahadhari: Tofauti kati ya eneo lililoingizwa na eneo lililohesabiwa ni kubwa (%.2f) ha. Fikiria kutumia thamani iliyohesabiwa badala yake.</string>
 
     <string name="polygon_saved">"Poligoni imehifadhiwa kwa mafanikio"</string>
     <string name="invalid_polygon_title">"Poligoni Batili"</string>

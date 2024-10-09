@@ -334,12 +334,12 @@ class FarmViewModel(
 
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
-                    // Handle Point geometry
-//                    val coordArray = geometry.getJSONArray("coordinates")
-//                    val lon = coordArray.getDouble(1)
-//                    val lat = coordArray.getDouble(0)
-//                    coordinates = listOf(Pair(lon, lat))
-                    coordinates = null
+                     // Handle Point geometry
+                    val coordArray = geometry.getJSONArray("coordinates")
+                    val lon = coordArray.getDouble(1)
+                    val lat = coordArray.getDouble(0)
+                    coordinates = listOf(Pair(lon, lat))
+                    // coordinates = null
                 } else if (geoType == "Polygon") {
                     val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
                     val coordList = mutableListOf<Pair<Double, Double>>()
