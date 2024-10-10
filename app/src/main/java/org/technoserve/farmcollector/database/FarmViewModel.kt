@@ -454,13 +454,58 @@ class FarmViewModel(
             val farmsNeedingUpdate = mutableListOf<Farm>()
             val invalidFarms = mutableListOf<String>()
             try {
-                // Check file extension before proceeding
-                val fileName =
-                    uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
-                if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
-                    message = context.getString(R.string.unsupported_file_format)
-                    return@withContext ImportResult(success, message, importedFarms)
+//                Log.d("Import","Start Import")
+//                // Check file extension before proceeding
+//                val fileName =
+//                    uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
+//
+//                if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
+//                    message = context.getString(R.string.unsupported_file_format)
+//                    return@withContext ImportResult(success, message, importedFarms)
+//                }
+//
+//                Log.d("Filename","File Name: $fileName")
+
+                val contentResolver = context.contentResolver
+                val mimeType = contentResolver.getType(uri)
+
+                Log.d("MimeType", "File MimeType: $mimeType")
+
+                // Accept multiple MIME types or fall back to content-based checks
+                val isSupportedMimeType = mimeType != null && (
+                        mimeType == "text/csv" ||
+                                mimeType == "application/geo+json" ||
+                                mimeType == "application/octet-stream" ||  // Sometimes used for generic binary files
+                                mimeType == "text/comma-separated-values"  // Alternative for CSV
+                        )
+
+                if (!isSupportedMimeType) {
+                    // Fall back to content-based detection
+                    val inputStream = contentResolver.openInputStream(uri)
+                    val reader = BufferedReader(InputStreamReader(inputStream))
+                    val firstLine = reader.readLine()?.trim()
+
+                    if (firstLine != null) {
+                        when {
+                            firstLine.startsWith("{") && firstLine.contains("\"type\"") -> {
+                                // It's likely a GeoJSON file
+                                Log.d("Import", "Detected GeoJSON content")
+                            }
+                            firstLine.contains(",") -> {
+                                // It's likely a CSV file
+                                Log.d("Import", "Detected CSV content")
+                            }
+                            else -> {
+                                message = context.getString(R.string.unsupported_file_format)
+                                return@withContext ImportResult(success, message, importedFarms)
+                            }
+                        }
+                    } else {
+                        message = context.getString(R.string.unsupported_file_format)
+                        return@withContext ImportResult(success, message, importedFarms)
+                    }
                 }
+
 
                 val inputStream =
                     context.contentResolver.openInputStream(uri)
@@ -470,6 +515,8 @@ class FarmViewModel(
                 val farms = mutableListOf<Farm>()
 
                 println("First line: $firstLine")
+
+                Log.d("First line","First line: $firstLine")
 
                 if (firstLine.trim().startsWith("{")) {
                     // It's a GeoJSON file
@@ -647,8 +694,6 @@ class FarmViewModel(
                     }
                     reader.close()
                     println("Parsed farms from CSV: $farms")
-                    // repository.importFarms(farms)
-                    // importFarms(siteId,farms)
 
                     message = context.getString(R.string.csv_import_successful)
                     success = true
@@ -677,14 +722,37 @@ class FarmViewModel(
                         // Extract the farmer's name from the string format "Record of [farmer_name] is not inserted"
                         it.substringAfter("Record of ").substringBefore(" is not inserted")
                     }
+                    // Check if invalidFarms is not empty and contains valid content
+                    if (invalidFarms.isNotEmpty() && invalidFarms.any { it.isNotBlank() }) {
+                        // Logging invalid farms, convert list to a readable format
+                        Log.d("Invalid Farms", "Invalid Farms: ${invalidFarms.joinToString(", ")}")
 
-                    // Construct the toast message
-                    val invalidFarmsMessage = context.getString(
-                        R.string.invalid_farms_with_names,
-                        invalidFarms.size,
-                        farmerNames
-                    )
-                    showCustomToast(context, invalidFarmsMessage, 5000)
+                        // Join the farmer names (or use invalid farm information), filter out any blank entries
+                        val farmerNames = invalidFarms.filter { it.isNotBlank() }.joinToString(", ")
+
+                        // Construct the toast message
+                        val invalidFarmsMessage = context.getString(
+                            R.string.invalid_farms_with_names,
+                            invalidFarms.size,  // Number of invalid farms
+                            farmerNames         // List of names or details
+                        )
+
+                        // Log the farmer names and the message
+                        Log.d("Farmer names", "farmer names: $farmerNames")
+                        Log.d("Invalid Farms Message", "Invalid Farms Message: $invalidFarmsMessage")
+
+                        // Check if farmerNames is not empty and does not contain just "[]"
+                        if (farmerNames.isNotEmpty() && farmerNames != "[]") {
+                            // Show the toast
+                            showCustomToast(context, invalidFarmsMessage, 5000)
+                        } else {
+                            Log.d("Invalid Farms", "Farmer names list is empty or contains only [].")
+                        }
+                    } else {
+                        Log.d("Invalid Farms", "No invalid farms to display.")
+                    }
+
+
                 }
             }
             // Show a toast message for farms that needs updates
