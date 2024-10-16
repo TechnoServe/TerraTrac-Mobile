@@ -7,12 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.Environment
 import android.os.Looper
 import android.os.Parcel
 import android.os.Parcelable
-import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,6 +21,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +46,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -59,11 +59,13 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -95,6 +97,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -124,16 +127,28 @@ import java.util.Date
 import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
+import org.technoserve.farmcollector.database.RestoreStatus
+import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.ui.Alignment.Companion.BottomEnd
+import androidx.compose.ui.draw.clip
+import org.technoserve.farmcollector.map.MapViewModel
 
-import androidx.lifecycle.viewModelScope
 
-// data class Farm(val farmerName: String, val village: String, val district: String)
 var siteID = 0L
 
 enum class Action {
     Export,
     Share,
 }
+
+private const val KEY_HAS_NEW_POLYGON = "has_new_polygon"
 
 data class ParcelablePair(val first: Double, val second: Double) : Parcelable {
     constructor(parcel: Parcel) : this(
@@ -183,6 +198,41 @@ data class ParcelableFarmData(val farm: Farm, val view: String) : Parcelable {
             return arrayOfNulls(size)
         }
     }
+}
+
+@Composable
+fun KeepPolygonDialog(
+    onDismiss: () -> Unit,
+    onKeepExisting: () -> Unit,
+    onCaptureNew: () -> Unit,
+) {
+
+    val mapViewModel: MapViewModel = viewModel()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(id=R.string.update_polygon), color = MaterialTheme.colorScheme.onBackground )
+        },
+        text = {
+            Text(text = stringResource(id=R.string.keep_existing_polygon_or_capture_new), color = MaterialTheme.colorScheme.onBackground )
+        },
+        confirmButton = {
+            Button(onClick = onKeepExisting, modifier = Modifier.background(MaterialTheme.colorScheme.background),colors = ButtonDefaults.buttonColors()) {
+                Text(text = stringResource(id=R.string.keep_existing), color = MaterialTheme.colorScheme.onBackground )
+            }
+        },
+        dismissButton = {
+            Button(onClick = {
+                mapViewModel.clearCoordinates() // Clear coordinates
+                onCaptureNew()
+            }, modifier = Modifier.background(MaterialTheme.colorScheme.background),colors = ButtonDefaults.buttonColors()) {
+                Text(text = stringResource(id=R.string.capture_new), color = MaterialTheme.colorScheme.onBackground )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
+    )
 }
 
 
@@ -236,6 +286,8 @@ fun FormatSelectionDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -282,10 +334,13 @@ fun ConfirmationDialog(
                 Text(text = stringResource(R.string.no))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(
@@ -327,6 +382,29 @@ fun FarmList(
 
     // State to manage the loading status
     val isLoading = remember { mutableStateOf(true) }
+    var deviceId by remember { mutableStateOf("") }
+    // State variable to observe restore status
+    val restoreStatus by farmViewModel.restoreStatus.observeAsState()
+
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var showRestorePrompt by remember { mutableStateOf(false) }
+    var finalMessage by remember { mutableStateOf("") }
+    var showFinalMessage by remember { mutableStateOf(false) }
+
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val iconColor = MaterialTheme.colorScheme.onBackground
+
+    LaunchedEffect(Unit) {
+        deviceId = DeviceIdUtil.getDeviceId(context)
+    }
 
     // Simulate a network request or data loading
     LaunchedEffect(Unit) {
@@ -334,6 +412,7 @@ fun FarmList(
         delay(2000) // Adjust the delay as needed
         // After loading data, set isLoading to false
         isLoading.value = false
+
     }
 
     fun createFileForSharing(): File? {
@@ -353,32 +432,11 @@ fun FarmList(
             file.bufferedWriter().use { writer ->
                 if (exportFormat == "CSV") {
                     writer.write(
-                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
                     )
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
-//                        val reversedCoordinates =
-//                            matches
-//                                .map { match ->
-//                                    val (lat, lon) = match.destructured
-//                                    "[$lon, $lat]"
-//                                }.toList() // Convert Sequence to List for easy handling
-//                                .let { coordinates ->
-//                                    if (coordinates.isNotEmpty()) {
-//                                        if (coordinates.size == 1) {
-//                                            // Single point, return without additional brackets
-//                                            coordinates.first()
-//                                        } else {
-//                                            // Multiple points, add enclosing brackets
-//                                            coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                        }
-//                                    } else {
-//                                        "" // Return an empty string if there are no coordinates
-//                                    }
-//                                }
-
-
                         val reversedCoordinates =
                             matches
                                 .map { match ->
@@ -390,14 +448,15 @@ fun FarmList(
                                         // Always include brackets, even for a single point
                                         coordinates.joinToString(", ", prefix = "[", postfix = "]")
                                     } else {
-                                        val lon = farm.longitude ?: "0.0"
-                                        val lat = farm.latitude ?: "0.0"
-                                        "[$lon, $lat]"
+//                                        val lon = farm.longitude ?: "0.0"
+//                                        val lat = farm.latitude ?: "0.0"
+//                                        "[$lon, $lat]"
+                                        ""
                                     }
                                 }
 
                         val line =
-                            "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                            "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},\"${getSiteById?.name}\",\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",\"${farm.accuracyArray}\",${
                                 Date(
                                     farm.createdAt,
                                 )
@@ -428,7 +487,7 @@ fun FarmList(
                                         "type": "Feature",
                                         "properties": {
                                             "remote_id": "${farm.remoteId ?: ""}",
-                                            "farmer_name": "${farm.farmerName ?: ""}",
+                                            "farmer_name":"${farm.farmerName.split(" ").joinToString(" ") ?: ""}",
                                             "member_id": "${farm.memberId ?: ""}",
                                             "collection_site": "${getSiteById?.name ?: ""}",
                                             "agent_name": "${getSiteById?.agentName ?: ""}",
@@ -437,13 +496,13 @@ fun FarmList(
                                              "farm_size": ${farm.size ?: 0.0},
                                             "latitude": $latitude,
                                             "longitude": $longitude,
+                                             "accuracyArray": "${farm.accuracyArray ?: ""}",
                                             "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
-                                            
+                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                            "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                             "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
                                         }
                                     }
                                     """.trimIndent()
@@ -478,31 +537,11 @@ fun FarmList(
                 BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
                     if (exportFormat == "CSV") {
                         writer.write(
-                            "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,created_at,updated_at\n",
+                            "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
                         )
                         listItems.forEach { farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-//                            val reversedCoordinates =
-//                                matches
-//                                    .map { match ->
-//                                        val (lat, lon) = match.destructured
-//                                        "[$lon, $lat]"
-//                                    }.toList() // Convert Sequence to List for easy handling
-//                                    .let { coordinates ->
-//                                        if (coordinates.isNotEmpty()) {
-//                                            if (coordinates.size == 1) {
-//                                                // Single point, return without additional brackets
-//                                                coordinates.first()
-//                                            } else {
-//                                                // Multiple points, add enclosing brackets
-//                                                coordinates.joinToString(", ", prefix = "[", postfix = "]")
-//                                            }
-//                                        } else {
-//                                            "" // Return an empty string if here are no coordinates
-//                                        }
-//                                    }
-
                             val reversedCoordinates =
                                 matches
                                     .map { match ->
@@ -518,14 +557,15 @@ fun FarmList(
                                                 postfix = "]"
                                             )
                                         } else {
-                                            val lon = farm.longitude ?: "0.0"
-                                            val lat = farm.latitude ?: "0.0"
-                                            "[$lon, $lat]"
+//                                            val lon = farm.longitude ?: "0.0"
+//                                            val lat = farm.latitude ?: "0.0"
+//                                            "[$lon, $lat]"
+                                            ""
                                         }
                                     }
 
                             val line =
-                                "${farm.remoteId},${farm.farmerName},${farm.memberId},${getSiteById?.name},${getSiteById?.agentName},${farm.village},${farm.district},${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",${
+                                "${farm.remoteId},\"${farm.farmerName.split(" ").joinToString(" ") }\",${farm.memberId},${getSiteById?.name},\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",\"${farm.accuracyArray}\",${
                                     Date(farm.createdAt)
                                 },${Date(farm.updatedAt)}\n"
                             writer.write(line)
@@ -555,7 +595,7 @@ fun FarmList(
                                             "type": "Feature",
                                             "properties": {
                                                 "remote_id": "${farm.remoteId ?: ""}",
-                                                "farmer_name": "${farm.farmerName ?: ""}",
+                                                "farmer_name": "${farm.farmerName.split(" ").joinToString(" ") ?: ""}",
                                                 "member_id": "${farm.memberId ?: ""}",
                                                 "collection_site": "${getSiteById?.name ?: ""}",
                                                 "agent_name": "${getSiteById?.agentName ?: ""}",
@@ -564,13 +604,14 @@ fun FarmList(
                                                  "farm_size": ${farm.size ?: 0.0},
                                                 "latitude": $latitude,
                                                 "longitude": $longitude,
+                                                "accuracyArray": "${farm.accuracyArray ?: ""}",
                                                 "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
                                                 "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}"
                                                 
                                             },
                                             "geometry": {
                                                 "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                                "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude,$longitude]"}
+                                                 "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
                                             }
                                         }
                                         """.trimIndent()
@@ -712,60 +753,32 @@ fun FarmList(
         }
     }
 
-//    fun onDelete() {
-//        val toDelete = mutableListOf<Long>()
-//        toDelete.addAll(selectedIds)
-//        farmViewModel.deleteList(toDelete)
-//        selectedIds.removeAll(selectedIds)
-//        showDeleteDialog.value = false
-//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp)
+//    ) {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        FarmListHeaderPlots(
-            title = stringResource(id = R.string.farm_list),
-            onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
-            onBackClicked = { navController.navigate("siteList") },
-            onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
-            onExportClicked = {
-                action = Action.Export
-                showFormatDialog = true
-            },
-            onShareClicked = {
-                action = Action.Share
-                showFormatDialog = true
-            },
-            onSearchQueryChanged = setSearchQuery,
-            onImportClicked = { showImportDialog = true },
-            showAdd = true,
-            showExport = listItems.isNotEmpty(),
-            showShare = listItems.isNotEmpty(),
-            showSearch = listItems.isNotEmpty()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+    // Function to show data or no data message
+    @Composable
+    fun showDataContent() {
+        val hasData = listItems.isNotEmpty() // Check if there's data available
 
-        if (isLoading.value) {
-            // Show loader while data is loading
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            val hasData = listItems.isNotEmpty() // Check if there's data available
-
-            if (hasData) {
+        if (hasData) {
+            Column {
                 // Only show the TabRow and HorizontalPager if there is data
                 TabRow(
                     selectedTabIndex = pagerState.currentPage,
                     modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                     contentColor = MaterialTheme.colorScheme.onSurface,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]).height(3.dp),
+                            color = MaterialTheme.colorScheme.onPrimary // Color for the indicator
+                        )
+                    },
+                    divider = {  HorizontalDivider() }
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -784,7 +797,7 @@ fun FarmList(
 
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                 ) { page ->
                     val filteredListItems = when (page) {
                         1 -> listItems.filter { it.needsUpdate }
@@ -797,6 +810,7 @@ fun FarmList(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .padding(bottom = 90.dp)
                         ) {
                             val filteredList = filteredListItems.filter {
                                 it.farmerName.contains(searchQuery, ignoreCase = true)
@@ -868,9 +882,11 @@ fun FarmList(
                         )
                     }
                 }
-            } else {
-                // Display a message or image indicating no data available
-                Spacer(modifier = Modifier.height(8.dp))
+            }
+        } else {
+            // Display a message or image indicating no data available
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(modifier = Modifier.fillMaxSize()) {
                 Image(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -881,12 +897,324 @@ fun FarmList(
                 )
             }
         }
+    }
+    Scaffold(
+        topBar = {
+            FarmListHeaderPlots(
+                title = stringResource(id = R.string.farm_list),
+                onAddFarmClicked = { navController.navigate("addFarm/${siteId}") },
+                onBackClicked = { navController.navigate("siteList") },
+                onBackSearchClicked = { navController.navigate("farmList/${siteId}") },
+                onExportClicked = {
+                    action = Action.Export
+                    showFormatDialog = true
+                },
+                onShareClicked = {
+                    action = Action.Share
+                    showFormatDialog = true
+                },
+                onSearchQueryChanged = setSearchQuery,
+                onImportClicked = { showImportDialog = true },
+                showAdd = true,
+                showExport = listItems.isNotEmpty(),
+                showShare = listItems.isNotEmpty(),
+                showSearch = listItems.isNotEmpty(),
+                onRestoreClicked = {
+                    farmViewModel.restoreData(
+                        deviceId = deviceId,
+                        phoneNumber = "",
+                        email = "",
+                        farmViewModel = farmViewModel
+                    ) { success ->
+                        if (success) {
+                            finalMessage = context.getString(R.string.data_restored_successfully)
+                            showFinalMessage = true
+                        } else {
+                            showFinalMessage = true
+                            showRestorePrompt = true
+                        }
+                    }
+                }
 
-        if (showDeleteDialog.value) {
-            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+            )
+        },
+        floatingActionButton = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        val sharedPref =
+                            context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+                        sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
+                        navController.navigate("addFarm/${siteId}")
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(end = 0.dp, bottom = 48.dp)
+                        .background(MaterialTheme.colorScheme.background).align(BottomEnd)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Farm in a Site")
+                }
+            }
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
+                showDataContent()
+            }
+        }
+    )
+
+    when (restoreStatus) {
+        is RestoreStatus.InProgress -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is RestoreStatus.Success -> {
+            Column(
+                modifier = Modifier
+                    .padding(top=72.dp)
+                    .fillMaxSize()
+            ) {
+                // Display a completion message
+                val status = restoreStatus as RestoreStatus.Success
+//                Text(
+//                    text = stringResource(
+//                        R.string.restoration_completed,
+//                        status.addedCount,
+//                        status.sitesCreated
+//                    ),
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .fillMaxWidth(),
+//                    textAlign = TextAlign.Center,
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+
+                if (showFinalMessage) {
+                    // Show the toast
+                    Toast.makeText(
+                        context,
+                        context.getString(
+                            R.string.restoration_completed,
+                            status.addedCount,
+                            status.sitesCreated
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                showFinalMessage=false
+                showRestorePrompt = false // Hide the restore prompt if restoration is successful
+                // showDataContent()
+            }
+        }
+
+        is RestoreStatus.Error -> {
+            // Display an error message
+            val status = restoreStatus as RestoreStatus.Error
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showRestorePrompt) {
+                    Column(
+                        modifier = Modifier
+//                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+//                        Text(
+//                            text = stringResource(id = R.string.no_data_available),
+//                            modifier = Modifier.padding(bottom = 16.dp),
+//                            textAlign = TextAlign.Center,
+//                            style = MaterialTheme.typography.bodyMedium
+//                        )
+
+                    if(showFinalMessage) {
+                        // Show the toast with the final message
+                        Toast.makeText(
+                            context,
+                            context.getString(
+                                R.string.no_data_found,
+                            ),
+                            Toast.LENGTH_LONG // Duration of the toast (LONG or SHORT)
+                        ).show()
+                    }
+
+                        showFinalMessage = false
+                        TextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.phone_number,),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (phone.isNotEmpty() && !isValidPhoneNumber(phone)) Text(
+                                    stringResource(R.string.error_invalid_phone_number, phone)
+                                )
+                            },
+                            isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            )
+
+                        )
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.email),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                        email
+                                    ).matches()
+                                )
+                                    Text(stringResource(R.string.error_invalid_email_address))
+                            },
+                            isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                email
+                            ).matches(),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            ),
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                onClick = {
+                                    showRestorePrompt = false
+                                    showFinalMessage = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(id = R.string.cancel))
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    if (phone.isNotBlank() || email.isNotBlank()) {
+                                        showRestorePrompt =
+                                            false // Hide the restore prompt on retry
+                                        farmViewModel.restoreData(
+                                            deviceId = deviceId,
+                                            phoneNumber = phone,
+                                            email = email,
+                                            farmViewModel = farmViewModel
+                                        ) { success ->
+                                            finalMessage = if (success) {
+                                                context.getString(R.string.data_restored_successfully)
+                                            } else {
+                                                context.getString(R.string.no_data_found)
+                                            }
+                                            showFinalMessage = true
+                                        }
+                                    }
+                                },
+                                enabled = email.isNotBlank() || phone.isNotBlank(),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(context.getString(R.string.restore_data))
+                            }
+                        }
+                    }
+                } else {
+                    // Display a message indicating no data available
+//                    Text(
+//                        text = finalMessage,
+//                        modifier = Modifier.padding(16.dp),
+//                        textAlign = TextAlign.Center,
+//                        style = MaterialTheme.typography.bodyMedium
+//                    )
+
+                    if (showFinalMessage) {
+                        // Show the toast
+                        Toast.makeText(
+                            context,
+                            finalMessage,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    // showDataContent()
+                }
+            }
+        }
+
+        null -> {
+            if (isLoading.value) {
+                // Show loader while data is loading
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(top=48.dp)
+//                        .fillMaxSize()
+                ) {
+                    // Display data or no data message if loading is complete
+                    // showDataContent()
+                }
+            }
         }
     }
+
+    if (showDeleteDialog.value) {
+        DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+    }
 }
+
+
+
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun ImportFileDialog(
@@ -960,7 +1288,9 @@ fun ImportFileDialog(
     }
 
     AlertDialog(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = {
+//            onDismiss()
+                           },
         title = { Text(text = stringResource(R.string.import_file)) },
         text = {
             Column(
@@ -969,10 +1299,6 @@ fun ImportFileDialog(
                         .padding(8.dp)
                         .fillMaxWidth(),
             ) {
-//                Text(
-//                    text = stringResource(R.string.select_file_type),
-//                    modifier = Modifier.padding(bottom = 8.dp),
-//                )
                 Box(
                     modifier =
                         Modifier
@@ -1026,6 +1352,8 @@ fun ImportFileDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
+        containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+        tonalElevation = 6.dp // Adds a subtle shadow for better UX
     )
 }
 
@@ -1040,11 +1368,22 @@ fun DeleteAllDialogPresenter(
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
             onDismissRequest = { showDeleteDialog.value = false },
-            title = { Text(text = stringResource(id = R.string.delete_this_item)) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Warning, // Use a built-in warning icon
+                        contentDescription = stringResource(id = R.string.warning),
+                        tint = MaterialTheme.colorScheme.error, // Use error color for the icon
+                        modifier = Modifier.size(24.dp) // Adjust the size of the icon
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(id = R.string.delete_this_farm))
+                }
+            },
             text = {
                 Column {
                     Text(stringResource(id = R.string.are_you_sure))
-                    Text(stringResource(id = R.string.item_will_be_deleted))
+                    Text(stringResource(id = R.string.farm_will_be_deleted))
                 }
             },
             confirmButton = {
@@ -1057,9 +1396,56 @@ fun DeleteAllDialogPresenter(
                     Text(text = stringResource(id = R.string.no))
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
 }
+
+@Composable
+fun SiteDeleteAllDialogPresenter(
+    showDeleteDialog: MutableState<Boolean>,
+    onProceedFn: () -> Unit,
+) {
+    if (showDeleteDialog.value) {
+        AlertDialog(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            onDismissRequest = { showDeleteDialog.value = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Warning, // Use a built-in warning icon
+                        contentDescription = stringResource(id = R.string.warning),
+                        tint = MaterialTheme.colorScheme.error, // Use error color for the icon
+                        modifier = Modifier.size(24.dp) // Adjust the size of the icon
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(id = R.string.delete_this_site))
+                }
+            },
+            text = {
+                Column {
+                    Text(stringResource(id = R.string.are_you_sure))
+                    Text(stringResource(id = R.string.site_will_be_deleted))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onProceedFn() }) {
+                    Text(text = stringResource(id = R.string.yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog.value = false }) {
+                    Text(text = stringResource(id = R.string.no))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
+        )
+    }
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -1071,101 +1457,152 @@ fun FarmListHeader(
     onBackSearchClicked: () -> Unit,
     showAdd: Boolean,
     showSearch: Boolean,
+    showRestore: Boolean,
+    onRestoreClicked: () -> Unit
 ) {
-    // State for holding the search query
+    // State to hold the search query
     var searchQuery by remember { mutableStateOf("") }
 
+    // State to determine if the search mode is active
     var isSearchVisible by remember { mutableStateOf(false) }
 
     TopAppBar(
-        modifier =
-            Modifier
-                .background(MaterialTheme.colorScheme.primary)
-                .fillMaxWidth(),
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.primary)
+            .fillMaxWidth(),
         navigationIcon = {
-            IconButton(onClick = onBackClicked) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+            IconButton(onClick = {
+                if (isSearchVisible) {
+                    // Exit search mode, clear search query
+                    searchQuery = ""
+                    onSearchQueryChanged("")
+                    isSearchVisible = false
+                } else {
+                    // Navigate back normally
+                    onBackClicked()
+                }
+            }) {
+//                if (!isSearchVisible) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+//                }
             }
         },
         title = {
-            Text(
-                text = title,
-                style =
-                    MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary,
-                    ),
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
-                textAlign = TextAlign.Center,
-            )
+//            if (!isSearchVisible) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 22.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+//            }
         },
         actions = {
-            if (showAdd) {
-                IconButton(onClick = onAddFarmClicked) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-                }
+
+        if (showRestore ){
+            IconButton(
+                onClick = { onRestoreClicked() },
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Restore",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
+        }
             if (showSearch) {
                 IconButton(onClick = {
                     isSearchVisible = !isSearchVisible
-                }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
+                },modifier = Modifier.size(36.dp)) {
+//                    if (!isSearchVisible) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+//                    }
                 }
             }
         },
     )
-    // Conditional rendering of the search field
-    if (isSearchVisible && showSearch) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
+
+    // Show search field when search mode is active
+    if (isSearchVisible) {
+        Box(
+            modifier = Modifier
+                .padding(top=54.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center // Center the Row within the Box
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = {
-                    searchQuery = it
-                    onSearchQueryChanged(it)
-                },
-                modifier =
-                    Modifier
-                        .padding(start = 8.dp)
-                        .weight(1f),
-                label = { Text(stringResource(R.string.search)) },
-                leadingIcon = {
-                    IconButton(onClick = {
-                        // onBackSearchClicked()
-                        searchQuery = ""
-                        onSearchQueryChanged("")
-                        isSearchVisible = !isSearchVisible
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-//                trailingIcon = {
-//                    IconButton(onClick = {
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.Close, contentDescription = "Close")
-//                    }
-//                },
-                singleLine = true,
-                colors =
-                    TextFieldDefaults.outlinedTextFieldColors(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center, // Center the contents within the Row
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        onSearchQueryChanged(it)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth() // Center with a smaller width
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(0.dp)), // Add rounded corners
+                    placeholder = { Text(stringResource(R.string.search), color = MaterialTheme.colorScheme.onBackground) },
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            // Exit search mode and clear search
+                            searchQuery = ""
+                            onSearchQueryChanged("")
+                            isSearchVisible = false
+                        }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    trailingIcon = {
+                        if (searchQuery != ""){
+                            IconButton(onClick = {
+                                // Exit search mode and clear search
+                                searchQuery = ""
+                                onSearchQueryChanged("")
+                            }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
                         cursorColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-            )
+                    shape = RoundedCornerShape(0.dp) // Set the shape for the field to rounded
+                )
+
+            }
         }
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1182,122 +1619,214 @@ fun FarmListHeaderPlots(
     showExport: Boolean,
     showShare: Boolean,
     showSearch: Boolean,
+    onRestoreClicked: () -> Unit
 ) {
     val context = LocalContext.current as Activity
 
-    // State for holding the search query
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
-
-    // State for tracking if import has been completed
     var isImportDisabled by remember { mutableStateOf(false) }
 
-    TopAppBar(
-        title = { Text(text = title, fontSize = 18.sp) },
-        navigationIcon = {
-            IconButton(onClick = onBackClicked) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-            }
-        },
-        actions = {
-            if (showExport) {
-                IconButton(onClick = onExportClicked, modifier = Modifier.size(24.dp)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.save),
-                        contentDescription = "Export",
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            if (showShare) {
-                IconButton(onClick = onShareClicked, modifier = Modifier.size(24.dp)) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(24.dp))
-                }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            IconButton(
-                onClick = {
-                    if (!isImportDisabled) {
-                        onImportClicked()
-                        isImportDisabled = true // Disable the import icon after importing
-                    }
-                },
-                modifier = Modifier.size(24.dp),
-                enabled = !isImportDisabled // Disable the button if import is completed
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.icons8_import_file_48),
-                    contentDescription = "Import",
-                    modifier = Modifier.size(24.dp),
+   // Column {
+        TopAppBar(
+            title = {
+//                if (!isSearchVisible) {
+                Text(
+                    text = title,
+                    fontSize = 22.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-            }
-            Spacer(modifier = Modifier.width(2.dp))
-            if (showAdd) {
+//                    }
+            },
+//            navigationIcon = {
+//                IconButton(onClick = onBackClicked) {
+//                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                }
+//            },
+            navigationIcon = {
                 IconButton(onClick = {
-                    // Remove plot_size from shared preferences
-                    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
-                    if (sharedPref.contains("plot_size")) {
-                        sharedPref.edit().remove("plot_size").apply()
-                    }
-                    if (sharedPref.contains("selectedUnit")) {
-                        sharedPref.edit().remove("selectedUnit").apply()
-                    }
-                    // Call the onAddFarmClicked lambda
-                    onAddFarmClicked()
-                }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
-                }
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            if (showSearch) {
-                IconButton(onClick = {
-                    isSearchVisible = !isSearchVisible
-                }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", modifier = Modifier.size(24.dp))
-                }
-            }
-        },
-    )
-
-    // Conditional rendering of the search field
-    if (isSearchVisible && showSearch) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = {
-                    searchQuery = it
-                    onSearchQueryChanged(it)
-                },
-                modifier =
-                    Modifier
-                        .padding(start = 8.dp)
-                        .weight(1f),
-                label = { Text(stringResource(R.string.search)) },
-                leadingIcon = {
-                    IconButton(onClick = {
-                        // onBackSearchClicked()
+                    if (isSearchVisible) {
+                        // Exit search mode, clear search query
                         searchQuery = ""
                         onSearchQueryChanged("")
-                        isSearchVisible = !isSearchVisible
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        isSearchVisible = false
+                    } else {
+                        // Navigate back normally
+                        onBackClicked()
                     }
-                },
-                singleLine = true,
-                colors =
-                    TextFieldDefaults.outlinedTextFieldColors(
+                }) {
+//                    if ( !isSearchVisible ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+//                    }
+                }
+            },
+            actions = {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.horizontalScroll(rememberScrollState())
+                ) {
+//                    if ( !isSearchVisible ){
+                    IconButton(
+                        onClick = { onRestoreClicked() },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Restore",
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+//                }
+                    if (showExport
+//                        && !isSearchVisible
+                        ) {
+                        IconButton(onClick = onExportClicked, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.save),
+                                contentDescription = "Export",
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                    }
+                    if (showShare
+//                        && !isSearchVisible
+                        ) {
+                        IconButton(onClick = onShareClicked, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share",
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+//                    if ( !isSearchVisible ) {
+                        IconButton(
+                            onClick = {
+                                if (!isImportDisabled) {
+                                    onImportClicked()
+                                    // isImportDisabled = true
+                                }
+                            },
+                            modifier = Modifier.size(36.dp),
+                            // enabled = !isImportDisabled
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icons8_import_file_48),
+                                contentDescription = "Import",
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+//                    }
+                    if (showAdd) {
+//                        IconButton(onClick = {
+//                            val sharedPref =
+//                                context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+//                            sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
+//                            onAddFarmClicked()
+//                        }, modifier = Modifier.size(36.dp)) {
+//                            Icon(
+//                                Icons.Default.Add,
+//                                contentDescription = "Add",
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                        }
+                    }
+
+                    if (showSearch) {
+                        IconButton(onClick = {
+                            isSearchVisible = !isSearchVisible
+                        },modifier = Modifier.size(36.dp)) {
+//                            if (!isSearchVisible) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+//                            }
+                        }
+                    }
+                }
+            },
+        )
+
+    // Show search field when search mode is active
+    if (isSearchVisible) {
+        Box(
+            modifier = Modifier
+                .padding(top=54.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center // Center the Row within the Box
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center, // Center the contents within the Row
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        onSearchQueryChanged(it)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth() // Center with a smaller width
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(0.dp)), // Add rounded corners
+                    placeholder = { Text(stringResource(R.string.search)) },
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            // Exit search mode and clear search
+                            searchQuery = ""
+                            onSearchQueryChanged("")
+                            isSearchVisible = false
+                        }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    trailingIcon = {
+                        if (searchQuery != ""){
+                            IconButton(onClick = {
+                                // Exit search mode and clear search
+                                searchQuery = ""
+                                onSearchQueryChanged("")
+                            }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
                         cursorColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-            )
+                    shape = RoundedCornerShape(0.dp) // Set the shape for the field to rounded
+                )
+
+            }
         }
     }
+    // }
 }
 
 @Composable
@@ -1306,9 +1835,10 @@ fun FarmCard(
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val textColor = if (isDarkTheme) Color.White else Color.Black
+
+
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val iconColor = MaterialTheme.colorScheme.onBackground
 
     Column(
         modifier =
@@ -1325,7 +1855,7 @@ fun FarmCard(
             ),
             modifier =
             Modifier
-                .background(backgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxWidth()
                 .padding(8.dp),
             onClick = {
@@ -1335,7 +1865,7 @@ fun FarmCard(
             Column(
                 modifier =
                 Modifier
-                    .background(backgroundColor)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(16.dp),
             ) {
                 Row(
@@ -1486,6 +2016,7 @@ fun UpdateFarmForm(
             latitude = "Default Village",
             longitude = "Default Village",
             coordinates = null,
+            accuracyArray = null,
             size = floatValue,
             purchases = floatValue,
             createdAt = 1L,
@@ -1497,15 +2028,31 @@ fun UpdateFarmForm(
     var farmerPhoto by remember { mutableStateOf(item.farmerPhoto) }
     var village by remember { mutableStateOf(item.village) }
     var district by remember { mutableStateOf(item.district) }
-    var size by remember { mutableStateOf(item.size.toString()) }
+//    var size by remember { mutableStateOf(item.size.toString()) }
+
+    val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
+    var isValidSize by remember { mutableStateOf(true) }
+    var size by remember {
+        mutableStateOf(sharedPref.getString("plot_size", item.size.toString()) ?: item.size.toString())
+    }
+
+    val hasNewPolygon: Boolean = sharedPref.getBoolean(KEY_HAS_NEW_POLYGON,false)
+
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
     var coordinates by remember { mutableStateOf(item.coordinates) }
+
+    // Flag to track if the polygon was modified
+    var showKeepPolygonDialog by remember { mutableStateOf(false) }
+
+
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val farmViewModel: FarmViewModel =
         viewModel(
             factory = FarmViewModelFactory(context.applicationContext as Application),
         )
+
+
     val showDialog = remember { mutableStateOf(false) }
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }
@@ -1558,14 +2105,6 @@ fun UpdateFarmForm(
             },
         )
     }
-
-//    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-//        coordinates =
-//            navController.currentBackStackEntry!!.savedStateHandle.get<List<Pair<Double, Double>>>(
-//                "coordinates",
-//            )
-//    }
-
     if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
         val parcelableCoordinates = navController.currentBackStackEntry!!
             .savedStateHandle
@@ -1579,16 +2118,16 @@ fun UpdateFarmForm(
 
     fun validateForm(): Boolean {
         var isValid = true
-
-        if (farmerName.isBlank()) {
+        val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+        if (farmerName.isBlank() || !farmerName.matches(textWithNumbersRegex)) {
             isValid = false
         }
 
-        if (village.isBlank()) {
+        if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
             isValid = false
         }
 
-        if (district.isBlank()) {
+        if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
             isValid = false
         }
 
@@ -1609,6 +2148,7 @@ fun UpdateFarmForm(
      */
 
     fun updateFarmInstance() {
+
         val isValid = validateForm()
         if (isValid) {
             item.farmerPhoto = ""
@@ -1618,19 +2158,59 @@ fun UpdateFarmForm(
             item.village = village
             item.district = district
             item.longitude = longitude
+//            if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
+//                if ((coordinates?.size ?: 0) < 3) {
+//                    Toast
+//                        .makeText(
+//                            context,
+//                            R.string.error_polygon_points,
+//                            Toast.LENGTH_SHORT,
+//                        ).show()
+//                    return
+//                }
+//                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+//            } else {
+//                item.coordinates = listOf(Pair(item.longitude.toDoubleOrNull() ?: 0.0, item.latitude.toDoubleOrNull() ?: 0.0)) // Example default value
+//            }
+            // Updated condition handling
             if ((size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f) >= 4) {
+                // Check if coordinates are valid for a polygon
                 if ((coordinates?.size ?: 0) < 3) {
-                    Toast
-                        .makeText(
-                            context,
-                            R.string.error_polygon_points,
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                    Toast.makeText(
+                        context,
+                        R.string.error_polygon_points,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                     return
                 }
-                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+
+                // Show the dialog to ask whether to keep or capture new coordinates
+                showKeepPolygonDialog = true
+
             } else {
-                item.coordinates = listOf(Pair(item.longitude.toDoubleOrNull() ?: 0.0, item.latitude.toDoubleOrNull() ?: 0.0)) // Example default value
+//                // Handle case where size is less than 4
+//                if ((coordinates?.size ?: 0) < 3) {
+//                    // Size is less than 4 and not enough points for a polygon
+//                    Toast.makeText(
+//                        context,
+//                        R.string.error_polygon_points,
+//                        Toast.LENGTH_SHORT,
+//                    ).show()
+//                    return
+//                } else
+                    if ((coordinates?.size ?: 0) >= 3) {
+                    // Size is less than 4 but valid polygon coordinates are present
+                    // Show the dialog to ask whether to keep or capture new coordinates
+                    showKeepPolygonDialog = true
+                } else {
+                    // Handle the case where size is less than the threshold and only one coordinate is present
+                    item.coordinates = listOf(
+                        Pair(
+                            item.longitude.toDoubleOrNull() ?: 0.0,
+                            item.latitude.toDoubleOrNull() ?: 0.0
+                        )
+                    ) // Example default value
+                }
             }
             item.size = convertSize(size.toDouble(), selectedUnit).toFloat()
             item.purchases = 0.toFloat()
@@ -1644,7 +2224,31 @@ fun UpdateFarmForm(
             Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
         }
     }
-    // Confirm farm update and ask if they wish to capture new polygon
+
+    // If changes are detected, show dialog to confirm
+    if (showKeepPolygonDialog)  {
+        KeepPolygonDialog(
+            onDismiss = { showKeepPolygonDialog = false },
+            onKeepExisting = {
+                // Keep the existing polygon
+                item.coordinates = coordinates?.plus(coordinates?.first()) as List<Pair<Double, Double>>
+                updateFarmInstance()
+                showKeepPolygonDialog = false // Close dialog
+            },
+            onCaptureNew = {
+                coordinates = listOf() // Clear coordinates array when starting to capture new polygon
+                navController.navigate("SetPolygon")
+
+                with(sharedPref.edit()) {
+                    putBoolean(KEY_HAS_NEW_POLYGON, true)
+                    apply()
+                }
+                showKeepPolygonDialog = false // Close dialog
+            }
+        )
+    }
+
+// Confirm farm update and ask if they wish to capture new polygon
     if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -1657,7 +2261,14 @@ fun UpdateFarmForm(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    updateFarmInstance()
+                    if ((coordinates?.size ?: 0) >= 3) {
+//                        if (!hasNewPolygon) {
+                            showKeepPolygonDialog = true
+//                        }
+                    }
+                    else{
+                        updateFarmInstance();
+                    }
                 }) {
                     Text(text = stringResource(id = R.string.update_farm))
                 }
@@ -1673,8 +2284,14 @@ fun UpdateFarmForm(
                     Text(text = stringResource(id = R.string.set_polygon))
                 }
             },
+            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+            tonalElevation = 6.dp // Adds a subtle shadow for better UX
         )
     }
+
+
+
+
 
     val scrollState = rememberScrollState()
     val (focusRequester1) = FocusRequester.createRefs()
@@ -1709,19 +2326,22 @@ fun UpdateFarmForm(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(backgroundColor)
-                .padding(16.dp)
+                .background(MaterialTheme.colorScheme.background)
+//                .padding(16.dp)
                 .verticalScroll(state = scrollState),
     ) {
-        FarmListHeader(
-            title = stringResource(id = R.string.update_farm),
-            onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackClicked = { navController.popBackStack() },
-            onBackSearchClicked = {},
-            showAdd = false,
-            showSearch = false,
-        )
+            FarmListHeader(
+                title = stringResource(id = R.string.update_farm),
+                onSearchQueryChanged = {},
+                onAddFarmClicked = { /* Handle adding a farm here */ },
+                onBackClicked = { navController.popBackStack() },
+                onBackSearchClicked = {},
+                showAdd = false,
+                showSearch = false,
+                showRestore = false,
+                onRestoreClicked = {}
+            )
+        Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -1805,23 +2425,25 @@ fun UpdateFarmForm(
             TextField(
                 singleLine = true,
                 value = truncateToDecimalPlaces(size,9),
-                onValueChange = {
-                    size = it
+                onValueChange = { it ->
+                    val formattedValue = when {
+                        validateSize(it) -> it
+                        scientificNotationPattern.matcher(it).matches() -> {
+                            truncateToDecimalPlaces(formatInput(it), 9)
+                        }
+                        else -> it
+                    }
+
+                    // Update the size state with the formatted value
+                    size = formattedValue
+                    isValidSize = validateSize(formattedValue)
+
+                    // Save to SharedPreferences
+                    with(sharedPref.edit()) {
+                        putString("plot_size", formattedValue)
+                        apply()
+                    }
                 },
-//                value =  truncateToDecimalPlaces(formatInput(size),9),
-//                onValueChange = { inputValue ->
-//                    val formattedValue = when {
-//                        validateSize(inputValue) -> inputValue
-//                        // Check if the input is in scientific notation
-//                        scientificNotationPattern.matcher(inputValue).matches() -> {
-//                            truncateToDecimalPlaces(formatInput(inputValue),9)
-//                        }
-//                        else -> inputValue
-//                    }
-//
-//                    // Update the size state with the formatted value
-//                    size = formattedValue
-//                },
                 keyboardOptions =
                     KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number,
@@ -1894,7 +2516,31 @@ fun UpdateFarmForm(
                 TextField(
                     readOnly = true,
                     value = latitude,
-                    onValueChange = { latitude = it },
+//                    onValueChange = { latitude = it },
+                    onValueChange = { it ->
+                        val formattedValue = when {
+                            validateNumber(it) -> {
+                                truncateToDecimalPlaces(it, 6) // Valid number, truncate to 6 decimal places
+                            }
+                            scientificNotationPattern.matcher(it).matches() -> {
+                                truncateToDecimalPlaces(formatInput(it), 6) // Convert scientific notation and truncate
+                            }
+                            else -> {
+                                // Show a Toast message if the input does not meet the requirements
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_latitude_decimal_places),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                null // Return null to reject invalid input
+                            }
+                        }
+
+                        // Update the latitude state only if the formatted value is valid (not null)
+                        formattedValue?.let {
+                            latitude = it
+                        }
+                    },
                     label = { Text(stringResource(id = R.string.latitude), color = inputLabelColor) },
                     modifier =
                         Modifier
@@ -1905,7 +2551,31 @@ fun UpdateFarmForm(
                 TextField(
                     readOnly = true,
                     value = longitude,
-                    onValueChange = { longitude = it },
+//                    onValueChange = { longitude = it },
+                    onValueChange = { it ->
+                        val formattedValue = when {
+                            validateNumber(it) -> {
+                                truncateToDecimalPlaces(it, 6) // Valid number, truncate to 6 decimal places
+                            }
+                            scientificNotationPattern.matcher(it).matches() -> {
+                                truncateToDecimalPlaces(formatInput(it), 6) // Convert scientific notation and truncate
+                            }
+                            else -> {
+                                // Show a Toast message if the input does not meet the requirements
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_longitude_decimal_places),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                null // Return null to reject invalid input
+                            }
+                        }
+
+                        // Update the latitude state only if the formatted value is valid (not null)
+                        formattedValue?.let {
+                            longitude = it
+                        }
+                    },
                     label = { Text(stringResource(id = R.string.longitude), color = inputLabelColor) },
                     modifier =
                         Modifier
@@ -1921,7 +2591,6 @@ fun UpdateFarmForm(
                     showLocationDialog.value = true
                 } else {
                     if (isLocationEnabled(context) && context.hasLocationPermission()) {
-//                        if (size.toFloatOrNull() != null && size.toFloat() < 4) {
                         if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) {
                             // Simulate collecting latitude and longitude
                             if (context.hasLocationPermission()) {

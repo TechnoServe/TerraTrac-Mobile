@@ -50,7 +50,7 @@
     <string name="accuracy">ትክክለኝነት</string>
     <string name="confirm_set_polygon">ብዙ ጊዜ ማመቻቸትህን ጨርሰሃል? ከሆነ የ አዎ የሚለውን ቁልፍ በመምረጥ አስቀምጥና አስቀምጥ።</string>
     <string name="clear_map">ካርታውን ማጽዳት ትፈልጋለህ?</string>
-    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ስም ማሻሻል ከፈለጋችሁ አዎ ጋር ይቀጥሉ።</string>
+    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ማዘመን ከፈለጉ \'አዎ\' ይቀጥሉ</string>
     <string name="update_site">የውሂብ ማሰባሰቢያ ስሪት</string>
     <string name="farm_info">ሴራ መረጃ</string>
     <string name="finish">ጨርስ</string>
@@ -83,7 +83,7 @@
     <string name="calculated_area">የተሰላ አካባቢ (%1$s ሄክታር)</string>
     <string name="entered_size">የገባው መጠን (%1$s ሄክታር)</string>
     <string name="insufficient_coordinates_title">የበቂ እስክሪፕታስ</string>
-    <string name="insufficient_coordinates_message">ነጠላ እንገባ ቢያንስ አራት እስክሪፕታስ ያስፈልጋል። እባኮትን እስክሪፕታስን እንደገና ይይዙ።</string>
+    <string name="insufficient_coordinates_message">ለአንድ ግቤት ቢያንስ ሶስት ስክሪፕቶች ያስፈልጋሉ። እባክዎን ስክሪፕቱን እንደገና ይያዙ።</string>
     <string name="ok">እሺ</string>
     <string name="enable_location_services">የአቀባበል አገልግሎቶችን አንቀሳቅስ</string>
     <string name="location_services_required_message">የአቀባበል አገልግሎቶች ለዚህ ተግባር ያስፈልጋሉ። እባኮትን የአቀባበል አገልግሎቶችን አንቀሳቅሱ።</string>
@@ -120,20 +120,59 @@
     <string name="geojson_import_successful">የGeoJSON እንቅስቃሴ ተሳክቷል</string>
     <string name="csv_import_successful">የCSV እንቅስቃሴ ተሳክቷል</string>
     <string name="import_failed_with_error">እንቅስቃሴ አልተሳካም፡ %1$s</string>
-    <string name="error_site_name_empty">የጣቢያ ስም ባዶ ሊሆን አይችልም</string>
-    <string name="error_agent_name_empty">የወኪል ስም ባዶ ሊሆን አይችልም</string>
+    <string name="error_site_name_empty">የጣቢያ ስም ባዶ መሆን ወይም ቁጥሮችን ብቻ መያዝ የለበትም</string>
+    <string name="error_agent_name_empty">የወኪል ስም ባዶ መሆን ወይም ቁጥሮችን ብቻ መያዝ የለበትም</string>
     <string name="error_invalid_phone_number">የስልክ ቁጥር አልተሳለችም</string>
     <string name="error_invalid_email_address">የኢሜል አድራሻ አይሳልኝም</string>
-    <string name="error_village_empty">መንደር ባዶ ሊሆን አይችልም</string>
-    <string name="error_district_empty">ዞን ባዶ ሊሆን አይችልም</string>
+    <string name="error_village_empty">መንደር ባዶ መሆን ወይም ቁጥሮችን ብቻ መያዝ የለበትም</string>
+    <string name="error_district_empty">ወረዳ ባዶ መሆን ወይም ቁጥሮችን ብቻ መያዝ የለበትም</string>
     <string name="error_farmer_name_empty">የገበሬ ስም ባዶ ሊሆን አይችልም</string>
     <string name="error_farm_size_empty">የመሬት መጠን ባዶ ሊሆን አይችልም</string>
     <string name="error_latitude_decimal_places">ኬኮር በብዛት 6 የመጠን ቁጥር መኖር አለበት</string>
     <string name="error_longitude_decimal_places">ኬኮር በብዛት 6 የመጠን ቁጥር መኖር አለበት</string>
-    <string name="error_polygon_points">እንዲሁም ከ 4 ሂክታር በላይ ሲሆን እንዲሁ ብዙ ቅርፅ ማጠናቀቅ አለበት ፡፡</string>
+    <string name="error_polygon_points">እንዲሁም ከ 3 ሂክታር በላይ ሲሆን እንዲሁ ብዙ ቅርፅ ማጠናቀቅ አለበት ፡፡</string>
     <string name="error_farm_size_invalid">የግብርኛ መስክ መጠን የተሳሳተ</string>
     <string name="invalid_farms">%1$d የማይገባው እርሻ መዝግቦች አልተገቡም</string>
     <string name="invalid_farms_with_names">%1$d ተገቢ ያልሆኑ እርሻ ቅጽበቶች አልተሰጡም። ግለሰቦች፡ %2$s</string>
+
+    <string name="phone_info">የስልክ ቁጥርህ በፈጣሪ ውሂብ እንዲከለክል ሊጠቀም ይችላል።</string>
+    <string name="email_info">የኢሜል አድራሻህ በፈጣሪ ውሂብ እንዲከለክል ይጠቀማል።</string>
+    <string name="sync_service_notification_title">ማቅለሽ አገልግሎት</string>
+    <string name="sync_service_notification_text">ውሂብን እየማቀለሽ ነው…</string>
+    <string name="sync_service_channel_id">ማቅለሽ_አገልግሎት_ቻነል</string>
+    <string name="sync_complete">ማቅለሽ ተጠናቋል</string>
+    <string name="successfully_syncronized">እርሻዎች ከሰርቨር ጋር በትክክል ተመርተዋል።</string>
+    <string name="sync_channel_name">ማቅለሽ ቻነል</string>
+    <string name="sync_channel_description">የማቅለሽ ማስታወቂያዎች ለማቀለሽ ቻነል</string>
+    <string name="sync_channel_id">ማቅለሽ_ቻነል_id</string>
+    <string name="successfully_synchronized">በትክክል ተመርቷል</string>
+
+    <string name="restoration_completed">ማስያዝ ተጠናቋል። የተጨምሩት: %1$d እርሻዎች፣ እና %2$d ቦታዎች ተፈጥሯል።</string>
+    <string name="no_data_available">አንደኛ ውሂብ አልተገኘም። እባክዎን የስልኩን ቁጥር ወይም ኢሜልዎን እንዲመልስ አካባቢ ያስገቡ።</string>
+    <string name="data_restored_successfully">ውሂብ በትክክል ተመልሷል።</string>
+    <string name="no_data_found">ለተሰጡት መረጃዎች አንደኛ ውሂብ አልተገኘም። እባክዎን ከሰአት በኋላችሁ ይሞክሩ ወይም የድጋፍ አገልግሎት ያካፍሉ።</string>
+    <string name="restore_data">ውሂብ ይመልስ</string>
+    <string name="restoration_error">ውሂብ መልሰው አልተቻለም፦ %1$s</string>
+
+    <string name="sync_failed">ማስተካከያው አልተሳካም</string>
+    <string name="syncronization_failed">የእርሻ መረጃን ከአገልጋይ ጋር ማስተካከል አልተሳካም</string>
+
+    <string name="update_polygon">ፖሊጎን አድስ?</string>
+    <string name="keep_existing_polygon_or_capture_new">ያለውን ፖሊጎን መጠቀም ወይም አዲስ መቆጣጠር ትፈልጋለህ?</string>
+    <string name="keep_existing">ያለውን ግበር</string>
+    <string name="capture_new">አዲስ አንሳ</string>
+
+    <string name="warning_difference">ማስጠንቀቂያ፡ በገባው ቦታ እና በተሰላው ቦታ መካከል ያለው ልዩነት ከፍተኛ ነው (%2f) ሄክታር። በምትኩ የተሰላውን እሴት ለመጠቀም ያስቡበት።</string>
+    <string name="polygon_saved">"ፖሊጎኑ በተሳካ ሁኔታ ተቀምጧል"</string>
+    <string name="invalid_polygon_title">"ልክ ያልሆነ ፖሊጎን"</string>
+    <string name="invalid_polygon_message">"የተያዙት ነጥቦች ልክ አይደሉም ወይም ቀጥ ሰር ይፈጥራሉ። እባኮትን እንደገና ይሞክሩ።"</string>
+
+    <string name="delete_this_farm">ይህን እርሻ ሰርዝ</string>
+    <string name="farm_will_be_deleted">ይህ እርሻ ተሰርዞ ይጠፋል</string>
+    <string name="delete_this_site">ይህን ስፍራ ሰርዝ</string>
+    <string name="site_will_be_deleted">ይህ ስፍራ እና አካባቢ እርሻዎች ሁሉ ተሰርዘው ይጠፋሉ</string>
+    <string name="warning">ማስጠንቀቂያዎች</string>
+
 
 
 </resources>

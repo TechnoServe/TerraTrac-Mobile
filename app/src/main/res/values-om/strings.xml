@@ -50,7 +50,7 @@
     <string name="accuracy">Dogoggoraala</string>
     <string name="confirm_set_polygon">Pooligoonii saaguu xumurteettaa? Yoo akkas ta\'e, itti fufii qaree \'Eeyyee\' filachuudhaan saagi.</string>
     <string name="clear_map">Kaartaa qulqulleessuu barbaadduu?</string>
-    <string name="confirm_update_site">Yoo maqaa saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
+    <string name="confirm_update_site">Yoo saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
     <string name="update_site">Saayitii Walitti Qabuu Fooyyessi</string>
     <string name="farm_info">Odeeffannoo Lafaa</string>
     <string name="finish">Xumuruu</string>
@@ -83,7 +83,7 @@
     <string name="calculated_area">Bal’ina shallagame (%1$s hektaara) .</string>
     <string name="entered_size">Guddina Galfame (%1$s hektaara) .</string>
     <string name="insufficient_coordinates_title">Koordinaatota Hinhafne</string>
-    <string name="insufficient_coordinates_message">Poligooniin koordinaatota 4 gosa xiqqaa barbaada. Koordinaatota deebi\'ee qabachuuf yaali.</string>
+    <string name="insufficient_coordinates_message">Poligooniin koordinaatota 3 gosa xiqqaa barbaada. Koordinaatota deebi\'ee qabachuuf yaali.</string>
     <string name="ok">TOLEE</string>
     <string name="enable_location_services">Tajaajiloota Bakka Buusuu Hojii Galchuu</string>
     <string name="location_services_required_message">Tajaajiloonni Bakka Buusuu hojii kanaaf barbaachisu. Tajaajiloota Bakka Buusuu Hojii Galchuu</string>
@@ -120,20 +120,58 @@
     <string name="geojson_import_successful">Galchi GeoJSON milkaa\'aa ta\'eera</string>
     <string name="csv_import_successful">Galchi CSV milkaa\'aa ta\'eera</string>
     <string name="import_failed_with_error">Galchi harkifataa: %1$s</string>
-    <string name="error_site_name_empty">Maqaan bakka hojii hin duwwaa ta\'uu qaba</string>
-    <string name="error_agent_name_empty">Maqaan agntii hin duwwaa ta\'uu qaba</string>
+    <string name="error_site_name_empty">Maqaan Saayitii duwwaa ta\'uu hin qabu ykn lakkoofsa qofa qabaachuu hin qabu</string>
+    <string name="error_agent_name_empty">Maqaan Bakka Bu\'aa duwwaa ta\'uu hin qabu ykn lakkoofsota qofa qabaachuu hin qabu</string>
     <string name="error_invalid_phone_number">Lakkofsa bilbilaa dogoggora</string>
     <string name="error_invalid_email_address">I-meelii dogoggora</string>
     <string name="error_village_empty">Gandaan hin duwwaa ta\'uu qaba</string>
-    <string name="error_district_empty">Aanaawwan hin duwwaa ta\'uu qaba</string>
-    <string name="error_farmer_name_empty">Maqaan qonnaan bulaa hin duwwaa ta\'uu qaba</string>
+    <string name="error_district_empty">Aanaan duwwaa ta\'uu ykn lakkoofsa qofa of keessaa qabaachuu hin qabu</string>
+    <string name="error_farmer_name_empty">Maqaan Qonnaan Bulaa duwwaa ykn lakkoofsa qofa of keessaa qabaachuu hin qabu</string>
     <string name="error_farm_size_empty">Bal\'inni lafa qonnaa hin duwwaa ta\'uu qaba</string>
     <string name="error_latitude_decimal_places">Bal\'inni kaabaa miilxirraa 6 akka ta\'u qaba</string>
     <string name="error_longitude_decimal_places">Bal\'inni kibbaa miilxirraa 6 akka ta\'u qaba</string>
-    <string name="error_polygon_points">Giddugaleessa meetiraa 4 ta\'u yoo xiqqaate foorisaaniirra seenuu qaba.</string>
+    <string name="error_polygon_points">Giddugaleessa meetiraa 3 ta\'u yoo xiqqaate foorisaaniirra seenuu qaba.</string>
     <string name="error_farm_size_invalid">Gatii Dirree Dogoggoraa</string>
     <string name="invalid_farms">%1$d Waraqaa qabeenya beeyladaa dogoggoraa hin galmoofne</string>
     <string name="invalid_farms_with_names">%1$d qabeenya ispoortii dogongoraa hin taasifamne. Barsiisota: %2$s</string>
+
+    <string name="phone_info">Lakkoofsa bilbilaa kee deebi\'ee argachuuf yeroo itti aanutti fayyadamuu danda\'ama.</string>
+    <string name="email_info">Teessoo email kee deebi\'ee argachuuf yeroo itti aanutti fayyadamuu danda\'ama.</string>
+    <string name="sync_service_notification_title">Tajaajila Sinkii</string>
+    <string name="sync_service_notification_text">Daataan walitti fufaa jira…</string>
+    <string name="sync_service_channel_id">sinkii_tajaajila_kaanaalii</string>
+    <string name="sync_complete">Sinkii Xumurameera</string>
+    <string name="successfully_syncronized">Lafotuun milkiidhaan sirriitti seerveratti walfudhateera.</string>
+    <string name="sync_channel_name">Kaanaalii Sinkii</string>
+    <string name="sync_channel_description">Kaanaalii beeksisa sinkii tajaajilu</string>
+    <string name="sync_channel_id">sinkii_kaanaalii_id</string>
+    <string name="successfully_synchronized">Milkiidhaan walitti fufameera</string>
+
+    <string name="restoration_completed">Gargaarsa xumurame. Dabalamanii: %1$d Lafotuu fi %2$d bakka uumame</string>
+    <string name="no_data_available">Odeeffannoo hin jiru. Odeeffannoo deebisuu qabduuf lakkoofsa bilbilaa ykn email kee galchi.</string>
+    <string name="data_restored_successfully">Odeeffannoon milkiidhaan deebi\'ameera.</string>
+    <string name="no_data_found">Odeeffannoo kennaman irratti hin argamne. Maaloo, yeroo biraa yaali ykn gargaarsa gaafadhu.</string>
+    <string name="restore_data">Odeeffannoo Deebi\'aa</string>
+    <string name="restoration_error">Odeeffannoo deebi\'uu hin dandeenye: %1$s</string>
+    <string name="sync_failed">Sinksii kufaatee</string>
+    <string name="syncronization_failed">Daataa Fardeen Sinksii Saffisa waliin galchuu hin danda\'amne</string>
+
+    <string name="update_polygon">Poligoonii Haaromsuu?</string>
+    <string name="keep_existing_polygon_or_capture_new">Poligoonii jiru qabachuuf moo haaraa qabsiisuuf?</string>
+    <string name="keep_existing">Kan Jiru Qabadhu</string>
+    <string name="capture_new">Haaraa Qabsiisi</string>
+
+    <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f) ha. Gatii herreeffame fayyadamuuf yaadaa.</string>
+
+    <string name="polygon_saved">"Poligooniin milkaa'inaan kuusameera"</string>
+    <string name="invalid_polygon_title">"Poligoonii sirrii hin ta'in"</string>
+    <string name="invalid_polygon_message">"Qarqara qabaman sirrii miti yookiinis sarara qajeelaa uumu. Mee irra deebi'ii yaali."</string>
+
+    <string name="delete_this_farm">Qonna kana haqi</string>
+    <string name="farm_will_be_deleted">Qonni kun ni haqama</string>
+    <string name="delete_this_site">Bakka kana haqi</string>
+    <string name="site_will_be_deleted">Bakka kana fi qonnaa walitti dhufeenya qabaniin ni haqamu</string>
+    <string name="warning">Eegumsa</string>
 
 
 </resources>

@@ -3,7 +3,9 @@ package org.technoserve.farmcollector.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ContentValues.TAG
 import android.content.Intent
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -18,9 +20,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -31,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
@@ -51,7 +61,8 @@ fun AddSite(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .fillMaxWidth()
+//            .padding(16.dp)
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_site),
@@ -60,7 +71,9 @@ fun AddSite(navController: NavController) {
             onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
             showAdd = false,
-            showSearch = false
+            showSearch = false,
+            showRestore = false,
+            onRestoreClicked = {}
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)
@@ -79,6 +92,9 @@ fun SiteForm(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var village by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
+    var showDisclaimerPhone by remember { mutableStateOf(false) }
+    var showDisclaimerEmail by remember { mutableStateOf(false) }
+
 
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
@@ -92,23 +108,22 @@ fun SiteForm(navController: NavController) {
     fun validateForm(): Boolean {
         isValid = true  // Reset isValid to true before starting validation
 
-        if (name.isBlank()) {
+        val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+
+        if (name.isBlank() || !name.matches(textWithNumbersRegex)) {
             isValid = false
-            // You can display an error message for this field if needed
         }
 
-        if (agentName.isBlank()) {
+        if (agentName.isBlank() || !agentName.matches(textWithNumbersRegex)) {
             isValid = false
-            // You can display an error message for this field if needed
-        }
-        if (village.isBlank()) {
-            isValid = false
-            // You can display an error message for this field if needed
         }
 
-        if (district.isBlank()) {
+        if (village.isBlank() || !village.matches(textWithNumbersRegex)) {
             isValid = false
-            // You can display an error message for this field if needed
+        }
+
+        if (district.isBlank() || !district.matches(textWithNumbersRegex)) {
+            isValid = false
         }
 
         if (email.isNotBlank() && !email.contains("@")) {
@@ -133,14 +148,14 @@ fun SiteForm(navController: NavController) {
 
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputLabelColor = MaterialTheme.colorScheme.onBackground
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(backgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
@@ -166,7 +181,7 @@ fun SiteForm(navController: NavController) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+//                    .padding(bottom = 16.dp)
                     .onKeyEvent {
                         if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                             focusRequester1.requestFocus()
@@ -175,7 +190,7 @@ fun SiteForm(navController: NavController) {
                     }
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -196,53 +211,89 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester2.requestFocus()
+                    .fillMaxWidth() // Make the element fill the width of its parent
+//                    .padding(bottom = 8.dp) // Add bottom padding
+                    .focusRequester(focusRequester2) // Attach a focus requester
+                    .onKeyEvent { keyEvent ->
+                    // Handle key events
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester2.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false
+                    false // Indicate that the event is not consumed
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                keyboardType = KeyboardType.Phone
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { focusRequester3.requestFocus() }
-            ),
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it
-                isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
-            },
-            label = { Text(stringResource(id = R.string.phone_number,),color = inputLabelColor) },
-            supportingText = {
-                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(stringResource(R.string.error_invalid_phone_number, phoneNumber))
-            },
-            isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
-            colors = TextFieldDefaults.textFieldColors(
-                errorLeadingIconColor = Color.Red,
-                cursorColor = inputTextColor,
-                errorCursorColor = Color.Red,
-                focusedIndicatorColor = inputBorder,
-                unfocusedIndicatorColor = inputBorder,
-                errorIndicatorColor = Color.Red
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester3.requestFocus()
-                    }
-                    false
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Phone
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusRequester3.requestFocus() }
+                ),
+                value = phoneNumber,
+                onValueChange = {
+                    phoneNumber = it
+                    isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
+                },
+                label = {
+                    Text(
+                        stringResource(id = R.string.phone_number,),
+                        color = inputLabelColor
+                    )
+                },
+                supportingText = {
+                    if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(
+                        stringResource(R.string.error_invalid_phone_number, phoneNumber)
+                    )
+                },
+                isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
+                colors = TextFieldDefaults.textFieldColors(
+                    errorLeadingIconColor = Color.Red,
+                    cursorColor = inputTextColor,
+                    errorCursorColor = Color.Red,
+                    focusedIndicatorColor = inputBorder,
+                    unfocusedIndicatorColor = inputBorder,
+                    errorIndicatorColor = Color.Red
+                ),
+                trailingIcon = {
+                IconButton(onClick = { showDisclaimerPhone = !showDisclaimerPhone }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.phone_info),
+                        tint = inputLabelColor
+                    )
                 }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+            },
+            modifier = Modifier
+                        .fillMaxWidth() // Make the element fill the width of its parent
+//                        .padding(bottom = 16.dp) // Add bottom padding
+                        .focusRequester(focusRequester3) // Attach a focus requester
+                         .onKeyEvent { keyEvent ->
+                        // Handle key events
+                        if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                            focusRequester3.requestFocus() // Request focus when Enter key is pressed
+                        }
+                        false // Indicate that the event is not consumed
+                    }
+            )
+        if (showDisclaimerPhone) {
+            AlertDialog(
+                onDismissRequest = { showDisclaimerPhone = false },
+                title = {Text(stringResource(id=R.string.phone_number)) },
+                text = { Text(stringResource(id=R.string.phone_info), color = MaterialTheme.colorScheme.onBackground) },
+                confirmButton = {
+                    TextButton(onClick = { showDisclaimerPhone = false }) {
+                        Text(stringResource(id=R.string.ok))
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
+            )
+
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
@@ -273,17 +324,42 @@ fun SiteForm(navController: NavController) {
                 unfocusedIndicatorColor = inputBorder,
                 errorIndicatorColor = Color.Red
             ),
+            trailingIcon = {
+                IconButton(onClick = { showDisclaimerEmail = !showDisclaimerEmail }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.email_info),
+                        tint = inputLabelColor
+                    )
+                }
+            },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester4.requestFocus()
+                    .fillMaxWidth() // Make the element fill the width of its parent
+//                .padding(bottom = 16.dp) // Add bottom padding
+                .focusRequester(focusRequester4) // Attach a focus requester
+                .onKeyEvent { keyEvent ->
+                    // Handle key events
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester4.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false
+                    false // Indicate that the event is not consumed
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        if (showDisclaimerEmail) {
+            AlertDialog(
+                onDismissRequest = { showDisclaimerEmail = false },
+                title = {Text(stringResource(id=R.string.email)) },
+                text = { Text(stringResource(id=R.string.email_info),color = MaterialTheme.colorScheme.onBackground) },
+                confirmButton = {
+                    TextButton(onClick = { showDisclaimerEmail = false }) {
+                        Text("OK")
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
+                tonalElevation = 6.dp // Adds a subtle shadow for better UX
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -304,18 +380,24 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .onKeyEvent {
-                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester5.requestFocus()
+                .fillMaxWidth() // Make the element fill the width of its parent
+//                .padding(bottom = 16.dp) // Add bottom padding
+                .focusRequester(focusRequester5) // Attach a focus requester
+                .onKeyEvent { keyEvent ->
+                    // Handle key events
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester5.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false
+                    false // Indicate that the event is not consumed
                 }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         TextField(
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester6.requestFocus() }
+            ),
             value = district,
             onValueChange = { district = it },
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
@@ -331,9 +413,10 @@ fun SiteForm(navController: NavController) {
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .focusRequester(focusRequester6)
+//                .padding(bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
                 if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
@@ -384,6 +467,10 @@ fun addSite(
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addSite(site)
+    farmViewModel.addSite(site){isAdded->
+        if (isAdded) {
+            Log.d(TAG, " site added")
+        }
+    }
     return site
 }

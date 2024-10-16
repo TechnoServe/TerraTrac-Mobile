@@ -1,6 +1,7 @@
 package org.technoserve.farmcollector.ui.screens
 
 import android.app.Application
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,15 +17,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,7 +55,21 @@ import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment.Companion.BottomEnd
+import org.technoserve.farmcollector.database.RestoreStatus
+import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionSiteList(navController: NavController) {
     val context = LocalContext.current
@@ -92,6 +110,29 @@ fun CollectionSiteList(navController: NavController) {
     // State to manage the loading status
     val isLoading = remember { mutableStateOf(true) }
 
+
+    var deviceId by remember { mutableStateOf("") }
+    // State variable to observe restore status
+    val restoreStatus by farmViewModel.restoreStatus.observeAsState()
+
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+
+    var showRestorePrompt by remember { mutableStateOf(false) }
+    var finalMessage by remember { mutableStateOf("") }
+    var showFinalMessage by remember { mutableStateOf(false) }
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
+    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
+    LaunchedEffect(Unit) {
+        deviceId = DeviceIdUtil.getDeviceId(context)
+    }
+
+
     // Simulate a network request or data loading
     LaunchedEffect(Unit) {
         // Simulate a delay for loading
@@ -99,106 +140,13 @@ fun CollectionSiteList(navController: NavController) {
         // After loading data, set isLoading to false
         isLoading.value = false
     }
-/*
-
-    if (listItems.isNotEmpty()) {
-        LazyColumn(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-        ) {
-            item {
-                FarmListHeader(
-                    title = stringResource(id = R.string.collection_site_list),
-                    onSearchQueryChanged = setSearchQuery,
-                    onAddFarmClicked = { navController.navigate("addSite") },
-                    onBackSearchClicked = { navController.navigate("siteList") },
-                    onBackClicked = { navController.navigate("home") },
-                    showAdd = true,
-                    showSearch = true,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // Filter the list based on the search query
-            val filteredList =
-                listItems.filter {
-                    it.name.contains(searchQuery, ignoreCase = true)
-                }
-
-            // Display a message if no results are found
-            if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.no_results_found),
-                        modifier =
-                            Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            } else {
-                // Display the list of filtered items
-                items(filteredList) { site ->
-                    siteCard(
-                        site = site,
-                        onCardClick = {
-                            navController.navigate("farmList/${site.siteId}")
-                        },
-                        onDeleteClick = {
-                            selectedIds.add(site.siteId)
-                            showDeleteDialog.value = true
-                        },
-                        farmViewModel = farmViewModel,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-
-            // Display delete dialog if showDeleteDialog is true
-            if (showDeleteDialog.value) {
-                item {
-                    DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-                }
-            }
-        }
-    } else {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize(),
-        ) {
-            FarmListHeader(
-                title = stringResource(id = R.string.collection_site_list),
-                onAddFarmClicked = { navController.navigate("addSite") },
-                onSearchQueryChanged = {},
-                onBackClicked = { navController.navigateUp() },
-                onBackSearchClicked = {},
-                showAdd = true,
-                showSearch = false,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                        .padding(16.dp, 8.dp),
-                painter = painterResource(id = R.drawable.no_data2),
-                contentDescription = null,
-            )
-        }
-    }
-    */
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp),
+//    ) {
+    Scaffold(
+        topBar = {
         FarmListHeader(
             title = stringResource(id = R.string.collection_site_list),
             onSearchQueryChanged = setSearchQuery,
@@ -207,12 +155,154 @@ fun CollectionSiteList(navController: NavController) {
             onBackClicked = { navController.navigate("home") },
             showAdd = true,
             showSearch = true,
+            showRestore = true,
+            onRestoreClicked = {
+                farmViewModel.restoreData(
+                    deviceId = deviceId,
+                    phoneNumber = "",
+                    email = "",
+                    farmViewModel = farmViewModel
+                ) { success ->
+                    if (success) {
+                        finalMessage = context.getString(R.string.data_restored_successfully)
+                    } else {
+                        showFinalMessage = true
+                        showRestorePrompt = true
+                    }
+                }
+            }
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        },
+        floatingActionButton = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("addSite")
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(end= 0.dp, bottom = 48.dp)
+                        .background(MaterialTheme.colorScheme.background).align(BottomEnd)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add a Site")
+                }
+            }
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
 
-        // Show loader while data is loading
-        if (isLoading.value) {
-            // Show loader while data is loading
+//                if (isSearchActive) {
+//                    OutlinedTextField(
+//                        value = searchQuery,
+//                        onValueChange = { setSearchQuery = it },
+//                        placeholder = { Text("Search...") },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(horizontal = 8.dp)
+//                            .padding(top = 8.dp),
+//                        singleLine = true,
+//                        leadingIcon = {
+//                            IconButton(onClick = { isSearchActive = false; setSearchQuery = "" }) {
+//                                Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
+//                            }
+//                        },
+//                        trailingIcon = {
+//                            if (searchQuery.isNotEmpty()) {
+//                                IconButton(onClick = { setSearchQuery = "" }) {
+//                                    Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+//                                }
+//                            }
+//                        }
+//                    )
+//                }
+
+                // Show loader while data is loading
+                if (isLoading.value) {
+                    // Show loader while data is loading
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    if (listItems.isNotEmpty()) {
+                        // Show list of items after loading is complete
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 90.dp)
+                        ) {
+                            // Filter the list based on the search query
+                            val filteredList = listItems.filter {
+                                it.name.contains(searchQuery, ignoreCase = true)
+                            }
+
+                            // Display a message if no results are found
+                            if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
+                                item {
+                                    Text(
+                                        text = stringResource(R.string.no_results_found),
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                            } else {
+                                // Display the list of filtered items
+                                items(filteredList) { site ->
+                                    siteCard(
+                                        site = site,
+                                        onCardClick = {
+                                            navController.navigate("farmList/${site.siteId}")
+                                        },
+                                        onDeleteClick = {
+                                            selectedIds.add(site.siteId)
+                                            showDeleteDialog.value = true
+                                        },
+                                        farmViewModel = farmViewModel,
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp, 8.dp),
+                            painter = painterResource(id = R.drawable.no_data2),
+                            contentDescription = null,
+                        )
+                    }
+                }
+            }
+        },
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.primary)
+            .fillMaxWidth(),
+       //  modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
+    )
+
+
+
+    when (restoreStatus) {
+        is RestoreStatus.InProgress -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -221,69 +311,204 @@ fun CollectionSiteList(navController: NavController) {
             ) {
                 CircularProgressIndicator()
             }
-        }  else {
-            if (listItems.isNotEmpty()) {
-                // Show list of items after loading is complete
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    // Filter the list based on the search query
-                    val filteredList = listItems.filter {
-                        it.name.contains(searchQuery, ignoreCase = true)
-                    }
+        }
 
-                    // Display a message if no results are found
-                    if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.no_results_found),
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
+        is RestoreStatus.Success -> {
+            Column(
+                modifier = Modifier
+                    .padding(top=72.dp)
+                    .fillMaxSize()
+            ) {
+                // Display a completion message
+                val status = restoreStatus as RestoreStatus.Success
+                // Show the toast
+                Toast.makeText(
+                    context,
+                    context.getString(
+                        R.string.restoration_completed,
+                        status.addedCount,
+                        status.sitesCreated
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+                showRestorePrompt = false // Hide the restore prompt if restoration is successful
+                // showDataContent()
+            }
+        }
+
+        is RestoreStatus.Error -> {
+            // Display an error message
+            val status = restoreStatus as RestoreStatus.Error
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showRestorePrompt) {
+                    Column(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        if(showFinalMessage) {
+                            // Show the toast with the final message
+                            Toast.makeText(
+                                context,
+                                context.getString(
+                                    R.string.no_data_found,
+                                ),
+                                Toast.LENGTH_LONG // Duration of the toast (LONG or SHORT)
+                            ).show()
                         }
-                    } else {
-                        // Display the list of filtered items
-                        items(filteredList) { site ->
-                            siteCard(
-                                site = site,
-                                onCardClick = {
-                                    navController.navigate("farmList/${site.siteId}")
-                                },
-                                onDeleteClick = {
-                                    selectedIds.add(site.siteId)
-                                    showDeleteDialog.value = true
-                                },
-                                farmViewModel = farmViewModel,
+
+                        showFinalMessage = false
+                        TextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.phone_number,),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (phone.isNotEmpty() && !isValidPhoneNumber(phone)) Text(
+                                    stringResource(R.string.error_invalid_phone_number, phone)
+                                )
+                            },
+                            isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+
+                        )
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.email),
+                                    color = inputLabelColor
+                                )
+                            },
+                            supportingText = {
+                                if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                        email
+                                    ).matches()
+                                )
+                                    Text(stringResource(R.string.error_invalid_email_address))
+                            },
+                            isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                email
+                            ).matches(),
+                            colors = TextFieldDefaults.textFieldColors(
+                                errorLeadingIconColor = Color.Red,
+                                cursorColor = inputTextColor,
+                                errorCursorColor = Color.Red,
+                                focusedIndicatorColor = inputBorder,
+                                unfocusedIndicatorColor = inputBorder,
+                                errorIndicatorColor = Color.Red
+                            ),
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                onClick = {
+                                    showRestorePrompt = false
+                                    showFinalMessage = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(id = R.string.cancel))
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    if (phone.isNotBlank() || email.isNotBlank()) {
+                                        showRestorePrompt =
+                                            false // Hide the restore prompt on retry
+                                        farmViewModel.restoreData(
+                                            deviceId = deviceId,
+                                            phoneNumber = phone,
+                                            email = email,
+                                            farmViewModel = farmViewModel
+                                        ) { success ->
+                                            finalMessage = if (success) {
+                                                context.getString(R.string.data_restored_successfully)
+                                            } else {
+                                                context.getString(R.string.no_data_found)
+                                            }
+                                            showFinalMessage = true
+                                        }
+                                    }
+                                },
+                                enabled = email.isNotBlank() || phone.isNotBlank(),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(context.getString(R.string.restore_data))
+                            }
                         }
+                    }
+                } else {
+                    if(showFinalMessage) {
+                        // Show the toast
+                        Toast.makeText(
+                            context,
+                            finalMessage,
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             }
-
-            else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp, 8.dp),
-                        painter = painterResource(id = R.drawable.no_data2),
-                        contentDescription = null,
-                    )
-                }
         }
+
+        null -> {
+            if (isLoading.value) {
+                // Show loader while data is loading
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                   //  CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(top=48.dp)
+//                        .fillMaxSize()
+                ) {
+                    // Display data or no data message if loading is complete
+                    // showDataContent()
+                }
+            }
+        }
+    }
 
         // Display delete dialog if showDeleteDialog is true
         if (showDeleteDialog.value) {
-            DeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+            SiteDeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -302,10 +527,8 @@ fun siteCard(
             farmViewModel = farmViewModel,
         )
     }
-    val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
-    val textColor = if (isDarkTheme) Color.White else Color.Black
-    val iconColor = if (isDarkTheme) Color.White else Color.Black
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val iconColor = MaterialTheme.colorScheme.onBackground
 
     Column(
         modifier =
@@ -322,7 +545,7 @@ fun siteCard(
                 ),
             modifier =
                 Modifier
-                    .background(backgroundColor)
+                    .background(MaterialTheme.colorScheme.background)
                     .fillMaxWidth() // 90% of the screen width
                     .padding(8.dp),
             onClick = {
@@ -332,7 +555,7 @@ fun siteCard(
             Column(
                 modifier =
                     Modifier
-                        .background(backgroundColor)
+                        .background(MaterialTheme.colorScheme.background)
                         .padding(16.dp),
             ) {
                 Row(

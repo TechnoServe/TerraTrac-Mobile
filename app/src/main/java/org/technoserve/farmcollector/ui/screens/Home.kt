@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -30,6 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.ui.theme.DarkGray
+import org.technoserve.farmcollector.ui.theme.Navy
+import org.technoserve.farmcollector.ui.theme.Teal
+import org.technoserve.farmcollector.ui.theme.Turquoise
+import org.technoserve.farmcollector.ui.theme.White
+import org.technoserve.farmcollector.ui.theme.Yellow
 import org.technoserve.farmcollector.utils.Language
 import org.technoserve.farmcollector.utils.LanguageSelector
 import org.technoserve.farmcollector.utils.LanguageViewModel
@@ -47,13 +54,14 @@ fun Home(
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        add language selector here and align on right
+        // Add language selector here and align on the right
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
             LanguageSelector(viewModel = languageViewModel, languages = languages)
         }
+
         Column(
             Modifier
                 .fillMaxWidth()
@@ -63,7 +71,7 @@ fun Home(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.app_icon),
-                null,
+                contentDescription = null,
                 modifier = Modifier
                     .width(80.dp)
                     .height(80.dp)
@@ -75,33 +83,35 @@ fun Home(
                     .padding(top = 10.dp)
                     .align(Alignment.CenterHorizontally),
                 fontWeight = FontWeight.Bold,
-                color = colorResource(id = R.color.light_blue_900),
+                color = Turquoise, // Using the custom Turquoise color
                 style = TextStyle(fontSize = 24.sp)
             )
         }
+
         Box(
             modifier = Modifier
                 .padding(30.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Teal,
                     shape = RoundedCornerShape(10.dp)
                 )
                 .clickable {
                     navController.navigate("siteList")
                 }
-                .padding(16.dp) // Additional padding to make the clickable area similar to a button
+                .padding(16.dp)
         ) {
             Text(
                 text = stringResource(id = R.string.get_started),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary // Ensure text color contrasts with background
+                    color = White
                 ),
                 modifier = Modifier.align(Alignment.Center)
             )
         }
 
         Spacer(modifier = Modifier.fillMaxHeight(0.2f))
+
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -110,13 +120,16 @@ fun Home(
             Text(
                 text = stringResource(id = R.string.app_intro),
                 style = TextStyle(
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground // Use DarkGray for the intro text
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
+
         Spacer(modifier = Modifier.height(10.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -124,19 +137,18 @@ fun Home(
         ) {
             Text(
                 modifier = Modifier.padding(start = 20.dp, end = 5.dp),
-                text = stringResource(id = R.string.developed_by)
+                text = stringResource(id = R.string.developed_by),
+                color = Teal // Apply Teal color for the developer label
             )
             Image(
                 painter = painterResource(id = R.drawable.tns_labs),
-                null,
+                contentDescription = null,
                 modifier = Modifier
                     .width(130.dp)
                     .height(20.dp)
             )
         }
+
         Spacer(modifier = Modifier.height(5.dp))
     }
 }
-
-
-

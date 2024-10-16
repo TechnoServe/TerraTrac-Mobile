@@ -42,7 +42,7 @@
     <string name="accuracy">Accuracy</string>
     <string name="confirm_set_polygon">Have you finished setting the polygon? If so, proceed and save by selecting the \'Yes\' button.</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site name.</string>
+    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site.</string>
     <string name="update_site">Update Collection Site</string>
     <string name="unit">Unit</string>
     <string name="agent_name">Agent Name</string>
@@ -82,7 +82,7 @@
     <string name="calculated_area">Calculated Area (%1$s hectares)</string>
     <string name="entered_size">Entered Size (%1$s hectares)</string>
     <string name="insufficient_coordinates_title">Insufficient Coordinates</string>
-    <string name="insufficient_coordinates_message">The polygon requires at least 4 points. Please capture the coordinates again.</string>
+    <string name="insufficient_coordinates_message">The polygon requires at least 3 points. Please capture the coordinates again.</string>
     <string name="ok">OK</string>
     <string name="enable_location_services">Enable Location Services</string>
     <string name="location_services_required_message">Location services are required for this feature. Please enable location services.</string>
@@ -119,18 +119,55 @@
     <string name="csv_import_successful">CSV import successful</string>
     <string name="import_failed_with_error">Import failed: %1$s</string>
 
-    <string name="error_site_name_empty">Site Name should not be empty</string>
-    <string name="error_agent_name_empty">Agent Name should not be empty</string>
+    <string name="error_site_name_empty">Site Name should not be empty or contain numbers only</string>
+    <string name="error_agent_name_empty">Agent Name should not be empty or contain numbers only</string>
     <string name="error_invalid_phone_number">Invalid Phone Number</string>
     <string name="error_invalid_email_address">Invalid Email Address</string>
-    <string name="error_village_empty">Village should not be empty</string>
-    <string name="error_district_empty">District should not be empty</string>
-    <string name="error_farmer_name_empty">Farmer Name should not be empty</string>
+    <string name="error_village_empty">Village should not be empty or contain numbers only</string>
+    <string name="error_district_empty">District should not be empty or contain numbers only</string>
+    <string name="error_farmer_name_empty">Farmer Name should not be empty or contain numbers only</string>
     <string name="error_farm_size_empty">Farm Size should not be empty</string>
     <string name="error_latitude_decimal_places">Latitude must have at least 6 decimal places</string>
     <string name="error_longitude_decimal_places">Longitude must have at least 6 decimal places</string>
-    <string name="error_polygon_points">Please capture at least 4 points for the polygon when the size is greater than 4 hectares.</string>
+    <string name="error_polygon_points">Please capture at least 3 points for the polygon when the size is greater than 4 hectares.</string>
     <string name="error_farm_size_invalid">Invalid Farm Size</string>
     <string name="invalid_farms">%1$d Invalid farm Records were not Imported</string>
     <string name="invalid_farms_with_names">%1$d Invalid farm records were not imported. Farmers: %2$s</string>
+
+    <string name="phone_info">Your phone number may be used for data recovery in future.</string>
+    <string name="email_info">Your email address will be used for data recovery in future.</string>
+    <string name="sync_service_notification_title">Sync Service</string>
+    <string name="sync_service_notification_text">Syncing data...</string>
+    <string name="sync_service_channel_id">sync_service_channel</string>
+    <string name="sync_complete">Sync Complete</string>
+    <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>
+    <string name="sync_channel_name">Sync Channel</string>
+    <string name="sync_channel_description">Channel for sync notifications</string>
+    <string name="sync_channel_id">sync_channel_id</string>
+    <string name="successfully_synchronized">Successfully synchronized</string>
+    <string name="restoration_completed">Restoration completed. Added: %1$d Farms, and %2$d sites created</string>
+    <string name="no_data_available">No data available. Please enter your phone number or email to restore data.</string>
+    <string name="data_restored_successfully">Data restored successfully.</string>
+    <string name="no_data_found">No data was found for the provided information. Please try again later or contact support.</string>
+    <string name="restore_data">Restore Data</string>
+    <string name="restoration_error">Failed to restore data: %1$s</string>
+    <string name="sync_failed">Sync Failed</string>
+    <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
+
+    <string name="update_polygon">Update Polygon?"</string>
+    <string name="keep_existing_polygon_or_capture_new">Would you like to keep the existing polygon or capture a new one?</string>
+    <string name="keep_existing">Keep Existing</string>
+    <string name="capture_new">Capture New</string>
+    <string name="warning_difference">Warning: The difference between the entered area and the calculated area is significant (%.2f) ha. Consider using the calculated value instead.</string>
+    <string name="polygon_saved">"Polygon saved successfully"</string>
+    <string name="invalid_polygon_title">Invalid Polygon</string>
+    <string name="invalid_polygon_message">The captured points are invalid or form a straight line. Please try again.</string>
+
+    <string name="delete_this_farm">Delete this Farm</string>
+    <string name="farm_will_be_deleted">This Farm will be deleted</string>
+    <string name="delete_this_site">Delete this Site</string>
+    <string name="site_will_be_deleted">This site and all associated farms will be deleted</string>
+    <string name="warning">Warnings</string>
+
+
 </resources>

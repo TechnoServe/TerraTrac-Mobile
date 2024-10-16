@@ -50,7 +50,7 @@
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">Has terminado de configurar el polígono? Si es así, proceda y guarde seleccionando el botón \'Sí\'.</string>
     <string name="clear_map">Quieres borrar el mapa?</string>
-    <string name="confirm_update_site">Continúe con yes si desea actualizar el nombre del sitio de la colección.</string>
+    <string name="confirm_update_site">Continúe con sí si desea actualizar el sitio de recopilación.</string>
     <string name="update_site">Actualizar el sitio de recopilación</string>
     <string name="farm_info">Información de la trama</string>
     <string name="finish">Terminar</string>
@@ -83,7 +83,7 @@
     <string name="calculated_area">Área calculada (%1$s hectáreas)</string>
     <string name="entered_size">Tamaño ingresado (%1$s hectáreas)</string>
     <string name="insufficient_coordinates_title">Coordenadas Insuficientes</string>
-    <string name="insufficient_coordinates_message">El polígono requiere al menos 4 points. Por favor, capture las coordenadas nuevamente.</string>
+    <string name="insufficient_coordinates_message">El polígono requiere al menos 3 points. Por favor, capture las coordenadas nuevamente.</string>
     <string name="ok">OK</string>
     <string name="enable_location_services">Habilitar Servicios de Localización</string>
     <string name="location_services_required_message">Se requieren servicios de localización para esta función. Por favor, habilite los servicios de localización.</string>
@@ -120,19 +120,61 @@
     <string name="geojson_import_successful">Importación de GeoJSON exitosa</string>
     <string name="csv_import_successful">Importación de CSV exitosa</string>
     <string name="import_failed_with_error">Error en la importación: %1$s</string>
-    <string name="error_site_name_empty">El nombre del sitio no debe estar vacío</string>
-    <string name="error_agent_name_empty">El nombre del agente no debe estar vacío</string>
+    <string name="error_site_name_empty">El nombre del sitio no debe estar vacío o contener solo números</string>
+    <string name="error_agent_name_empty">El nombre del agente no debe estar vacío o contener solo números</string>
     <string name="error_invalid_phone_number">Número de teléfono no válido</string>
     <string name="error_invalid_email_address">Dirección de correo electrónico no válida</string>
-    <string name="error_village_empty">El pueblo no debe estar vacío</string>
-    <string name="error_district_empty">El distrito no debe estar vacío</string>
-    <string name="error_farmer_name_empty">El nombre del agricultor no debe estar vacío</string>
+    <string name="error_village_empty">El pueblo no debe estar vacío o contener solo números</string>
+    <string name="error_district_empty">El distrito no debe estar vacío o contener solo números</string>
+    <string name="error_farmer_name_empty">El nombre del agricultor no debe estar vacío o contener solo números</string>
     <string name="error_farm_size_empty">El tamaño de la finca no debe estar vacío</string>
     <string name="error_latitude_decimal_places">La latitud debe tener al menos 6 decimales</string>
     <string name="error_longitude_decimal_places">La longitud debe tener al menos 6 decimales</string>
-    <string name="error_polygon_points">Por favor, capture al menos 4 puntos para el polígono cuando el tamaño sea superior a 4 hectáreas.</string>
+    <string name="error_polygon_points">Por favor, capture al menos 3 puntos para el polígono cuando el tamaño sea superior a 4 hectáreas.</string>
     <string name="error_farm_size_invalid">Tamaño de granja inválido</string>
     <string name="invalid_farms">%1$d Registros de granjas inválidos no fueron importados</string>
     <string name="invalid_farms_with_names">%1$d registros de granjas inválidos no fueron importados. Agricultores: %2$s</string>
+
+    <string name="phone_info">Tu número de teléfono puede ser utilizado para la recuperación de datos en el futuro.</string>
+    <string name="email_info">Tu dirección de correo electrónico será utilizada para la recuperación de datos en el futuro.</string>
+    <string name="sync_service_notification_title">Servicio de sincronización</string>
+    <string name="sync_service_notification_text">Sincronizando datos…</string>
+    <string name="sync_service_channel_id">canal_servicio_sync</string>
+    <string name="sync_complete">Sincronización Completa</string>
+    <string name="successfully_syncronized">Las granjas se han sincronizado correctamente con el servidor.</string>
+    <string name="sync_channel_name">Canal de Sincronización</string>
+    <string name="sync_channel_description">Canal para notificaciones de sincronización</string>
+    <string name="sync_channel_id">canal_sync_id</string>
+    <string name="successfully_synchronized">Sincronizado con éxito</string>
+
+    <string name="restoration_completed">Restauración completada. Añadido: %1$d granjas y %2$d sitios creados</string>
+    <string name="no_data_available">No hay datos disponibles. Por favor, ingrese su número de teléfono o correo electrónico para restaurar los datos.</string>
+    <string name="data_restored_successfully">Datos restaurados con éxito.</string>
+    <string name="no_data_found">No se encontraron datos para la información proporcionada. Por favor, intente de nuevo más tarde o contacte al soporte.</string>
+    <string name="restore_data">Restaurar Datos</string>
+    <string name="restoration_error">No se pudo restaurar los datos: %1$s</string>
+
+    <string name="sync_failed">Sincronización fallida</string>
+    <string name="syncronization_failed">Error al sincronizar los datos de las granjas con el servidor</string>
+
+    <string name="update_polygon">¿Actualizar polígono?</string>
+    <string name="keep_existing_polygon_or_capture_new">¿Te gustaría mantener el polígono existente o capturar uno nuevo?</string>
+    <string name="keep_existing">Mantener existente</string>
+    <string name="capture_new">Capturar nuevo</string>
+
+    <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f) ha. Considere usar el valor calculado en su lugar.</string>
+
+    <string name="polygon_saved">"Polígono guardado con éxito"</string>
+    <string name="invalid_polygon_title">"Polígono inválido"</string>
+    <string name="invalid_polygon_message">"Los puntos capturados son inválidos o forman una línea recta. Por favor, inténtalo de nuevo."</string>
+
+    <string name="delete_this_farm">Eliminar esta granja</string>
+    <string name="farm_will_be_deleted">Esta granja será eliminada</string>
+    <string name="delete_this_site">Eliminar este sitio</string>
+    <string name="site_will_be_deleted">Este sitio y todas las granjas asociadas serán eliminados</string>
+    <string name="warning">Advertencias</string>
+
+
+
 
 </resources>

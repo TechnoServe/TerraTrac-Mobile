@@ -9,6 +9,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
+import org.technoserve.farmcollector.database.converters.AccuracyListConvert
 import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
 import org.technoserve.farmcollector.ui.screens.ParcelablePair
@@ -26,7 +27,7 @@ import java.util.UUID
     ],
 )
 @Parcelize
-@TypeConverters(CoordinateListConvert::class)
+@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class)
 data class Farm(
     @ColumnInfo(name = "siteId")
     var siteId: Long,
@@ -52,6 +53,8 @@ data class Farm(
     var longitude: String,
     @ColumnInfo(name = "coordinates")
     var coordinates: List<Pair<Double?, Double?>>?,
+    @ColumnInfo(name = "accuracyArray")  // New field
+    var accuracyArray: List<Float?>?,     // List to store accuracies
     @ColumnInfo(name = "synced", defaultValue = "0")
     val synced: Boolean = false,
     @ColumnInfo(name = "scheduledForSync",defaultValue = "0")
@@ -92,6 +95,7 @@ data class Farm(
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.createTypedArrayList(ParcelablePair.CREATOR)?.map { Pair(it.first, it.second) },
+        parcel.createFloatArray()?.toList(),  // Read accuracyArray as a List<Float?>
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readLong(),
@@ -122,6 +126,7 @@ data class Farm(
                     it2
                 )
             } } })
+            parcel.writeFloatArray(accuracyArray?.filterNotNull()?.toFloatArray())  // Write accuracyArray
             parcel.writeByte(if (synced) 1 else 0)
             parcel.writeByte(if (scheduledForSync) 1 else 0)
             parcel.writeLong(createdAt)
@@ -136,44 +141,83 @@ data class Farm(
     }
 }
 
-data class FarmDto(
-    val remote_id: UUID,
-    val farmer_name: String,
-    val farm_village: String,
-    val farm_district: String,
-    val farm_size: Float,
-    val latitude: String,
-    val longitude: String,
-    val polygon: List<Pair<Double?, Double?>>,
-    val device_id: String,
-    val collection_site: Long,
+
+
+data class CollectionSiteDto(
+    val local_cs_id: Long,
+    val name: String,
     val agent_name: String,
+    val phone_number: String?,
+    val email: String?,
+    val village: String?,
+    val district: String?
 )
 
-fun List<Farm>.toDtoList(
-    deviceId: String,
-    farmDao: FarmDAO,
-): List<FarmDto> =
-    this.map { farm ->
-        val collectionSite = farmDao.getCollectionSiteById(farm.siteId)
-        val agentName = collectionSite?.agentName ?: "Unknown"
+data class FarmDetailDto(
+    val remote_id: String,
+    val farmer_name: String,
+    val member_id: String,
+    val village: String,
+    val district: String,
+    val size: Float,
+    val latitude: Double,
+    val longitude: Double,
+    val coordinates: List<List<Double?>>?,
+    val accuracies: List<Float?>?,
+)
 
-        farm.remoteId?.let {
-            FarmDto(
-                remote_id = it,
-                farmer_name = farm.farmerName,
-                farm_village = farm.village,
-                farm_district = farm.district,
-                farm_size = farm.size,
-                latitude = farm.latitude,
-                longitude = farm.longitude,
-                polygon = farm.coordinates ?: emptyList(),
-                device_id = deviceId,
-                collection_site = farm.siteId,
-                agent_name = agentName,
+data class DeviceFarmDto(
+    val device_id: String,
+    val collection_site: CollectionSiteDto,
+    val farms: List<FarmDetailDto>
+)
+
+
+fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<DeviceFarmDto> {
+    return this.groupBy { it.siteId } // Group by siteId
+        .mapNotNull { (siteId, farms) ->
+            val collectionSite = farmDao.getCollectionSiteById(siteId) ?: return@mapNotNull null
+
+            // Map the collection site details
+            val collectionSiteDto = CollectionSiteDto(
+                local_cs_id = collectionSite.siteId,
+                name = collectionSite.name,
+                agent_name = collectionSite.agentName ?: "Unknown",
+                phone_number = collectionSite.phoneNumber,
+                email = collectionSite.email,
+                village = collectionSite.village,
+                district = collectionSite.district
             )
-        }!!
-    }
+
+            // Map the farms
+            val farmDtos = farms.mapNotNull { farm ->
+                farm.remoteId?.let { remoteId ->
+                    // Ensure latitude and longitude are not empty or null before parsing
+                    val latitude = farm.latitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
+                    val longitude = farm.longitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
+
+                    FarmDetailDto(
+                        remote_id = remoteId.toString(),
+                        farmer_name = farm.farmerName,
+                        member_id = farm.memberId,
+                        village = farm.village,
+                        district = farm.district,
+                        size = farm.size,
+                        latitude = latitude,
+                        longitude = longitude,
+                        coordinates = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() ,// Convert coordinate pairs
+                        accuracies = farm.accuracyArray?.filterNotNull() // Filter out null values
+                    )
+                }
+            }
+
+            DeviceFarmDto(
+                device_id = deviceId,
+                collection_site = collectionSiteDto,
+                farms = farmDtos
+            )
+        }
+}
 
 @Entity(tableName = "CollectionSites")
 data class CollectionSite(

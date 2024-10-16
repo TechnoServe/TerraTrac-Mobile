@@ -50,8 +50,8 @@
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">Avez-vous fini de définir le polygone? Si tel est le cas, continuez et enregistrez en sélectionnant le bouton « Oui ».</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continúe con \'oui\' si desea actualizar el nombre del sitio de la colección.</string>
-    <string name="update_site">Actualizar el sitio de recopilación</string>
+    <string name="confirm_update_site">Continuez avec \'oui\' si vous souhaitez mettre à jour depuis le site de collecte.</string>
+    <string name="update_site">Mettre à jour le site de collecte</string>
     <string name="farm_info">Informations sur le parcelle</string>
     <string name="finish">Finir</string>
     <string name="start">Commencer</string>
@@ -83,7 +83,7 @@
     <string name="calculated_area">l\'aire  calculée (%1$s hectares)</string>
     <string name="entered_size">Taille saisie (%1$s hectares)</string>
     <string name="insufficient_coordinates_title">Coordonnées Insuffisantes</string>
-    <string name="insufficient_coordinates_message">Le polygone nécessite au moins 4 points. Veuillez capturer à nouveau les coordonnées.</string>
+    <string name="insufficient_coordinates_message">Le polygone nécessite au moins 3 points. Veuillez capturer à nouveau les coordonnées.</string>
     <string name="ok">OK</string>
     <string name="enable_location_services">Activer les Services de Localisation</string>
     <string name="location_services_required_message">Les services de localisation sont nécessaires pour cette fonctionnalité. Veuillez activer les services de localisation.</string>
@@ -120,20 +120,59 @@
     <string name="geojson_import_successful">Importation de GeoJSON réussie</string>
     <string name="csv_import_successful">Importation de CSV réussie</string>
     <string name="import_failed_with_error">Échec de l\'importation : %1$s</string>
-    <string name="error_site_name_empty">Le nom du site ne doit pas être vide</string>
-    <string name="error_agent_name_empty">Le nom de l\'agent ne doit pas être vide</string>
+    <string name="error_site_name_empty">Le nom du site ne doit pas être vide ou contenir uniquement des chiffres</string>
+    <string name="error_agent_name_empty">Le nom de l\'agent ne doit pas être vide ou contenir uniquement des chiffres</string>
     <string name="error_invalid_phone_number">Numéro de téléphone invalide</string>
     <string name="error_invalid_email_address">Adresse e-mail invalide</string>
-    <string name="error_village_empty">Le village ne doit pas être vide</string>
-    <string name="error_district_empty">Le district ne doit pas être vide</string>
-    <string name="error_farmer_name_empty">Le nom du fermier ne doit pas être vide</string>
+    <string name="error_village_empty">Le village ne doit pas être vide ou contenir uniquement des chiffres</string>
+    <string name="error_district_empty">Le district ne doit pas être vide ou contenir uniquement des chiffres</string>
+    <string name="error_farmer_name_empty">Le nom du fermier ne doit pas être vide ou contenir uniquement des chiffres</string>
     <string name="error_farm_size_empty">La taille de la ferme ne doit pas être vide</string>
     <string name="error_latitude_decimal_places">La latitude doit avoir au moins 6 chiffres après la virgule</string>
     <string name="error_longitude_decimal_places">La longitude doit avoir au moins 6 chiffres après la virgule</string>
-    <string name="error_polygon_points">Veuillez capturer au moins 4 points pour le polygone lorsque la taille est supérieure à 4 hectares.</string>
+    <string name="error_polygon_points">Veuillez capturer au moins 3 points pour le polygone lorsque la taille est supérieure à 4 hectares.</string>
     <string name="error_farm_size_invalid">Taille de ferme invalide</string>
     <string name="invalid_farms">%1$d Enregistrements de fermes invalides n\'ont pas été importés</string>
     <string name="invalid_farms_with_names">%1$d enregistrements de ferme invalides n\'ont pas été importés. Fermiers : %2$s</string>
+
+    <string name="phone_info">Votre numéro de téléphone peut être utilisé pour récupérer des données à l\'avenir.</string>
+    <string name="email_info">Votre adresse e-mail sera utilisée pour la récupération des données à l\'avenir.</string>
+    <string name="sync_service_notification_title">Service de synchronisation</string>
+    <string name="sync_service_notification_text">Synchronisation des données…</string>
+    <string name="sync_service_channel_id">canal_service_sync</string>
+    <string name="sync_complete">Synchronisation terminée</string>
+    <string name="successfully_syncronized">Les fermes ont été synchronisées avec succès avec le serveur.</string>
+    <string name="sync_channel_name">Canal de synchronisation</string>
+    <string name="sync_channel_description">Canal pour les notifications de synchronisation</string>
+    <string name="sync_channel_id">canal_sync_id</string>
+    <string name="successfully_synchronized">Synchronisé avec succès</string>
+
+    <string name="restoration_completed">Restauration terminée. Ajouté : %1$d fermes et %2$d sites créés</string>
+    <string name="no_data_available">Aucune donnée disponible. Veuillez entrer votre numéro de téléphone ou votre e-mail pour restaurer les données.</string>
+    <string name="data_restored_successfully">Données restaurées avec succès.</string>
+    <string name="no_data_found">Aucune donnée trouvée pour les informations fournies. Veuillez réessayer plus tard ou contacter le support.</string>
+    <string name="restore_data">Restaurer les données</string>
+    <string name="restoration_error">Échec de la restauration des données : %1$s</string>
+    <string name="sync_failed">Échec de la synchronisation</string>
+    <string name="syncronization_failed">Échec de la synchronisation des données des fermes avec le serveur</string>
+
+    <string name="update_polygon">Mettre à jour le polygone?</string>
+    <string name="keep_existing_polygon_or_capture_new">Voulez-vous garder le polygone existant ou en capturer un nouveau?</string>
+    <string name="keep_existing">Garder l\'existant</string>
+    <string name="capture_new">Capturer un nouveau</string>
+
+    <string name="warning_difference">Attention : La différence entre la surface saisie et la surface calculée est significative (%.2f) ha. Envisagez d\'utiliser la valeur calculée à la place.</string>
+    <string name="polygon_saved">"Polygone enregistré avec succès"</string>
+    <string name="invalid_polygon_title">"Polygone invalide"</string>
+    <string name="invalid_polygon_message">"Les points capturés sont invalides ou forment une ligne droite. Veuillez réessayer."</string>
+
+    <string name="delete_this_farm">Supprimer cette ferme</string>
+    <string name="farm_will_be_deleted">Cette ferme sera supprimée</string>
+    <string name="delete_this_site">Supprimer ce site</string>
+    <string name="site_will_be_deleted">Ce site et toutes les fermes associées seront supprimés</string>
+    <string name="warning">Avertissements</string>
+
+
 
 
 </resources>

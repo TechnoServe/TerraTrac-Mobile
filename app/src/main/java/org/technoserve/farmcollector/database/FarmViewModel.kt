@@ -1,11 +1,13 @@
 package org.technoserve.farmcollector.database
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
@@ -14,14 +16,23 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.joda.time.Instant
 import org.json.JSONObject
+import org.technoserve.farmcollector.BuildConfig
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.remote.ApiService
+import org.technoserve.farmcollector.database.remote.FarmRequest
+import org.technoserve.farmcollector.ui.screens.truncateToDecimalPlaces
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.UUID
+import java.util.regex.Pattern
 
 data class ImportResult(
     val success: Boolean,
@@ -43,6 +54,52 @@ data class ParsedFarms(
     val invalidFarms: List<String>
 )
 
+// Define a sealed class for restore status
+sealed class RestoreStatus {
+    object InProgress : RestoreStatus()
+    data class Success(val addedCount: Int, val message: String, val sitesCreated: Int = 0) : RestoreStatus()
+    data class Error(val message: String) : RestoreStatus()
+}
+
+
+data class CollectionSiteRestore(
+    val id: Long,
+    val local_cs_id:Long,
+    val name: String,
+    val device_id: String,
+    val agent_name: String,
+    val email: String,
+    val phone_number: String,
+    val village: String,
+    val district: String,
+    val created_at: String,
+    val updated_at: String
+)
+
+data class FarmRestore(
+    val id: Long,
+    val remote_id: String,
+    val farmer_name: String,
+    val member_id: String?,
+    val size: Double,
+    val agent_name: String?,
+    val village: String,
+    val district: String,
+    val latitude: Double,
+    val longitude: Double,
+    val coordinates: List<List<Double>>,
+    val accuracyArray: List<Float?>?,
+    val created_at: String,
+    val updated_at: String,
+    val site_id: Long
+)
+
+data class ServerFarmResponse(
+    val device_id: String,
+    val collection_site: CollectionSiteRestore,
+    val farms: List<FarmRestore>
+)
+
 
 
 class FarmViewModel(
@@ -51,20 +108,36 @@ class FarmViewModel(
     private val repository: FarmRepository
     val readAllSites: RefreshableLiveData<List<CollectionSite>>
     val readData: RefreshableLiveData<List<Farm>>
+    //val readData: List<Farm>
 
     private val _farms = MutableLiveData<List<Farm>>()
     val farms: LiveData<List<Farm>> get() = _farms
+
+    private val _restoreStatus = MutableLiveData<RestoreStatus>()
+    val restoreStatus: LiveData<RestoreStatus> get() = _restoreStatus
+
+    private val apiService: ApiService
 
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
         repository = FarmRepository(farmDAO)
         readAllSites = RefreshableLiveData { repository.readAllSites }
         readData = RefreshableLiveData { repository.readData }
+        // readData = repository.getAllFarms()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        apiService = retrofit.create(ApiService::class.java)
     }
 
     fun readAllData(siteId: Long): LiveData<List<Farm>> = repository.readAllFarms(siteId)
 
     fun getSingleFarm(farmId: Long): LiveData<List<Farm>> = repository.readFarm(farmId)
+
+    val sites = readAllSites.value ?: emptyList()
 
     fun addFarm(
         farm: Farm,
@@ -72,11 +145,20 @@ class FarmViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!repository.isFarmDuplicateBoolean(farm)) {
+                Log.d(TAG, "Attempting to add New Farm in FarmViewModelScope")
                 repository.addFarm(farm)
+                Log.d(TAG, "New Farm in FarmViewModelScope was successfully added")
+                FarmAddResult(success = true, message = "Farm added successfully", farm)
+                // Update the LiveData list
+                _farms.postValue(repository.readAllFarms(siteId).value?: emptyList())
+                Log.d(TAG, "Attempting to add New Farm in FarmViewModelScope")
+                repository.addFarm(farm)
+                Log.d(TAG, "New Farm in FarmViewModelScope was successfully added")
                 FarmAddResult(success = true, message = "Farm added successfully", farm)
                 // Update the LiveData list
                 _farms.postValue(repository.readAllFarms(siteId).value ?: emptyList())
             } else {
+                Log.d(TAG, "New Farm in FarmViewModelScope was not added" )
                 FarmAddResult(
                     success = false,
                     message = "Duplicate farm: ${farm.farmerName}, Site ID: ${farm.siteId}. Needs update.",
@@ -86,11 +168,15 @@ class FarmViewModel(
         }
     }
 
-    fun addSite(site: CollectionSite) {
+    fun addSite(site: CollectionSite, onSuccess: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.addSite(site)
+            val result = repository.addSite(site)
+            withContext(Dispatchers.Main) {
+                onSuccess(result)  // Return the result to the main thread
+            }
         }
     }
+
 
     fun getLastFarm(): LiveData<List<Farm>> = repository.getLastFarm()
 
@@ -103,6 +189,16 @@ class FarmViewModel(
             val updatedFarms = repository.readAllFarms(farm.siteId).value ?: emptyList()
             _farms.postValue(updatedFarms)
         }
+    }
+
+    // Update farm size and keep existing polygon coordinates
+    fun updateFarmSizeAndKeepPolygon(newSize: String) {
+        // Logic to update size but retain the existing polygon/coordinates
+    }
+
+    // Capture a new polygon (or update coordinates)
+    fun captureNewPolygon(newSize: String) {
+        // Logic to capture new coordinates or polygon after updating size
     }
 
     fun updateSite(site: CollectionSite) {
@@ -166,11 +262,6 @@ class FarmViewModel(
         return dateFormatter.parse(dateString).time
     }
 
-//    private suspend fun parseGeoJson(
-//        geoJsonString: String,
-//        siteId: Long,
-//    ): List<Farm> {
-//        val farms = mutableListOf<Farm>()
 
     private suspend fun parseGeoJson(
         geoJsonString: String,
@@ -224,13 +315,31 @@ class FarmViewModel(
                     }
 
                 var coordinates: List<Pair<Double, Double>>? = null
+                var accuracyArray: List<Float?>? = null
+                val accuracyArrayString = properties.optString("accuracyArray")
+
+                println("Accuracy Array $accuracyArrayString")
+
+                // Check if accuracyArrayString is not empty or null
+                if (!accuracyArrayString.isNullOrEmpty()) {
+                    // Remove square brackets and split the string by commas
+                    val cleanAccuracyArrayString = accuracyArrayString.replace("[", "").replace("]", "")
+                    val accuracyValues = cleanAccuracyArrayString.split(",").map { it.trim() }
+
+                    // Convert to a list of floats
+                    accuracyArray = accuracyValues.map { it.toFloatOrNull() }
+                }
+
+                println("Parsed Accuracy Array $accuracyArray")
+
                 val geoType = geometry.getString("type")
                 if (geoType == "Point") {
-                    // Handle Point geometry
+                     // Handle Point geometry
                     val coordArray = geometry.getJSONArray("coordinates")
                     val lon = coordArray.getDouble(1)
                     val lat = coordArray.getDouble(0)
                     coordinates = listOf(Pair(lon, lat))
+                    // coordinates = null
                 } else if (geoType == "Polygon") {
                     val coordArray = geometry.getJSONArray("coordinates").getJSONArray(0)
                     val coordList = mutableListOf<Pair<Double, Double>>()
@@ -242,7 +351,7 @@ class FarmViewModel(
                 }
 
                 val newFarm =
-                    coordinates?.let {
+                    // coordinates?.let {
                         Farm(
                             siteId = siteId,
                             remoteId = remoteId,
@@ -255,20 +364,15 @@ class FarmViewModel(
                             size = size.takeIf { !it.isNaN() } ?: 0f,
                             latitude = latitude ?: "0.0",
                             longitude = longitude ?: "0.0",
-                            coordinates = it,
+                            coordinates = coordinates,
+                            accuracyArray = accuracyArray,
                             synced = false,
                             scheduledForSync = false,
                             createdAt = createdAt,
                             updatedAt = updatedAt,
                         )
-                    }
-                if (newFarm != null) {
-//                    farms.add(newFarm)
-                    validFarms.add(newFarm)
-                }
-                else {
-                    invalidFarms.add(feature.toString())
-                }
+                   // }
+                validFarms.add(newFarm)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -350,13 +454,58 @@ class FarmViewModel(
             val farmsNeedingUpdate = mutableListOf<Farm>()
             val invalidFarms = mutableListOf<String>()
             try {
-                // Check file extension before proceeding
-                val fileName =
-                    uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
-                if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
-                    message = context.getString(R.string.unsupported_file_format)
-                    return@withContext ImportResult(success, message, importedFarms)
+//                Log.d("Import","Start Import")
+//                // Check file extension before proceeding
+//                val fileName =
+//                    uri.lastPathSegment ?: throw IllegalArgumentException("Invalid file URI")
+//
+//                if (!fileName.endsWith(".csv", true) && !fileName.endsWith(".geojson", true)) {
+//                    message = context.getString(R.string.unsupported_file_format)
+//                    return@withContext ImportResult(success, message, importedFarms)
+//                }
+//
+//                Log.d("Filename","File Name: $fileName")
+
+                val contentResolver = context.contentResolver
+                val mimeType = contentResolver.getType(uri)
+
+                Log.d("MimeType", "File MimeType: $mimeType")
+
+                // Accept multiple MIME types or fall back to content-based checks
+                val isSupportedMimeType = mimeType != null && (
+                        mimeType == "text/csv" ||
+                                mimeType == "application/geo+json" ||
+                                mimeType == "application/octet-stream" ||  // Sometimes used for generic binary files
+                                mimeType == "text/comma-separated-values"  // Alternative for CSV
+                        )
+
+                if (!isSupportedMimeType) {
+                    // Fall back to content-based detection
+                    val inputStream = contentResolver.openInputStream(uri)
+                    val reader = BufferedReader(InputStreamReader(inputStream))
+                    val firstLine = reader.readLine()?.trim()
+
+                    if (firstLine != null) {
+                        when {
+                            firstLine.startsWith("{") && firstLine.contains("\"type\"") -> {
+                                // It's likely a GeoJSON file
+                                Log.d("Import", "Detected GeoJSON content")
+                            }
+                            firstLine.contains(",") -> {
+                                // It's likely a CSV file
+                                Log.d("Import", "Detected CSV content")
+                            }
+                            else -> {
+                                message = context.getString(R.string.unsupported_file_format)
+                                return@withContext ImportResult(success, message, importedFarms)
+                            }
+                        }
+                    } else {
+                        message = context.getString(R.string.unsupported_file_format)
+                        return@withContext ImportResult(success, message, importedFarms)
+                    }
                 }
+
 
                 val inputStream =
                     context.contentResolver.openInputStream(uri)
@@ -366,6 +515,8 @@ class FarmViewModel(
                 val farms = mutableListOf<Farm>()
 
                 println("First line: $firstLine")
+
+                Log.d("First line","First line: $firstLine")
 
                 if (firstLine.trim().startsWith("{")) {
                     // It's a GeoJSON file
@@ -390,25 +541,6 @@ class FarmViewModel(
                         val existingFarm = newFarm.remoteId?.let {
                             repository.getFarmByDetails(newFarm)
                         }
-
-//                        if (existingFarm != null) {
-//                            if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-//                                // Farm needs an update
-//                                println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-//                                farmsNeedingUpdate.add(newFarm)
-//                            } else {
-//                                // Farm is a duplicate but does not need an update
-//                                val duplicateMessage =
-//                                    "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-//                                println(duplicateMessage)
-//                                duplicateFarms.add(duplicateMessage)
-//                            }
-//                        } else {
-//                            // Handle case where farm exists in the system but not in the repository
-//                            val unknownFarmMessage =
-//                                "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-//                            println(unknownFarmMessage)
-//                        }
 
                         if (repository.farmNeedsUpdateImport(newFarm)) {
                             // Farm needs an update
@@ -442,12 +574,12 @@ class FarmViewModel(
                                     UUID.randomUUID()
                                 }
 
-                            val farmerName = values.getOrNull(1) ?: ""
-                            val memberId = values.getOrNull(2) ?: ""
-                            val siteName = values.getOrNull(3) ?: ""
-                            val agentName = values.getOrNull(4) ?: ""
-                            val village = values.getOrNull(5) ?: ""
-                            val district = values.getOrNull(6) ?: ""
+                            val farmerName = values.getOrNull(1)?.removeSurrounding("\"", "\"") ?: ""
+                            val memberId = values.getOrNull(2)?.removeSurrounding("\"", "\"") ?: ""
+                            val siteName = values.getOrNull(3)?.removeSurrounding("\"", "\"") ?: ""
+                            val agentName = values.getOrNull(4)?.removeSurrounding("\"", "\"") ?: ""
+                            val village = values.getOrNull(5)?.removeSurrounding("\"", "\"") ?: ""
+                            val district = values.getOrNull(6)?.removeSurrounding("\"", "\"") ?: ""
                             val size = values.getOrNull(7)?.toFloatOrNull()
                             val latitude = values.getOrNull(8)
                             val longitude = values.getOrNull(9)
@@ -458,6 +590,14 @@ class FarmViewModel(
                             val coordinates = parseCoordinates(coordinatesString)
                             println("Coordinates $coordinates")
 
+                            var accuracyArray : List<Float?>? = null
+
+                            val accuraciesString = values.getOrNull(11)?.removeSurrounding("\"", "\"") ?: ""
+                            accuracyArray = if (accuraciesString.isNotBlank()) {
+                                accuraciesString.split(",").map { it.toFloatOrNull() }
+                            } else {
+                                listOf(null)
+                            }
                             val currentTime = System.currentTimeMillis()
                             val createdAt =
                                 try {
@@ -465,7 +605,7 @@ class FarmViewModel(
                                             .getOrNull(11)
                                             ?.isNotEmpty() == true
                                     ) {
-                                        parseDateStringToTimestamp(values[11])
+                                        parseDateStringToTimestamp(values[12])
                                     } else {
                                         currentTime
                                     }
@@ -476,10 +616,10 @@ class FarmViewModel(
                             val updatedAt =
                                 try {
                                     if (values
-                                            .getOrNull(12)
+                                            .getOrNull(13)
                                             ?.isNotEmpty() == true
                                     ) {
-                                        parseDateStringToTimestamp(values[12])
+                                        parseDateStringToTimestamp(values[14])
                                     } else {
                                         currentTime
                                     }
@@ -513,6 +653,7 @@ class FarmViewModel(
                                         coordinates
                                             ?: emptyList(),
                                     // Use empty list if coordinates are null
+                                    accuracyArray = accuracyArray,
                                     synced = false,
                                     scheduledForSync = false,
                                     createdAt = createdAt,
@@ -525,34 +666,9 @@ class FarmViewModel(
                                 importedFarms.add(newFarm)
                             }
 
-//                            val existingFarm =
-//                                newFarm.remoteId.let { repository.getFarmByRemoteId(it) }
                             val existingFarm = newFarm.remoteId?.let {
                                 repository.getFarmByDetails(newFarm)
                             }
-//                            if (existingFarm != null) {
-//                                if (repository.farmNeedsUpdate(existingFarm, newFarm)) {
-//                                    // Farm needs an update
-//                                    println("Farm needs update: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}")
-//                                    farmsNeedingUpdate.add(newFarm)
-//                                } else {
-//                                    // Farm is a duplicate but does not need an update
-//                                    val duplicateMessage =
-//                                        "Duplicate farm: ${newFarm.farmerName}, Site ID: ${newFarm.siteId}"
-//                                    println(duplicateMessage)
-//                                    duplicateFarms.add(duplicateMessage)
-//                                }
-//                            } else {
-//                                // Handle case where farm exists in the system but not in the repository
-//                                val unknownFarmMessage =
-//                                    "Farm with Site ID: ${newFarm.siteId} found in repository but not in the system."
-//                                println(unknownFarmMessage)
-//
-////                            // Remove farm from repository
-////                            runBlocking {
-////                                newFarm.remoteId?.let { repository.deleteFarmByRemoteId(it) }
-////                            }
-//                            }
 
                             if (repository.farmNeedsUpdateImport(newFarm)) {
                                 // Farm needs an update
@@ -578,8 +694,6 @@ class FarmViewModel(
                     }
                     reader.close()
                     println("Parsed farms from CSV: $farms")
-                    // repository.importFarms(farms)
-                    // importFarms(siteId,farms)
 
                     message = context.getString(R.string.csv_import_successful)
                     success = true
@@ -608,31 +722,43 @@ class FarmViewModel(
                         // Extract the farmer's name from the string format "Record of [farmer_name] is not inserted"
                         it.substringAfter("Record of ").substringBefore(" is not inserted")
                     }
+                    // Check if invalidFarms is not empty and contains valid content
+                    if (invalidFarms.isNotEmpty() && invalidFarms.any { it.isNotBlank() }) {
+                        // Logging invalid farms, convert list to a readable format
+                        Log.d("Invalid Farms", "Invalid Farms: ${invalidFarms.joinToString(", ")}")
 
-                    // Construct the toast message
-                    val invalidFarmsMessage = context.getString(
-                        R.string.invalid_farms_with_names,
-                        invalidFarms.size,
-                        farmerNames
-                    )
-//                    val invalidFarmsMessage = context.getString(R.string.invalid_farms, invalidFarms.size)
-//                    Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
-                    // Show the toast message
-                   // Toast.makeText(context, invalidFarmsMessage, Toast.LENGTH_LONG).show()
-                    // Show a custom duration toast
-                    showCustomToast(context, invalidFarmsMessage, 5000)
+                        // Join the farmer names (or use invalid farm information), filter out any blank entries
+                        val farmerNames = invalidFarms.filter { it.isNotBlank() }.joinToString(", ")
+
+                        // Construct the toast message
+                        val invalidFarmsMessage = context.getString(
+                            R.string.invalid_farms_with_names,
+                            invalidFarms.size,  // Number of invalid farms
+                            farmerNames         // List of names or details
+                        )
+
+                        // Log the farmer names and the message
+                        Log.d("Farmer names", "farmer names: $farmerNames")
+                        Log.d("Invalid Farms Message", "Invalid Farms Message: $invalidFarmsMessage")
+
+                        // Check if farmerNames is not empty and does not contain just "[]"
+                        if (farmerNames.isNotEmpty() && farmerNames != "[]") {
+                            // Show the toast
+                            showCustomToast(context, invalidFarmsMessage, 5000)
+                        } else {
+                            Log.d("Invalid Farms", "Farmer names list is empty or contains only [].")
+                        }
+                    } else {
+                        Log.d("Invalid Farms", "No invalid farms to display.")
+                    }
+
+
                 }
             }
             // Show a toast message for farms that needs updates
             withContext(Dispatchers.Main) {
                 if (farmsNeedingUpdate.isNotEmpty()) {
                     val farmsNeedingUpdateMessage = context.getString(R.string.farms_needing_update, farmsNeedingUpdate.size)
-//                    Toast
-//                        .makeText(
-//                            context,
-//                            "${farmsNeedingUpdate.size} farms need to be updated",
-//                            Toast.LENGTH_LONG,
-//                        ).show()
                     Toast.makeText(context, farmsNeedingUpdateMessage, Toast.LENGTH_LONG).show()
                 }
             }
@@ -776,13 +902,318 @@ class FarmViewModel(
             repository.readAllFarmsSync(siteId)
         }
 
-//    fun importFarms(siteId: Long, importedFarms: List<Farm>) {
-//        viewModelScope.launch {
-//            flagFarmersWithNewPlotInfo(siteId, importedFarms, this@FarmViewModel)
-//            // Update the farms LiveData after importing
-//            _farms.postValue(getExistingFarms(siteId))
-//        }
-//    }
+    suspend fun getAllExistingFarms(): List<Farm> =
+        withContext(Dispatchers.IO) {
+            repository.getAllFarms()
+        }
+
+    suspend fun getAllSites(): List<CollectionSite> =
+        withContext(Dispatchers.IO) {
+            repository.getAllSites()
+        }
+
+    // restore data from the server
+
+
+    val TAG = "FarmConversion"
+
+    // Regular expression pattern to detect scientific notation
+    val scientificNotationPattern = Pattern.compile("^[+-]?\\d*\\.?\\d+([eE][+-]?\\d+)?$")
+
+    // Function to format the float value to avoid scientific notation
+    fun formatFloatValue(value: Float, decimalPlaces: Int): Float {
+        // Format the float to a string with the specified number of decimal places
+        val formattedValue = String.format("%.${decimalPlaces}f", value)
+
+        // Check if the formatted value is in scientific notation and truncate if needed
+        val finalValue = if (scientificNotationPattern.matcher(formattedValue).matches()) {
+            truncateToDecimalPlaces(formattedValue, decimalPlaces)
+        } else {
+            formattedValue
+        }
+
+        // Convert the final formatted string back to a float and return it
+        return finalValue.toFloat()
+    }
+
+    // Extension function to convert CollectionSiteRestore to CollectionSite
+    fun CollectionSiteRestore.toCollectionSite(): CollectionSite {
+        return CollectionSite(
+            name = this.name,
+            agentName = this.agent_name,
+            phoneNumber = this.phone_number,
+            email = this.email,
+            village = this.village,
+            district = this.district,
+            createdAt =  Instant.now().millis,
+            updatedAt =  Instant.now().millis
+        ).apply {
+           siteId = this@toCollectionSite.local_cs_id
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    fun FarmRestore.toFarm(local_cs_id:Long): Farm {
+        Log.d(TAG, "Starting conversion for FarmRestore id: $id")
+
+        // Convert remote_id to UUID
+        val remoteId: UUID = try {
+            UUID.fromString(this.remote_id)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid UUID format for remote_id: ${this.remote_id} in FarmRestore id: $id", e)
+            UUID.randomUUID() // Fallback or handle appropriately
+        }
+        Log.d(TAG, "Converted remoteId: $remoteId")
+
+        // Parse created_at
+        val createdAt: Long = try {
+            Instant.now().millis
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing created_at: ${this.created_at} in FarmRestore id: $id", e)
+            System.currentTimeMillis() // Fallback or handle appropriately
+        }
+        Log.d(TAG, "Converted createdAt: $createdAt")
+
+        // Parse updated_at
+        val updatedAt: Long = try {
+            Instant.now().millis
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing updated_at: ${this.updated_at} in FarmRestore id: $id", e)
+            System.currentTimeMillis() // Fallback or handle appropriately
+        }
+        Log.d(TAG, "Converted updatedAt: $updatedAt")
+
+        // Convert coordinates
+        val coordinatesMapped: List<Pair<Double, Double>>? = try {
+            // Assuming this.coordinates is of type List<List<Double>>?
+            this.coordinates?.map { coordList ->
+                if (coordList.size >= 2) {
+                    val first = coordList[0]
+                    val second = coordList[1]
+                    Pair(first, second)
+                } else {
+                    Log.w(TAG, "Invalid coordinate list size: ${coordList.size} for FarmRestore id: $id")
+                    Pair(0.0, 0.0) // Adjust default value as needed
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error mapping coordinates for FarmRestore id: $id", e)
+            null
+        }
+
+        // Format the coordinates into the desired string format
+        val formattedCoordinates = coordinatesMapped?.joinToString(prefix = "[", postfix = "]") { "[%.6f, %.6f]".format(it.first, it.second) }
+
+        Log.d(TAG, "Converted coordinates: $formattedCoordinates")
+
+
+        val accuracyArray = this.accuracyArray
+        Log.d(TAG, "Converted accuracy Array: $accuracyArray")
+
+
+        // Convert size from Double to Float
+        val sizeFloat: Float = this.size.toFloat()
+        val formattedSize = formatFloatValue(sizeFloat, 9)
+        Log.d(TAG, "Converted size: ${formattedSize}")
+
+
+        // Convert latitude and longitude from Double to String
+        val latitudeStr: String = this.latitude.toString()
+        val longitudeStr: String = this.longitude.toString()
+        Log.d(TAG, "Converted latitude: $latitudeStr, longitude: $longitudeStr")
+
+        // Handle member_id
+        val memberId: String = this.member_id ?: "100"
+        Log.d(TAG, "Handled memberId: '$memberId'")
+
+
+
+        // Create Farm object
+        val farm = Farm(
+            siteId = local_cs_id,
+            remoteId = remoteId,
+            farmerPhoto = "farmer_photo",
+            farmerName = this.farmer_name,
+            memberId = memberId,
+            village = this.village,
+            district = this.district,
+            purchases =0.toFloat(),
+            size = formattedSize,
+            latitude = latitudeStr,
+            longitude = longitudeStr,
+            coordinates = coordinatesMapped,
+            accuracyArray = accuracyArray,
+            synced = false,
+            scheduledForSync = false,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            needsUpdate = false
+        )
+        Log.d(TAG, "Created Farm object: $farm")
+
+        return farm
+    }
+
+    // Restore data from the server
+    fun restoreData(
+        deviceId: String?,
+        phoneNumber: String?,
+        email: String?,
+        farmViewModel: FarmViewModel,
+        onCompletion: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _restoreStatus.postValue(RestoreStatus.InProgress)
+
+                // Get local farms and sites from the repository
+                val localFarms = farmViewModel.getAllExistingFarms()
+                val localSites = farmViewModel.getAllSites()
+                val siteIds = localSites.map { site -> site.siteId } // Extract all site IDs
+
+
+                Log.d(TAG, "Local Farms: $localFarms")
+                Log.d(TAG, "Local Sites: $localSites")
+                Log.d(TAG, "Site IDs: $siteIds")
+
+                // Prepare the request body
+                val farmRequest = FarmRequest(
+                    device_id = deviceId.orEmpty(),
+                    email = email.orEmpty(),
+                    phone_number = phoneNumber.orEmpty()
+                )
+
+                // Fetch farms from the server
+                val serverFarms = apiService.getFarmsByDeviceId(farmRequest)
+                // Initialize Gson
+                val gson = Gson()
+
+                // Convert the JSON to the ServerFarmResponse object
+                val serverFarmResponseList: List<ServerFarmResponse> = gson.fromJson(
+                    gson.toJson(serverFarms),
+                    Array<ServerFarmResponse>::class.java
+                ).toList()
+
+                // Extract and flatten the list of farms
+                val collectionSites: Map<Long, CollectionSiteRestore> =
+                    serverFarmResponseList.associateBy(
+                        { it.collection_site.local_cs_id },
+                        { it.collection_site }
+                    )
+
+                // Group farms by their associated collection site (using site_id in FarmRestore to map to CollectionSiteRestore)
+                val farmEntities: List<Farm> = serverFarmResponseList.flatMap { serverFarmResponse ->
+                    // Extract the local_cs_id from the collection_site
+                    val collectionSiteLocalId = serverFarmResponse.collection_site.local_cs_id
+
+                    // Convert each FarmRestore to Farm with the correct collectionSiteLocalId
+                    serverFarmResponse.farms.map { farmRestore ->
+                        Log.d(TAG, "Converting FarmRestore: $farmRestore for Collection Site Local ID: $collectionSiteLocalId")
+
+                        // Convert FarmRestore to Farm, associating it with the correct local_cs_id
+                        val farm = farmRestore.toFarm(collectionSiteLocalId)
+
+                        Log.d(TAG, "Converted Farm: $farm")
+
+                        farm // Return the converted farm
+                    }
+                }
+
+                Log.d(TAG, "All Converted Farms: $farmEntities")
+
+
+
+                // Initialize counters for added and updated farms
+                var addedCount = 0
+                var createdSiteCount = 0
+
+                // Create missing sites and add/update farms
+                farmEntities.forEach { serverFarm ->
+                    val siteId = serverFarm.siteId
+                    val localSite = localSites.find { it.siteId == siteId }
+                    val localFarm = localFarms.find { it.remoteId == serverFarm.remoteId }
+
+                    if (localSite == null) {
+                        // Site doesn't exist locally, create it
+                        val siteToCreate = collectionSites[siteId]
+                        if (siteToCreate != null) {
+                            val collectionSite = siteToCreate.toCollectionSite()
+                            Log.d(TAG, "Creating new site: $collectionSite")
+                            addSite(collectionSite){isAdded ->
+                                if (isAdded) {
+                                    createdSiteCount++
+                                }
+                            }
+                        }
+                    }
+
+                    // Add or update the farm
+                    if (localFarm == null) {
+                        // Farm doesn't exist locally, add it
+                        if (serverFarm.size == 0f || serverFarm.latitude == "0.0" || serverFarm.longitude == "0.0") {
+                            serverFarm.needsUpdate = true
+                            addFarm(serverFarm, siteId)
+                            Log.d(
+                                TAG,
+                                "Farm needs update due to missing size or coordinates: $serverFarm"
+                            )
+                            addedCount++
+                        } else {
+                            // Add the farm as it is complete
+                            Log.d(TAG, "Adding new farm: $serverFarm")
+                            addFarm(serverFarm, siteId)
+                            Log.d(TAG, "New farm added successfully")
+                            addedCount++
+                        }
+                    } else {
+                        // Log the farm that already exists
+                        Log.d(TAG, "Farm already exists locally: $localFarm")
+
+                        // Optionally update the local farm if the serverFarm has better information
+                        if (serverFarm.size != 0f && serverFarm.latitude != "0.0" && serverFarm.longitude != "0.0") {
+                            // Check if localFarm needs an update
+                            if (localFarm.size == 0f || localFarm.latitude == "0.0" || localFarm.longitude == "0.0") {
+                                localFarm.needsUpdate = true
+                                farmViewModel.updateFarm(localFarm)
+                                Log.d(
+                                    TAG,
+                                    "Updated local farm due to missing size or coordinates: $localFarm"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Log.d(TAG, "Total farms added: $addedCount")
+                Log.d(TAG, "Total sites created: $createdSiteCount")
+
+                // Prepare a success message
+                val message = "Restoration completed: $addedCount farms added, $createdSiteCount sites created."
+
+                // Refresh the farms LiveData
+                _farms.postValue(repository.getAllFarms())
+
+                // Post the completed status with the message
+                _restoreStatus.postValue(
+                    RestoreStatus.Success(
+                        addedCount = addedCount,
+                        sitesCreated=createdSiteCount,
+                        message = message
+                    )
+                )
+
+                // Notify completion with the success status
+                onCompletion(addedCount > 0 || createdSiteCount > 0)
+            } catch (e: Exception) {
+                // Post the error status with the exception message
+                _restoreStatus.postValue(RestoreStatus.Error("Failed to restore data: ${e.message}"))
+
+                // Notify completion with failure status
+                onCompletion(false)
+            }
+        }
+    }
+
 }
 
 class FarmViewModelFactory(
