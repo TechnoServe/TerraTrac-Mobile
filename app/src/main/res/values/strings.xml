@@ -55,6 +55,7 @@
     <string name="finish">Finish</string>
     <string name="start">Start</string>
     <string name="can_not_get_location">Can\'t get location, Try again</string>
+    <string name="location_update_failed">Can\'t Update location, Try again</string>
     <string name="add_point">Add Point</string>
     <string name="reset">Reset</string>
     <string name="drop_point">Drop Point</string>

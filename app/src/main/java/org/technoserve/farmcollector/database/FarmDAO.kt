@@ -113,7 +113,7 @@ interface FarmDAO {
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {
         farms.forEach { farm ->
-            if (farm.remoteId?.let { getFarmByRemoteId(it) } == null) {
+            if (getFarmByRemoteId(farm.remoteId) == null) {
                 insertAll(listOf(farm))
             }
         }

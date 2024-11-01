@@ -4,7 +4,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -32,6 +36,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
+import org.technoserve.farmcollector.database.LocationHelper
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.screens.AddFarm
 import org.technoserve.farmcollector.ui.screens.AddSite
@@ -64,6 +69,7 @@ object Routes {
 
 // @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var locationHelper: LocationHelper
     private val viewModel: MapViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels {
         LanguageViewModelFactory(application)
@@ -75,10 +81,26 @@ class MainActivity : ComponentActivity() {
         getSharedPreferences("FarmCollector", MODE_PRIVATE)
     }
 
+    private lateinit var sensorManager: SensorManager
+
+
     @SuppressLint("InlinedApi")
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        locationHelper = LocationHelper(this)
+
+
+        // initializing the sensor manager
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        // getting the list of all the availabale sensors in the current device
+        val deviceSensors: List<Sensor> = sensorManager.getSensorList(Sensor.TYPE_ALL)
+
+        deviceSensors.forEach { sensor ->
+            Log.d("SENSORS", "Sensor Name: ${sensor.name}")
+        }
 
         val darkMode = mutableStateOf(sharedPreferences.getBoolean("dark_mode", false))
 
@@ -221,6 +243,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
         }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        locationHelper.cleanup() // Ensures cleanup happens when the activity is destroyed
     }
 }

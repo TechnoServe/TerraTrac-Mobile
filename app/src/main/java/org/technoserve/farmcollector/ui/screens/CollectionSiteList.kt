@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,12 +54,8 @@ import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.setValue
@@ -69,7 +64,7 @@ import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun CollectionSiteList(navController: NavController) {
     val context = LocalContext.current
@@ -91,21 +86,21 @@ fun CollectionSiteList(navController: NavController) {
         selectedIds.removeAll(selectedIds)
         showDeleteDialog.value = false
     }
-
-    fun refreshListItems() {
-        // TODO: update saved predictions list when db gets updated
-        //  currently using a terrible makeshift solution
-        navController.navigate("home")
-        navController.navigate("farmList") {
-            navController.graph.startDestinationRoute?.let { route ->
-                popUpTo(route) {
-                    saveState = true
-                }
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
-    }
+//
+//    fun refreshListItems() {
+//        // TODO: update saved predictions list when db gets updated
+//        //  currently using a terrible makeshift solution
+//        navController.navigate("home")
+//        navController.navigate("farmList") {
+//            navController.graph.startDestinationRoute?.let { route ->
+//                popUpTo(route) {
+//                    saveState = true
+//                }
+//            }
+//            launchSingleTop = true
+//            restoreState = true
+//        }
+//    }
 
     // State to manage the loading status
     val isLoading = remember { mutableStateOf(true) }
@@ -123,7 +118,6 @@ fun CollectionSiteList(navController: NavController) {
     var showFinalMessage by remember { mutableStateOf(false) }
 
     val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
@@ -263,7 +257,7 @@ fun CollectionSiteList(navController: NavController) {
                             } else {
                                 // Display the list of filtered items
                                 items(filteredList) { site ->
-                                    siteCard(
+                                    SiteCard(
                                         site = site,
                                         onCardClick = {
                                             navController.navigate("farmList/${site.siteId}")
@@ -337,8 +331,6 @@ fun CollectionSiteList(navController: NavController) {
         }
 
         is RestoreStatus.Error -> {
-            // Display an error message
-            val status = restoreStatus as RestoreStatus.Error
 
             Box(
                 modifier = Modifier
@@ -374,7 +366,7 @@ fun CollectionSiteList(navController: NavController) {
                             singleLine = true,
                             label = {
                                 Text(
-                                    stringResource(id = R.string.phone_number,),
+                                    stringResource(id = R.string.phone_number),
                                     color = inputLabelColor
                                 )
                             },
@@ -384,7 +376,7 @@ fun CollectionSiteList(navController: NavController) {
                                 )
                             },
                             isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -415,7 +407,7 @@ fun CollectionSiteList(navController: NavController) {
                             isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                                 email
                             ).matches(),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -511,9 +503,9 @@ fun CollectionSiteList(navController: NavController) {
         }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
-fun siteCard(
+fun SiteCard(
     site: CollectionSite,
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit,

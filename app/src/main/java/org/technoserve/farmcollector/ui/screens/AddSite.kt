@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +61,6 @@ fun AddSite(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .fillMaxWidth()
-//            .padding(16.dp)
     ) {
         FarmListHeader(
             title = stringResource(id = R.string.add_site),
@@ -81,7 +79,7 @@ fun AddSite(navController: NavController) {
 }
 
 @SuppressLint("MissingPermission", "Recycle")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SiteForm(navController: NavController) {
     val context = LocalContext.current as Activity
@@ -147,7 +145,6 @@ fun SiteForm(navController: NavController) {
     val (focusRequester6) = FocusRequester.createRefs()
 
     val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val inputLabelColor = MaterialTheme.colorScheme.onBackground
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
@@ -171,7 +168,7 @@ fun SiteForm(navController: NavController) {
                 label = { Text(stringResource(id = R.string.site_name) + " (*)",color = inputLabelColor ) },
                 supportingText = { if (!isValid && name.isBlank()) Text(stringResource(R.string.error_site_name_empty)) },
                 isError = !isValid && name.isBlank(),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.colors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
@@ -181,7 +178,6 @@ fun SiteForm(navController: NavController) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .padding(bottom = 16.dp)
                     .onKeyEvent {
                         if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                             focusRequester1.requestFocus()
@@ -202,7 +198,7 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
             isError = !isValid && agentName.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -211,15 +207,13 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                    .fillMaxWidth() // Make the element fill the width of its parent
-//                    .padding(bottom = 8.dp) // Add bottom padding
-                    .focusRequester(focusRequester2) // Attach a focus requester
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester2)
                     .onKeyEvent { keyEvent ->
-                    // Handle key events
                     if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester2.requestFocus() // Request focus when Enter key is pressed
                     }
-                    false // Indicate that the event is not consumed
+                    false
                 }
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -239,7 +233,7 @@ fun SiteForm(navController: NavController) {
                 },
                 label = {
                     Text(
-                        stringResource(id = R.string.phone_number,),
+                        stringResource(id = R.string.phone_number),
                         color = inputLabelColor
                     )
                 },
@@ -249,7 +243,7 @@ fun SiteForm(navController: NavController) {
                     )
                 },
                 isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.colors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
@@ -316,7 +310,7 @@ fun SiteForm(navController: NavController) {
             isError = !isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                 email
             ).matches(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -371,7 +365,7 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -403,7 +397,7 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,

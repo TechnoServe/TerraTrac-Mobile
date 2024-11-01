@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,8 +46,8 @@ fun validateForm(
     village: String,
     district: String,
 ): Boolean {
-    var isValid = true // Reset isValid to true before starting validation
-    val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*") // Ensures there is at least one letter
+    var isValid = true
+    val textWithNumbersRegex = Regex(".*[a-zA-Z]+.*")
 
     if (name.isBlank() || !name.matches(textWithNumbersRegex)) {
         isValid = false
@@ -77,7 +76,6 @@ fun validateForm(
     return isValid
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdateCollectionDialog(
     site: CollectionSite,
@@ -91,7 +89,6 @@ fun UpdateCollectionDialog(
     var email by rememberSaveable { mutableStateOf(site.email) }
     var village by rememberSaveable { mutableStateOf(site.village) }
     var district by rememberSaveable { mutableStateOf(site.district) }
-    var isValid by remember { mutableStateOf(true) }
     var showConfirmDialog by remember { mutableStateOf(false) }
 
     // FocusRequester for each TextField

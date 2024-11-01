@@ -20,8 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -31,12 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.ui.theme.DarkGray
-import org.technoserve.farmcollector.ui.theme.Navy
 import org.technoserve.farmcollector.ui.theme.Teal
 import org.technoserve.farmcollector.ui.theme.Turquoise
 import org.technoserve.farmcollector.ui.theme.White
-import org.technoserve.farmcollector.ui.theme.Yellow
 import org.technoserve.farmcollector.utils.Language
 import org.technoserve.farmcollector.utils.LanguageSelector
 import org.technoserve.farmcollector.utils.LanguageViewModel
@@ -121,7 +116,7 @@ fun Home(
                 text = stringResource(id = R.string.app_intro),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground // Use DarkGray for the intro text
+                    color = MaterialTheme.colorScheme.onBackground
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.align(Alignment.Center)

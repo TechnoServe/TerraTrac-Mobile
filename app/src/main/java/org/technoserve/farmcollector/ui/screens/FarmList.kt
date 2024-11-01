@@ -43,6 +43,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -118,14 +119,12 @@ import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.BufferedWriter
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.Objects
 import java.util.regex.Pattern
 import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
@@ -134,7 +133,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
@@ -340,7 +339,7 @@ fun ConfirmationDialog(
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun FarmList(
@@ -354,12 +353,10 @@ fun FarmList(
             factory = FarmViewModelFactory(context.applicationContext as Application),
         )
     val selectedIds = remember { mutableStateListOf<Long>() }
-    // Create a mutable state for the selected farm
     val selectedFarm = remember { mutableStateOf<Farm?>(null) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems by farmViewModel.readAllData(siteId).observeAsState(listOf())
     val cwsListItems by farmViewModel.readAllSites.observeAsState(listOf())
-    // var showExportDialog by remember { mutableStateOf(false) }
     var showFormatDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf<Action?>(null) }
     val activity = context as Activity
@@ -369,12 +366,10 @@ fun FarmList(
     var showConfirmationDialog by remember { mutableStateOf(false) }
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
-    var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs =
         listOf(
             stringResource(id = R.string.all),
-            stringResource(id = R.string.needs_update),
-//            stringResource(id = R.string.no_update_needed),
+            stringResource(id = R.string.needs_update)
         )
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
@@ -394,13 +389,10 @@ fun FarmList(
 
 
     val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
-    val textColor = MaterialTheme.colorScheme.onBackground
-    val iconColor = MaterialTheme.colorScheme.onBackground
 
     LaunchedEffect(Unit) {
         deviceId = DeviceIdUtil.getDeviceId(context)
@@ -422,7 +414,7 @@ fun FarmList(
         val siteName = getSiteById?.name ?: "SiteName"
         val filename =
             if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
+
         // Get the Downloads directory
         val downloadsDir =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -486,19 +478,19 @@ fun FarmList(
                                     {
                                         "type": "Feature",
                                         "properties": {
-                                            "remote_id": "${farm.remoteId ?: ""}",
-                                            "farmer_name":"${farm.farmerName.split(" ").joinToString(" ") ?: ""}",
-                                            "member_id": "${farm.memberId ?: ""}",
+                                            "remote_id": "${farm.remoteId}",
+                                            "farmer_name":"${farm.farmerName.split(" ").joinToString(" ") }",
+                                            "member_id": "${farm.memberId}",
                                             "collection_site": "${getSiteById?.name ?: ""}",
                                             "agent_name": "${getSiteById?.agentName ?: ""}",
-                                            "farm_village": "${farm.village ?: ""}",
-                                            "farm_district": "${farm.district ?: ""}",
-                                             "farm_size": ${farm.size ?: 0.0},
+                                            "farm_village": "${farm.village}",
+                                            "farm_district": "${farm.district}",
+                                             "farm_size": ${farm.size},
                                             "latitude": $latitude,
                                             "longitude": $longitude,
                                              "accuracyArray": "${farm.accuracyArray ?: ""}",
-                                            "created_at": "${farm.createdAt?.let { Date(it) } ?: "null"}",
-                                            "updated_at": "${farm.updatedAt?.let { Date(it) } ?: "null"}
+                                            "created_at": "${Date(farm.createdAt)}",
+                                            "updated_at": "${Date(farm.updatedAt)}
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
@@ -557,9 +549,6 @@ fun FarmList(
                                                 postfix = "]"
                                             )
                                         } else {
-//                                            val lon = farm.longitude ?: "0.0"
-//                                            val lat = farm.latitude ?: "0.0"
-//                                            "[$lon, $lat]"
                                             ""
                                         }
                                     }
@@ -635,8 +624,8 @@ fun FarmList(
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
-                    val context = activity?.applicationContext
-                    if (context != null && createFile(context, uri)) {
+                    // val context = activity.applicationContext
+                    if (createFile(context, uri)) {
                         Toast.makeText(context, R.string.success_export_msg, Toast.LENGTH_SHORT)
                             .show()
                     }
@@ -644,7 +633,7 @@ fun FarmList(
             }
         }
 
-    fun initiateFileCreation(activity: Activity) {
+    fun initiateFileCreation() {
         val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
         val intent =
             Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -684,7 +673,7 @@ fun FarmList(
         activity.startActivity(chooserIntent)
     }
 
-    fun exportFile(activity: Activity) {
+    fun exportFile() {
         showConfirmationDialog = true
     }
 
@@ -700,7 +689,7 @@ fun FarmList(
                 exportFormat = format
                 showFormatDialog = false
                 when (action) {
-                    Action.Export -> exportFile(activity)
+                    Action.Export -> exportFile()
                     Action.Share -> shareFileAction()
                     else -> {}
                 }
@@ -713,7 +702,7 @@ fun FarmList(
             action = action!!, // Ensure action is not null
             onConfirm = {
                 when (action) {
-                    Action.Export -> initiateFileCreation(activity)
+                    Action.Export -> initiateFileCreation()
                     Action.Share -> {
                         val file = createFileForSharing()
                         if (file != null) {
@@ -773,7 +762,7 @@ fun FarmList(
                     modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
+                        SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]).height(3.dp),
                             color = MaterialTheme.colorScheme.onPrimary // Color for the indicator
                         )
@@ -1022,8 +1011,6 @@ fun FarmList(
         }
 
         is RestoreStatus.Error -> {
-            // Display an error message
-            val status = restoreStatus as RestoreStatus.Error
 
             Box(
                 modifier = Modifier
@@ -1034,18 +1021,11 @@ fun FarmList(
                 if (showRestorePrompt) {
                     Column(
                         modifier = Modifier
-//                            .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-//                        Text(
-//                            text = stringResource(id = R.string.no_data_available),
-//                            modifier = Modifier.padding(bottom = 16.dp),
-//                            textAlign = TextAlign.Center,
-//                            style = MaterialTheme.typography.bodyMedium
-//                        )
 
                     if(showFinalMessage) {
                         // Show the toast with the final message
@@ -1066,7 +1046,7 @@ fun FarmList(
                             singleLine = true,
                             label = {
                                 Text(
-                                    stringResource(id = R.string.phone_number,),
+                                    stringResource(id = R.string.phone_number),
                                     color = inputLabelColor
                                 )
                             },
@@ -1076,7 +1056,7 @@ fun FarmList(
                                 )
                             },
                             isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -1107,7 +1087,7 @@ fun FarmList(
                             isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                                 email
                             ).matches(),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -1447,7 +1427,7 @@ fun SiteDeleteAllDialogPresenter(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmListHeader(
     title: String,
@@ -1484,7 +1464,7 @@ fun FarmListHeader(
             }) {
 //                if (!isSearchVisible) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
@@ -1566,7 +1546,7 @@ fun FarmListHeader(
                             isSearchVisible = false
                         }) {
                             Icon(
-                                Icons.Default.ArrowBack,
+                                Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
@@ -1621,7 +1601,6 @@ fun FarmListHeaderPlots(
     showSearch: Boolean,
     onRestoreClicked: () -> Unit
 ) {
-    val context = LocalContext.current as Activity
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
@@ -1955,45 +1934,6 @@ fun OutputStream.writeCsv(farms: List<Farm>) {
     writer.flush()
 }
 
-// on below line creating a method to write data to txt file.
-private fun writeTextData(
-    file: File,
-    farms: List<Farm>,
-    onDismiss: () -> Unit,
-    format: String,
-) {
-    var fileOutputStream: FileOutputStream? = null
-    try {
-        fileOutputStream = FileOutputStream(file)
-
-        fileOutputStream
-            .write(
-                """"Farmer Name", "Village", "District", "Size in Ha", "Cherry harvested this year in Kgs", "latitude", "longitude" , "createdAt", "updatedAt" """
-                    .toByteArray(),
-            )
-        fileOutputStream.write(10)
-        farms.forEach {
-            fileOutputStream.write(
-                "${it.farmerName}, ${it.village},${it.district},${it.size},${it.purchases},${it.latitude},${it.longitude},${
-                    Date(
-                        it.createdAt,
-                    )
-                }, \"${Date(it.updatedAt)}\"".toByteArray(),
-            )
-            fileOutputStream.write(10)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    } finally {
-        if (fileOutputStream != null) {
-            try {
-                fileOutputStream.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-    }
-}
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -2025,18 +1965,14 @@ fun UpdateFarmForm(
     val context = LocalContext.current as Activity
     var farmerName by remember { mutableStateOf(item.farmerName) }
     var memberId by remember { mutableStateOf(item.memberId) }
-    var farmerPhoto by remember { mutableStateOf(item.farmerPhoto) }
     var village by remember { mutableStateOf(item.village) }
     var district by remember { mutableStateOf(item.district) }
-//    var size by remember { mutableStateOf(item.size.toString()) }
 
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
     var isValidSize by remember { mutableStateOf(true) }
     var size by remember {
         mutableStateOf(sharedPref.getString("plot_size", item.size.toString()) ?: item.size.toString())
     }
-
-    val hasNewPolygon: Boolean = sharedPref.getBoolean(KEY_HAS_NEW_POLYGON,false)
 
     var latitude by remember { mutableStateOf(item.latitude) }
     var longitude by remember { mutableStateOf(item.longitude) }
@@ -2058,12 +1994,6 @@ fun UpdateFarmForm(
     val showLocationDialogNew = remember { mutableStateOf(false) }
     val showPermissionRequest = remember { mutableStateOf(false) }
     val file = context.createImageFile()
-    val uri =
-        FileProvider.getUriForFile(
-            Objects.requireNonNull(context),
-            context.packageName + ".provider",
-            file,
-        )
     var expanded by remember { mutableStateOf(false) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var selectedUnit by remember { mutableStateOf(items[0]) }
@@ -2299,10 +2229,8 @@ fun UpdateFarmForm(
     val (focusRequester3) = FocusRequester.createRefs()
 
     val isDarkTheme = isSystemInDarkTheme()
-    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
-    val buttonColor = if (isDarkTheme) Color.Black else Color.White
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
     if (showPermissionRequest.value) {
@@ -2313,10 +2241,10 @@ fun UpdateFarmForm(
             onPermissionsGranted = {
                 showPermissionRequest.value = false
             },
-            onPermissionsDenied = {
-                // Handle permissions denied
-                // Show a message or take appropriate action
-            },
+//            onPermissionsDenied = {
+//                // Handle permissions denied
+//                // Show a message or take appropriate action
+//            },
             showLocationDialogNew = showLocationDialogNew,
             hasToShowDialog = showLocationDialogNew.value,
         )
@@ -2451,7 +2379,7 @@ fun UpdateFarmForm(
                 label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
                 isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
                 colors =
-                    TextFieldDefaults.textFieldColors(
+                    TextFieldDefaults.colors(
                         errorLeadingIconColor = Color.Red,
                         cursorColor = inputTextColor,
                         errorCursorColor = Color.Red,
@@ -2592,6 +2520,9 @@ fun UpdateFarmForm(
                 } else {
                     if (isLocationEnabled(context) && context.hasLocationPermission()) {
                         if (size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() }?.let { it < 4f } == true) {
+
+                            /** this should be updated with the new class locationHelper*/
+
                             // Simulate collecting latitude and longitude
                             if (context.hasLocationPermission()) {
                                 val locationRequest =

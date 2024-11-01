@@ -3,8 +3,6 @@ package org.technoserve.farmcollector.ui.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.location.Location
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -53,14 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.CancellationToken
-import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.gms.tasks.OnTokenCanceledListener
 import org.technoserve.farmcollector.R
+import org.technoserve.farmcollector.database.LocationHelper
 import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.map.MapViewModel
@@ -88,11 +80,11 @@ fun SetPolygon(
     var accuracyArray by remember { mutableStateOf(listOf<Float>()) }
     var isCapturingCoordinates by remember { mutableStateOf(false) }
     var hasPointsOnMap by remember { mutableStateOf(false) }
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var showConfirmDialog = remember { mutableStateOf(false) }
     val showClearMapDialog = remember { mutableStateOf(false) }
     //  Getting farm details such as polygon or single pair of lat and long if shared from farm list
-    val farmData = navController.previousBackStackEntry?.arguments?.getParcelable<ParcelableFarmData>("farmData")
+    val farmData =
+        navController.previousBackStackEntry?.arguments?.getParcelable<ParcelableFarmData>("farmData")
 
     // cast farmData string to Farm object
     val farmInfo = farmData?.farm
@@ -100,12 +92,7 @@ fun SetPolygon(
     var viewSelectFarm by remember { mutableStateOf(false) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
 
-    val locationRequest =
-        LocationRequest.create().apply {
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            interval = 1000 // Update interval in milliseconds
-            fastestInterval = 500 // Fastest update interval in milliseconds
-        }
+    val locationHelper = LocationHelper(context)
 
     val showAlertDialog = remember { mutableStateOf(false) }
 
@@ -119,11 +106,15 @@ fun SetPolygon(
         // mapViewModel.clearPolygon()
 
         //  Get the accuracyArrayData from savedStateHandle
-        val accuracyArrayData = navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>("accuracyArray")
+        val accuracyArrayData =
+            navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>("accuracyArray")
 
         // If the accuracyArrayData exists, clear it
         accuracyArrayData?.let {
-            navController.currentBackStackEntry?.savedStateHandle?.set("accuracyArray", emptyList<Float?>())
+            navController.currentBackStackEntry?.savedStateHandle?.set(
+                "accuracyArray",
+                emptyList<Float?>()
+            )
         }
         if (!isLocationEnabled(context)) {
             showLocationDialog.value = true
@@ -167,38 +158,68 @@ fun SetPolygon(
         )
     }
 
-    if (!isCapturingCoordinates && farmInfo == null) {
-        fusedLocationClient
-            .getCurrentLocation(
-                locationRequest.priority,
-                object : CancellationToken() {
-                    override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
+//    if (!isCapturingCoordinates && farmInfo == null) {
+//        fusedLocationClient
+//            .getCurrentLocation(
+//                locationRequest.priority,
+//                object : CancellationToken() {
+//                    override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
+//
+//                    override fun isCancellationRequested() = false
+//                },
+//            ).addOnSuccessListener { location: Location? ->
+//                // update map camera position
+//                if (location != null) {
+//                    accuracy = location.accuracy.toString()
+//                    if (viewModel.state.value.clusterItems
+//                            .isEmpty()
+//                    ) {
+//                        viewModel.addCoordinate(location.latitude, location.longitude)
+//                    }
+//                }
+//            }
+//    }
+//
+//    fusedLocationClient.requestLocationUpdates(
+//        locationRequest,
+//        object : LocationCallback() {
+//            override fun onLocationResult(locationResult: LocationResult) {
+//                val location = locationResult.lastLocation ?: return
+//                accuracy = location.accuracy.toString()
+//            }
+//        },
+//        Looper.getMainLooper(),
+//    )
 
-                    override fun isCancellationRequested() = false
-                },
-            ).addOnSuccessListener { location: Location? ->
-                // update map camera position
-                if (location != null) {
-                    accuracy = location.accuracy.toString()
-                    if (viewModel.state.value.clusterItems
-                            .isEmpty()
-                    ) {
-                        viewModel.addCoordinate(location.latitude, location.longitude)
-                    }
+    if (!isCapturingCoordinates && farmInfo == null) {
+        locationHelper.getCurrentLocation { location ->
+            location?.let {
+                accuracy = it.accuracy.toString()
+                if (viewModel.state.value.clusterItems.isEmpty()) {
+                    viewModel.addCoordinate(it.latitude, it.longitude)
                 }
+            } ?: run {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.can_not_get_location),
+                    Toast.LENGTH_LONG
+                ).show()
             }
+        }
     }
 
-    fusedLocationClient.requestLocationUpdates(
-        locationRequest,
-        object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                val location = locationResult.lastLocation ?: return
-                accuracy = location.accuracy.toString()
-            }
-        },
-        Looper.getMainLooper(),
-    )
+    locationHelper.requestLocationUpdates { location ->
+        location?.let {
+            accuracy = it.accuracy.toString()
+        } ?: run {
+            Toast.makeText(
+                context,
+                context.getString(R.string.location_update_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
 
     // Display coordinates of a farm on map
     if (farmInfo != null && !isCapturingCoordinates && !viewSelectFarm) {
@@ -214,8 +235,8 @@ fun SetPolygon(
     }
 
     val enteredArea = sharedPref.getString("plot_size", "0.0")?.toDoubleOrNull() ?: 0.0
-    val selectedUnit = sharedPref.getString("selectedUnit", "Ha")?:"Ha"
-    val enteredAreaConverted= convertSize(enteredArea,selectedUnit)
+    val selectedUnit = sharedPref.getString("selectedUnit", "Ha") ?: "Ha"
+    val enteredAreaConverted = convertSize(enteredArea, selectedUnit)
     val calculatedArea = mapViewModel.calculateArea(coordinates)
     var showSaveButton by remember { mutableStateOf(false) } // To track if save button should be shown
 
@@ -269,11 +290,6 @@ fun SetPolygon(
     }
 
 
-
-
-
-
-
     // Alert dialog for insufficient coordinates
     if (showAlertDialog.value) {
         AlertDialog(
@@ -293,10 +309,10 @@ fun SetPolygon(
                     },
                 ) {
                     Text(text = stringResource(id = R.string.ok))
-                    isCapturingCoordinates= true
+                    isCapturingCoordinates = true
                     showConfirmDialog.value = false
                     mapViewModel.clearCoordinates()
-                   //  mapViewModel.clearPolygon()
+                    //  mapViewModel.clearPolygon()
                 }
             },
             containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
@@ -342,7 +358,7 @@ fun SetPolygon(
                 // mapViewModel.clearPolygon()
                 showClearMapDialog.value = false
             },
-            onCancelFn = {showClearMapDialog.value = false}
+            onCancelFn = { showClearMapDialog.value = false }
         )
     }
 
@@ -356,17 +372,17 @@ fun SetPolygon(
     ) {
         Column(
             modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(
-                        if (viewSelectFarm) {
-                            0.65f
-                        } else if (accuracy.isNotEmpty()) {
-                            .87f
-                        } else {
-                            .93f
-                        },
-                    ),
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(
+                    if (viewSelectFarm) {
+                        0.65f
+                    } else if (accuracy.isNotEmpty()) {
+                        .87f
+                    } else {
+                        .93f
+                    },
+                ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -380,18 +396,18 @@ fun SetPolygon(
         }
         Column(
             modifier =
-                Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
+            Modifier
+                .background(MaterialTheme.colorScheme.background)
+                .fillMaxWidth()
+                .fillMaxHeight(),
         ) {
             if (!viewSelectFarm && accuracy.isNotEmpty()) {
                 Column(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .padding(horizontal = 14.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .padding(horizontal = 14.dp),
                 ) {
                     Text(
                         modifier = Modifier.padding(horizontal = 2.dp),
@@ -403,10 +419,10 @@ fun SetPolygon(
 
             FlowRow(
                 modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(bottom = 10.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(bottom = 10.dp),
                 horizontalArrangement = if (viewSelectFarm) Arrangement.Center else Arrangement.Start,
             ) {
                 // Hiding some buttons depending on page usage. Viewing verse setting farm polygon
@@ -415,26 +431,26 @@ fun SetPolygon(
                         if (farmInfo != null) {
                             Column(
                                 modifier =
-                                    Modifier
-                                        .background(MaterialTheme.colorScheme.background)
-                                        .padding(5.dp),
+                                Modifier
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .padding(5.dp),
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.farm_info),
                                     style =
-                                        MaterialTheme.typography.bodySmall.copy(
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
-                                        ),
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    ),
                                     modifier = Modifier.padding(5.dp),
                                 )
                                 Column(
                                     content = { },
                                     modifier =
-                                        Modifier
-                                            .width(200.dp)
-                                            .background(Color.Black)
-                                            .height(2.dp),
+                                    Modifier
+                                        .width(200.dp)
+                                        .background(Color.Black)
+                                        .height(2.dp),
                                 )
                                 Text(
                                     text = "${stringResource(id = R.string.farm_name)}: ${farmInfo.farmerName}",
@@ -453,10 +469,21 @@ fun SetPolygon(
                                     text = "${stringResource(id = R.string.district)}: ${farmInfo.district}",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = textColor),
                                 )
-                                Text(text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}",style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
-                                Text(text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}",style = MaterialTheme.typography.bodyMedium.copy(color = textColor))
                                 Text(
-                                    text = "${stringResource(id = R.string.size)}: ${truncateToDecimalPlaces(formatInput(farmInfo.size.toString()),9)} ${
+                                    text = "${stringResource(id = R.string.latitude)}: ${farmInfo.latitude}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.longitude)}: ${farmInfo.longitude}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = textColor)
+                                )
+                                Text(
+                                    text = "${stringResource(id = R.string.size)}: ${
+                                        truncateToDecimalPlaces(
+                                            formatInput(farmInfo.size.toString()),
+                                            9
+                                        )
+                                    } ${
                                         stringResource(
                                             id = R.string.ha,
                                         )
@@ -470,12 +497,12 @@ fun SetPolygon(
                         Button(
                             shape = RoundedCornerShape(10.dp),
                             modifier =
-                                Modifier
-                                    .width(120.dp)
-                                    .fillMaxWidth(0.23f),
+                            Modifier
+                                .width(120.dp)
+                                .fillMaxWidth(0.23f),
                             onClick = {
                                 viewModel.clearCoordinates()
-                               //  mapViewModel.clearPolygon()
+                                //  mapViewModel.clearPolygon()
                                 navController.navigateUp()
                             },
                         ) {
@@ -484,10 +511,10 @@ fun SetPolygon(
                         Button(
                             shape = RoundedCornerShape(10.dp),
                             modifier =
-                                Modifier
-                                    .width(150.dp)
-                                    .fillMaxWidth(0.23f)
-                                    .padding(start = 10.dp),
+                            Modifier
+                                .width(150.dp)
+                                .fillMaxWidth(0.23f)
+                                .padding(start = 10.dp),
                             onClick = {
                                 navController.navigate("updateFarm/${farmInfo?.id}")
                             },
@@ -500,7 +527,9 @@ fun SetPolygon(
                     // "Start" button - visible only when not capturing coordinates and the "Finish" button hasn't been clicked
                     if (!isCapturingCoordinates && !showConfirmDialog.value && !showSaveButton) {
                         ElevatedButton(
-                            modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.25f)
+                                .size(width = 80.dp, height = 80.dp),
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
@@ -508,11 +537,17 @@ fun SetPolygon(
                                     showLocationDialog.value = true
                                 } else {
                                     //  Get the accuracyArrayData from savedStateHandle
-                                    val accuracyArrayData = navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>("accuracyArray")
+                                    val accuracyArrayData =
+                                        navController.currentBackStackEntry?.savedStateHandle?.get<List<Float?>>(
+                                            "accuracyArray"
+                                        )
 
                                     // If the accuracyArrayData exists, clear it
                                     accuracyArrayData?.let {
-                                        navController.currentBackStackEntry?.savedStateHandle?.set("accuracyArray", emptyList<Float?>())
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            "accuracyArray",
+                                            emptyList<Float?>()
+                                        )
                                     }
                                     coordinates = listOf() // Clear coordinates array when starting
                                     viewModel.clearCoordinates()
@@ -533,13 +568,17 @@ fun SetPolygon(
                     // "Finish" button - visible when capturing coordinates but not yet finished or saved
                     if (isCapturingCoordinates && !showSaveButton) {
                         ElevatedButton(
-                            modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.25f)
+                                .size(width = 80.dp, height = 80.dp),
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
                                 if (coordinates.isNotEmpty()) {
-                                    showConfirmDialog.value = true // Show confirm dialog to finish capturing
-                                    isCapturingCoordinates = false // Stop capturing when "Finish" is clicked
+                                    showConfirmDialog.value =
+                                        true // Show confirm dialog to finish capturing
+                                    isCapturingCoordinates =
+                                        false // Stop capturing when "Finish" is clicked
                                 }
                             }
                         ) {
@@ -555,22 +594,30 @@ fun SetPolygon(
                     // "Save" button - visible after finishing the polygon and previewing it, but only when there are at least 3 points
                     if (showSaveButton && coordinates.size > 3) {
                         ElevatedButton(
-                            modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.25f)
+                                .size(width = 80.dp, height = 80.dp),
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(Color.White),
                             onClick = {
                                 mapViewModel.addCoordinates(coordinates)
                                 // Show the polygon on the map for review
-                                val parcelableCoordinates = coordinates.map { ParcelablePair(it.first, it.second) }
-                                navController.previousBackStackEntry?.savedStateHandle?.set("coordinates", parcelableCoordinates)
-                                navController.previousBackStackEntry?.savedStateHandle?.set("accuracyArray", accuracyArray)
-                                if(calculatedArea > 0.000000001) {
+                                val parcelableCoordinates =
+                                    coordinates.map { ParcelablePair(it.first, it.second) }
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    "coordinates",
+                                    parcelableCoordinates
+                                )
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    "accuracyArray",
+                                    accuracyArray
+                                )
+                                if (calculatedArea > 0.000000001) {
                                     mapViewModel.showAreaDialog(
                                         calculatedArea.toString(),
                                         enteredAreaConverted.toString()
                                     )
-                                }
-                                else{
+                                } else {
                                     // Show the dialog for invalid points
                                     showInvalidPolygonDialog.value = true
                                 }
@@ -593,9 +640,9 @@ fun SetPolygon(
 
                     // Logic to handle when a point is deleted
                     LaunchedEffect(coordinates.size) {
-                        if (coordinates.size < 3 ) {
+                        if (coordinates.size < 3) {
                             showSaveButton = false
-                            if (coordinates.size > 1 ) {
+                            if (coordinates.size > 1) {
                                 isCapturingCoordinates =
                                     true // Show "Finish" button again when points are deleted
                             }
@@ -609,151 +656,142 @@ fun SetPolygon(
 
                     ElevatedButton(
                         modifier =
-                            Modifier
-                                .fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
+                        Modifier
+                            .fillMaxWidth(0.25f)
+                            .size(width = 80.dp, height = 80.dp),
                         shape = RoundedCornerShape(0.dp),
                         colors = ButtonDefaults.buttonColors(Color.White),
-//                        enabled = isCapturingCoordinates,  // Enable only when capturing coordinates
                         onClick = {
-                            if (!isLocationEnabled(context)) {
+                            if (!locationHelper.isLocationEnabled()) {
                                 showLocationDialog.value = true
-                            } else {
-                                if (context.hasLocationPermission() && isCapturingCoordinates) {
-                                    fusedLocationClient
-                                        .getCurrentLocation(
-                                            locationRequest.priority,
-                                            object : CancellationToken() {
-                                                override fun onCanceledRequested(p0: OnTokenCanceledListener) =
-                                                    CancellationTokenSource().token
+                            } else if (context.hasLocationPermission() && isCapturingCoordinates) {
+                                locationHelper.requestLocationPermissionAndUpdatePolygon { latitude, longitude, accuracy ->
+                                    if (latitude != "0.0" && longitude != "0.0") {
+                                        viewModel.addMarker(
+                                            Pair(
+                                                latitude.toDouble(),
+                                                longitude.toDouble()
+                                            )
+                                        )
+                                        viewModel.addCoordinate(
+                                            latitude.toDouble(),
+                                            longitude.toDouble()
+                                        )
+                                        val coordinate =
+                                            Pair(latitude.toDouble(), longitude.toDouble())
+                                        coordinates = coordinates + coordinate
 
-                                                override fun isCancellationRequested() = false
-                                            },
-                                        ).addOnSuccessListener { location: Location? ->
-                                            if (location == null) {
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        context.getString(R.string.can_not_get_location),
-                                                        Toast.LENGTH_LONG,
-                                                    ).show()
-                                            } else {
-                                                if (location.latitude
-                                                        .toString()
-                                                        .split(".")[1]
-                                                        .length < 6 ||
-                                                    location.longitude
-                                                        .toString()
-                                                        .split(".")[1]
-                                                        .length < 6
-                                                ) {
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            context.getString(R.string.can_not_get_location),
-                                                            Toast.LENGTH_LONG,
-                                                        ).show()
+                                        hasPointsOnMap =
+                                            coordinates.isNotEmpty()  // Enable Drop/Reset buttons
 
-                                                    return@addOnSuccessListener
-                                                }
+                                        accuracyArray = accuracyArray + accuracy.toFloat()
+                                        val meanAccuracy = if (accuracyArray.isNotEmpty()) {
+                                            accuracyArray.average().toFloat()
+                                        } else 0f
 
-                                            // update map camera position
-                                                val coordinate = Pair(location.latitude, location.longitude)
-                                                accuracy = location.accuracy.toString()
-
-                                                val accuracyFloat = location.accuracy // accuracy is a Float
-
-                                                Log.d("Coordinates", "Coordinates : $coordinate")
-                                                Log.d("Accuracy", "Accuracy set to : $accuracyFloat")
-
-
-
-                                                coordinates = coordinates + coordinate
-                                                accuracyArray = accuracyArray + accuracyFloat
-
-                                                // Log the updated arrays
-                                                Log.d("Accuracy Array", "Accuracy Array is set to : $accuracyArray")
-
-                                                viewModel.addMarker(coordinate)
-                                                // add camera position
-                                                viewModel.addCoordinate(
-                                                    location.latitude,
-                                                    location.longitude,
-                                                )
-                                                hasPointsOnMap = coordinates.isNotEmpty()  // Enable Drop/Reset buttons
-                                            }
+                                        Log.d(
+                                            "Location Results",
+                                            "Latitude: $latitude, Longitude: $longitude, Accuracy: $accuracy"
+                                        )
+                                        Log.d("Mean Accuracy", "Mean accuracy is: $meanAccuracy")
+                                    } else if (latitude == "0.0" && longitude == "0.0") {
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                context.getString(R.string.can_not_get_location),
+                                                Toast.LENGTH_LONG,
+                                            ).show()
+                                    } else {
+                                        if (latitude
+                                                .split(".")[1]
+                                                .length < 6 ||
+                                            longitude
+                                                .split(".")[1]
+                                                .length < 6
+                                        ) {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    context.getString(R.string.can_not_get_location),
+                                                    Toast.LENGTH_LONG,
+                                                ).show()
                                         }
+                                    }
+                                }
+
                                 }
                             }
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(id = R.string.add_point),
-                            tint = Color.Black,
-                            modifier = Modifier.padding(4.dp),
-                        )
-                    }
-                    ElevatedButton(
-                        modifier = Modifier.fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White),
-//                        enabled = hasPointsOnMap,  // Enable only when there are points to drop
-                        shape = RoundedCornerShape(0.dp),
-                        onClick = {
-                            coordinates = coordinates.dropLast(1)
-                            viewModel.removeLastCoordinate()
-                        },
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.drop),
-                            contentDescription = stringResource(id = R.string.drop_point),
-                            tint = Color.Black,
-                            modifier = Modifier.padding(4.dp),
-                        )
-                    }
-                    ElevatedButton(
-                        modifier =
-                        Modifier
-                            .fillMaxWidth(0.25f).size(width = 80.dp, height = 80.dp),
-                        shape = RoundedCornerShape(0.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White),
-//                        enabled = hasPointsOnMap,  // Enable only when there are points to reset
-                        onClick = {
-                            showClearMapDialog.value = true
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(id = R.string.reset),
-                            tint = Color.Red,
-                            modifier = Modifier.padding(4.dp),
-                        )
-                    }
+                            ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(id = R.string.add_point),
+                                tint = Color.Black,
+                                modifier = Modifier.padding(4.dp),
+                            )
+                        }
+                            ElevatedButton(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.25f)
+                                    .size(width = 80.dp, height = 80.dp),
+                                colors = ButtonDefaults.buttonColors(Color.White),
+                                shape = RoundedCornerShape(0.dp),
+                                onClick = {
+                                    coordinates = coordinates.dropLast(1)
+                                    viewModel.removeLastCoordinate()
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.drop),
+                                    contentDescription = stringResource(id = R.string.drop_point),
+                                    tint = Color.Black,
+                                    modifier = Modifier.padding(4.dp),
+                                )
+                            }
+                            ElevatedButton(
+                                modifier =
+                                Modifier
+                                    .fillMaxWidth(0.25f)
+                                    .size(width = 80.dp, height = 80.dp),
+                                shape = RoundedCornerShape(0.dp),
+                                colors = ButtonDefaults.buttonColors(Color.White),
+                                onClick = {
+                                    showClearMapDialog.value = true
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(id = R.string.reset),
+                                    tint = Color.Red,
+                                    modifier = Modifier.padding(4.dp),
+                                )
+                            }
+                        }
                 }
             }
         }
     }
-}
-@Composable
-fun InvalidPolygonDialog(
-    showDialog: MutableState<Boolean>,
-    onDismiss: () -> Unit
-) {
-    if (showDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDialog.value = false },
-            title = { Text(text = stringResource(id = R.string.invalid_polygon_title)) },
-            text = { Text(text = stringResource(id = R.string.invalid_polygon_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDismiss()
-                }) {
-                    Text(text = stringResource(id = R.string.ok))
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.background,
-            tonalElevation = 6.dp
-        )
+
+    @Composable
+    fun InvalidPolygonDialog(
+        showDialog: MutableState<Boolean>,
+        onDismiss: () -> Unit
+    ) {
+        if (showDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                title = { Text(text = stringResource(id = R.string.invalid_polygon_title)) },
+                text = { Text(text = stringResource(id = R.string.invalid_polygon_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        onDismiss()
+                    }) {
+                        Text(text = stringResource(id = R.string.ok))
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+                tonalElevation = 6.dp
+            )
+        }
     }
-}
 
 
