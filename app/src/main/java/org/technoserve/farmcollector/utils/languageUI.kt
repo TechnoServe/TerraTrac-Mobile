@@ -52,7 +52,12 @@ fun LanguageSelector(viewModel: LanguageViewModel, languages: List<Language>) {
                         viewModel.selectLanguage(language, context)
                         expanded = false
                     },
-                    text = { Text(text = language.displayName, color = MaterialTheme.colorScheme.onBackground) }
+                    text = {
+                        Text(
+                            text = language.displayName,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 )
             }
         }

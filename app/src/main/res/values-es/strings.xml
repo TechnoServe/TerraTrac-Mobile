@@ -56,6 +56,7 @@
     <string name="finish">Terminar</string>
     <string name="start">Empezar</string>
     <string name="can_not_get_location">No puedo obtener la ubicación, inténtalo de nuevo</string>
+    <string name="location_update_failed">Actualización de ubicación fallida</string>
     <string name="add_point">Agregar punto</string>
     <string name="reset">Restablecimiento</string>
     <string name="drop_point">Punto de caída</string>

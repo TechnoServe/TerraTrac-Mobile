@@ -39,7 +39,7 @@ fun List<LatLng>.calculateCameraViewPoints(pctView: Double = .25): List<LatLng> 
 private fun List<LatLng>.findMaxMins(): CameraViewCoord {
     check(isNotEmpty()) { "Cannot calculate the view coordinates of nothing." }
     var viewCoord: CameraViewCoord? = null
-    for(point in this) {
+    for (point in this) {
         viewCoord = CameraViewCoord(
             yMax = viewCoord?.yMax?.let { yMax ->
                 if (point.longitude > yMax) {
@@ -48,21 +48,21 @@ private fun List<LatLng>.findMaxMins(): CameraViewCoord {
                     yMax
                 }
             } ?: point.longitude,
-            yMin = viewCoord?.yMin?.let { yMin->
+            yMin = viewCoord?.yMin?.let { yMin ->
                 if (point.longitude < yMin) {
                     point.longitude
                 } else {
                     yMin
                 }
             } ?: point.longitude,
-            xMax = viewCoord?.xMax?.let { xMax->
+            xMax = viewCoord?.xMax?.let { xMax ->
                 if (point.latitude > xMax) {
                     point.latitude
                 } else {
                     xMax
                 }
             } ?: point.latitude,
-            xMin = viewCoord?.xMin?.let { xMin->
+            xMin = viewCoord?.xMin?.let { xMin ->
                 if (point.latitude < xMin) {
                     point.latitude
                 } else {

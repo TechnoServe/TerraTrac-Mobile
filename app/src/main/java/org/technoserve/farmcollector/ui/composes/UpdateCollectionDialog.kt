@@ -148,7 +148,9 @@ fun UpdateCollectionDialog(
                         onValueChange = { phoneNumber = it },
                         label = { Text(stringResource(id = R.string.phone_number)) },
                         supportingText = {
-                            if (!isValidPhoneNumber(phoneNumber) && phoneNumber.isNotBlank()) Text(stringResource(id = R.string.invalid_phone_number))
+                            if (!isValidPhoneNumber(phoneNumber) && phoneNumber.isNotBlank()) Text(
+                                stringResource(id = R.string.invalid_phone_number)
+                            )
                         },
                         isError = phoneNumber.isNotBlank() && !isValidPhoneNumber(phoneNumber),
                         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),

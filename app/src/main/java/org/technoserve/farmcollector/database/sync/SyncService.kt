@@ -51,10 +51,11 @@ class SyncService : Service() {
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             syncWorkTag,
-            ExistingPeriodicWorkPolicy.REPLACE,  // Replace existing work with the new work
+            ExistingPeriodicWorkPolicy.UPDATE,  // Replace existing work with the new work
             syncRequest
         )
     }
+
     override fun onBind(intent: Intent?): IBinder? {
         // Return null as this service doesn't need to bind with an activity
         return null

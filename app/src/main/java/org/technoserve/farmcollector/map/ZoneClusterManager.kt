@@ -8,4 +8,4 @@ import com.google.maps.android.collections.MarkerManager
 class ZoneClusterManager(
     context: Context,
     googleMap: GoogleMap,
-): ClusterManager<ZoneClusterItem>(context, googleMap, MarkerManager(googleMap))
+) : ClusterManager<ZoneClusterItem>(context, googleMap, MarkerManager(googleMap))

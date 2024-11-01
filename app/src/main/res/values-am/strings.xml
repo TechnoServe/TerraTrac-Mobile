@@ -56,6 +56,7 @@
     <string name="finish">ጨርስ</string>
     <string name="start">ጀምር</string>
     <string name="can_not_get_location">ቦታ ማግኘት አይቻልም, እንደገና ይሞክሩ</string>
+    <string name="location_update_failed">እንቅስቃሴ መሻሻል አልተሳካም</string>
     <string name="add_point">ነጥብ ጨምር</string>
     <string name="reset">መልሶ ማቋቋም</string>
     <string name="drop_point">ነጥብ አወረደ</string>

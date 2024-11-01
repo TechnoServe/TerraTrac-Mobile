@@ -52,8 +52,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.LocationHelper
 import org.technoserve.farmcollector.hasLocationPermission
+import org.technoserve.farmcollector.map.LocationHelper
 import org.technoserve.farmcollector.map.MapScreen
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.composes.AreaDialog
@@ -158,39 +158,37 @@ fun SetPolygon(
         )
     }
 
-//    if (!isCapturingCoordinates && farmInfo == null) {
-//        fusedLocationClient
-//            .getCurrentLocation(
-//                locationRequest.priority,
-//                object : CancellationToken() {
-//                    override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
-//
-//                    override fun isCancellationRequested() = false
-//                },
-//            ).addOnSuccessListener { location: Location? ->
-//                // update map camera position
-//                if (location != null) {
-//                    accuracy = location.accuracy.toString()
-//                    if (viewModel.state.value.clusterItems
-//                            .isEmpty()
-//                    ) {
-//                        viewModel.addCoordinate(location.latitude, location.longitude)
-//                    }
-//                }
-//            }
-//    }
-//
-//    fusedLocationClient.requestLocationUpdates(
-//        locationRequest,
-//        object : LocationCallback() {
-//            override fun onLocationResult(locationResult: LocationResult) {
-//                val location = locationResult.lastLocation ?: return
-//                accuracy = location.accuracy.toString()
-//            }
-//        },
-//        Looper.getMainLooper(),
-//    )
 
+//    if (!isCapturingCoordinates && farmInfo == null) {
+//        locationHelper.getCurrentLocation { location ->
+//            location?.let {
+//                accuracy = it.accuracy.toString()
+//                if (viewModel.state.value.clusterItems.isEmpty()) {
+//                    viewModel.addCoordinate(it.latitude, it.longitude)
+//                }
+//            } ?: run {
+//                Toast.makeText(
+//                    context,
+//                    context.getString(R.string.can_not_get_location),
+//                    Toast.LENGTH_LONG
+//                ).show()
+//            }
+//        }
+//    }
+
+//    locationHelper.requestLocationUpdates { location ->
+//        location?.let {
+//            accuracy = it.accuracy.toString()
+//        } ?: run {
+//            Toast.makeText(
+//                context,
+//                context.getString(R.string.location_update_failed),
+//                Toast.LENGTH_SHORT
+//            ).show()
+//        }
+//    }
+
+    // First, get initial location if needed
     if (!isCapturingCoordinates && farmInfo == null) {
         locationHelper.getCurrentLocation { location ->
             location?.let {
@@ -208,9 +206,13 @@ fun SetPolygon(
         }
     }
 
-    locationHelper.requestLocationUpdates { location ->
+// Then start continuous location updates
+    locationHelper.requestLocationUpdates( onLocationUpdate = { location ->
         location?.let {
             accuracy = it.accuracy.toString()
+//                if (isCapturingCoordinates) {
+//                    viewModel.addCoordinate(it.latitude, it.longitude)
+//                }
         } ?: run {
             Toast.makeText(
                 context,
@@ -219,6 +221,7 @@ fun SetPolygon(
             ).show()
         }
     }
+    )
 
 
     // Display coordinates of a farm on map
@@ -649,11 +652,6 @@ fun SetPolygon(
                         }
                     }
 
-
-
-
-
-
                     ElevatedButton(
                         modifier =
                         Modifier
@@ -719,79 +717,79 @@ fun SetPolygon(
                                     }
                                 }
 
-                                }
-                            }
-                            ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(id = R.string.add_point),
-                                tint = Color.Black,
-                                modifier = Modifier.padding(4.dp),
-                            )
-                        }
-                            ElevatedButton(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.25f)
-                                    .size(width = 80.dp, height = 80.dp),
-                                colors = ButtonDefaults.buttonColors(Color.White),
-                                shape = RoundedCornerShape(0.dp),
-                                onClick = {
-                                    coordinates = coordinates.dropLast(1)
-                                    viewModel.removeLastCoordinate()
-                                },
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.drop),
-                                    contentDescription = stringResource(id = R.string.drop_point),
-                                    tint = Color.Black,
-                                    modifier = Modifier.padding(4.dp),
-                                )
-                            }
-                            ElevatedButton(
-                                modifier =
-                                Modifier
-                                    .fillMaxWidth(0.25f)
-                                    .size(width = 80.dp, height = 80.dp),
-                                shape = RoundedCornerShape(0.dp),
-                                colors = ButtonDefaults.buttonColors(Color.White),
-                                onClick = {
-                                    showClearMapDialog.value = true
-                                },
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = stringResource(id = R.string.reset),
-                                    tint = Color.Red,
-                                    modifier = Modifier.padding(4.dp),
-                                )
                             }
                         }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(id = R.string.add_point),
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp),
+                        )
+                    }
+                    ElevatedButton(
+                        modifier = Modifier
+                            .fillMaxWidth(0.25f)
+                            .size(width = 80.dp, height = 80.dp),
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        shape = RoundedCornerShape(0.dp),
+                        onClick = {
+                            coordinates = coordinates.dropLast(1)
+                            viewModel.removeLastCoordinate()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.drop),
+                            contentDescription = stringResource(id = R.string.drop_point),
+                            tint = Color.Black,
+                            modifier = Modifier.padding(4.dp),
+                        )
+                    }
+                    ElevatedButton(
+                        modifier =
+                        Modifier
+                            .fillMaxWidth(0.25f)
+                            .size(width = 80.dp, height = 80.dp),
+                        shape = RoundedCornerShape(0.dp),
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        onClick = {
+                            showClearMapDialog.value = true
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(id = R.string.reset),
+                            tint = Color.Red,
+                            modifier = Modifier.padding(4.dp),
+                        )
+                    }
                 }
             }
         }
     }
+}
 
-    @Composable
-    fun InvalidPolygonDialog(
-        showDialog: MutableState<Boolean>,
-        onDismiss: () -> Unit
-    ) {
-        if (showDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                title = { Text(text = stringResource(id = R.string.invalid_polygon_title)) },
-                text = { Text(text = stringResource(id = R.string.invalid_polygon_message)) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        onDismiss()
-                    }) {
-                        Text(text = stringResource(id = R.string.ok))
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.background,
-                tonalElevation = 6.dp
-            )
-        }
+@Composable
+fun InvalidPolygonDialog(
+    showDialog: MutableState<Boolean>,
+    onDismiss: () -> Unit
+) {
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(text = stringResource(id = R.string.invalid_polygon_title)) },
+            text = { Text(text = stringResource(id = R.string.invalid_polygon_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDismiss()
+                }) {
+                    Text(text = stringResource(id = R.string.ok))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 6.dp
+        )
     }
+}
 
 

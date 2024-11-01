@@ -5,9 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 /**
-
 This class converts long list of latitude and longitude pair into json format so that can be kept in database easily
-
  */
 class CoordinateListConvert {
     @TypeConverter

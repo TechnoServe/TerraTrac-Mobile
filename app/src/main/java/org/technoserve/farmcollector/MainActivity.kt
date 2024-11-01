@@ -36,17 +36,17 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
-import org.technoserve.farmcollector.database.LocationHelper
+import org.technoserve.farmcollector.map.LocationHelper
 import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.screens.AddFarm
 import org.technoserve.farmcollector.ui.screens.AddSite
+import org.technoserve.farmcollector.ui.screens.CollectionSiteList
 import org.technoserve.farmcollector.ui.screens.FarmList
 import org.technoserve.farmcollector.ui.screens.Home
 import org.technoserve.farmcollector.ui.screens.ScreenWithSidebar
 import org.technoserve.farmcollector.ui.screens.SetPolygon
 import org.technoserve.farmcollector.ui.screens.SettingsScreen
 import org.technoserve.farmcollector.ui.screens.UpdateFarmForm
-import org.technoserve.farmcollector.ui.screens.CollectionSiteList
 import org.technoserve.farmcollector.ui.theme.FarmCollectorTheme
 import org.technoserve.farmcollector.utils.LanguageViewModel
 import org.technoserve.farmcollector.utils.LanguageViewModelFactory
@@ -229,7 +229,7 @@ class MainActivity : ComponentActivity() {
                             }
                             SetPolygon(navController, viewModel)
                         }
-                        composable(Routes.SETTINGS,) {
+                        composable(Routes.SETTINGS) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
@@ -246,6 +246,7 @@ class MainActivity : ComponentActivity() {
 
         }
     }
+
     override fun onDestroy() {
         super.onDestroy()
         locationHelper.cleanup() // Ensures cleanup happens when the activity is destroyed

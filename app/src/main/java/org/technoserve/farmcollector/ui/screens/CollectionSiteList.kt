@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -29,6 +31,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,7 +40,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -53,15 +59,9 @@ import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.CollectionSite
 import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
-import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment.Companion.BottomEnd
 import org.technoserve.farmcollector.database.RestoreStatus
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 
 
@@ -74,11 +74,8 @@ fun CollectionSiteList(navController: NavController) {
         )
     val selectedIds = remember { mutableStateListOf<Long>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
-
     val listItems by farmViewModel.readAllSites.observeAsState(listOf())
-
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
-
     fun onDelete() {
         val toDelete = mutableListOf<Long>()
         toDelete.addAll(selectedIds)
@@ -86,30 +83,9 @@ fun CollectionSiteList(navController: NavController) {
         selectedIds.removeAll(selectedIds)
         showDeleteDialog.value = false
     }
-//
-//    fun refreshListItems() {
-//        // TODO: update saved predictions list when db gets updated
-//        //  currently using a terrible makeshift solution
-//        navController.navigate("home")
-//        navController.navigate("farmList") {
-//            navController.graph.startDestinationRoute?.let { route ->
-//                popUpTo(route) {
-//                    saveState = true
-//                }
-//            }
-//            launchSingleTop = true
-//            restoreState = true
-//        }
-//    }
-
-    // State to manage the loading status
     val isLoading = remember { mutableStateOf(true) }
-
-
     var deviceId by remember { mutableStateOf("") }
-    // State variable to observe restore status
     val restoreStatus by farmViewModel.restoreStatus.observeAsState()
-
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
@@ -127,45 +103,35 @@ fun CollectionSiteList(navController: NavController) {
     }
 
 
-    // Simulate a network request or data loading
     LaunchedEffect(Unit) {
-        // Simulate a delay for loading
-        delay(500) // Adjust the delay as needed
-        // After loading data, set isLoading to false
+        delay(500)
         isLoading.value = false
     }
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp),
-//    ) {
+
     Scaffold(
         topBar = {
-        FarmListHeader(
-            title = stringResource(id = R.string.collection_site_list),
-            onSearchQueryChanged = setSearchQuery,
-            onAddFarmClicked = { navController.navigate("addSite") },
-            onBackSearchClicked = { navController.navigate("siteList") },
-            onBackClicked = { navController.navigate("home") },
-            showAdd = true,
-            showSearch = true,
-            showRestore = true,
-            onRestoreClicked = {
-                farmViewModel.restoreData(
-                    deviceId = deviceId,
-                    phoneNumber = "",
-                    email = "",
-                    farmViewModel = farmViewModel
-                ) { success ->
-                    if (success) {
-                        finalMessage = context.getString(R.string.data_restored_successfully)
-                    } else {
-                        showFinalMessage = true
-                        showRestorePrompt = true
+            FarmListHeader(
+                title = stringResource(id = R.string.collection_site_list),
+                onSearchQueryChanged = setSearchQuery,
+                onBackClicked = { navController.navigate("home") },
+                showSearch = true,
+                showRestore = true,
+                onRestoreClicked = {
+                    farmViewModel.restoreData(
+                        deviceId = deviceId,
+                        phoneNumber = "",
+                        email = "",
+                        farmViewModel = farmViewModel
+                    ) { success ->
+                        if (success) {
+                            finalMessage = context.getString(R.string.data_restored_successfully)
+                        } else {
+                            showFinalMessage = true
+                            showRestorePrompt = true
+                        }
                     }
                 }
-            }
-        )
+            )
         },
         floatingActionButton = {
             Box(
@@ -178,8 +144,10 @@ fun CollectionSiteList(navController: NavController) {
                     },
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(end= 0.dp, bottom = 48.dp)
-                        .background(MaterialTheme.colorScheme.background).align(BottomEnd)
+                    modifier = Modifier
+                        .padding(end = 0.dp, bottom = 48.dp)
+                        .background(MaterialTheme.colorScheme.background)
+                        .align(BottomEnd)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add a Site")
                 }
@@ -193,34 +161,7 @@ fun CollectionSiteList(navController: NavController) {
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-//                if (isSearchActive) {
-//                    OutlinedTextField(
-//                        value = searchQuery,
-//                        onValueChange = { setSearchQuery = it },
-//                        placeholder = { Text("Search...") },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(horizontal = 8.dp)
-//                            .padding(top = 8.dp),
-//                        singleLine = true,
-//                        leadingIcon = {
-//                            IconButton(onClick = { isSearchActive = false; setSearchQuery = "" }) {
-//                                Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
-//                            }
-//                        },
-//                        trailingIcon = {
-//                            if (searchQuery.isNotEmpty()) {
-//                                IconButton(onClick = { setSearchQuery = "" }) {
-//                                    Icon(Icons.Default.Clear, contentDescription = "Clear Search")
-//                                }
-//                            }
-//                        }
-//                    )
-//                }
-
-                // Show loader while data is loading
                 if (isLoading.value) {
-                    // Show loader while data is loading
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -231,18 +172,14 @@ fun CollectionSiteList(navController: NavController) {
                     }
                 } else {
                     if (listItems.isNotEmpty()) {
-                        // Show list of items after loading is complete
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(bottom = 90.dp)
                         ) {
-                            // Filter the list based on the search query
                             val filteredList = listItems.filter {
                                 it.name.contains(searchQuery, ignoreCase = true)
                             }
-
-                            // Display a message if no results are found
                             if (searchQuery.isNotEmpty() && filteredList.isEmpty()) {
                                 item {
                                     Text(
@@ -255,7 +192,6 @@ fun CollectionSiteList(navController: NavController) {
                                     )
                                 }
                             } else {
-                                // Display the list of filtered items
                                 items(filteredList) { site ->
                                     SiteCard(
                                         site = site,
@@ -289,8 +225,7 @@ fun CollectionSiteList(navController: NavController) {
         },
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
-            .fillMaxWidth(),
-       //  modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.background)
+            .fillMaxWidth()
     )
 
 
@@ -310,12 +245,10 @@ fun CollectionSiteList(navController: NavController) {
         is RestoreStatus.Success -> {
             Column(
                 modifier = Modifier
-                    .padding(top=72.dp)
+                    .padding(top = 72.dp)
                     .fillMaxSize()
             ) {
-                // Display a completion message
                 val status = restoreStatus as RestoreStatus.Success
-                // Show the toast
                 Toast.makeText(
                     context,
                     context.getString(
@@ -325,8 +258,7 @@ fun CollectionSiteList(navController: NavController) {
                     ),
                     Toast.LENGTH_LONG
                 ).show()
-                showRestorePrompt = false // Hide the restore prompt if restoration is successful
-                // showDataContent()
+                showRestorePrompt = false
             }
         }
 
@@ -347,8 +279,7 @@ fun CollectionSiteList(navController: NavController) {
                         verticalArrangement = Arrangement.Center
                     ) {
 
-                        if(showFinalMessage) {
-                            // Show the toast with the final message
+                        if (showFinalMessage) {
                             Toast.makeText(
                                 context,
                                 context.getString(
@@ -437,7 +368,7 @@ fun CollectionSiteList(navController: NavController) {
                                 onClick = {
                                     if (phone.isNotBlank() || email.isNotBlank()) {
                                         showRestorePrompt =
-                                            false // Hide the restore prompt on retry
+                                            false
                                         farmViewModel.restoreData(
                                             deviceId = deviceId,
                                             phoneNumber = phone,
@@ -461,7 +392,7 @@ fun CollectionSiteList(navController: NavController) {
                         }
                     }
                 } else {
-                    if(showFinalMessage) {
+                    if (showFinalMessage) {
                         // Show the toast
                         Toast.makeText(
                             context,
@@ -475,32 +406,28 @@ fun CollectionSiteList(navController: NavController) {
 
         null -> {
             if (isLoading.value) {
-                // Show loader while data is loading
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                   //  CircularProgressIndicator()
+
                 }
             } else {
                 Column(
                     modifier = Modifier
-                        .padding(top=48.dp)
-//                        .fillMaxSize()
+                        .padding(top = 48.dp)
                 ) {
-                    // Display data or no data message if loading is complete
-                    // showDataContent()
+
                 }
             }
         }
     }
 
-        // Display delete dialog if showDeleteDialog is true
-        if (showDeleteDialog.value) {
-            SiteDeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
-        }
+    if (showDeleteDialog.value) {
+        SiteDeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
+    }
 }
 
 
@@ -524,31 +451,31 @@ fun SiteCard(
 
     Column(
         modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(top = 8.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(top = 8.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ElevatedCard(
             elevation =
-                CardDefaults.cardElevation(
-                    defaultElevation = 6.dp,
-                ),
+            CardDefaults.cardElevation(
+                defaultElevation = 6.dp,
+            ),
             modifier =
-                Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .fillMaxWidth() // 90% of the screen width
-                    .padding(8.dp),
+            Modifier
+                .background(MaterialTheme.colorScheme.background)
+                .fillMaxWidth()
+                .padding(8.dp),
             onClick = {
                 onCardClick()
             },
         ) {
             Column(
                 modifier =
-                    Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(16.dp),
+                Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -557,28 +484,28 @@ fun SiteCard(
                 ) {
                     Column(
                         modifier =
-                            Modifier
-                                .weight(1.1f)
-                                .padding(bottom = 4.dp),
+                        Modifier
+                            .weight(1.1f)
+                            .padding(bottom = 4.dp),
                     ) {
                         Text(
                             text = site.name,
                             style =
-                                MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = textColor,
-                                ),
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor,
+                            ),
                             modifier =
-                                Modifier
-                                    .padding(bottom = 1.dp),
+                            Modifier
+                                .padding(bottom = 1.dp),
                         )
                         Text(
                             text = "${stringResource(id = R.string.agent_name)}: ${site.agentName}",
                             style = MaterialTheme.typography.bodySmall.copy(color = textColor),
                             modifier =
-                                Modifier
-                                    .padding(bottom = 1.dp),
+                            Modifier
+                                .padding(bottom = 1.dp),
                         )
                         if (site.phoneNumber.isNotEmpty()) {
                             Text(
@@ -587,15 +514,14 @@ fun SiteCard(
                             )
                         }
                     }
-                    // Edit collection sites name
                     IconButton(
                         onClick = {
                             showDialog.value = true
                         },
                         modifier =
-                            Modifier
-                                .size(24.dp)
-                                .padding(4.dp),
+                        Modifier
+                            .size(24.dp)
+                            .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -604,15 +530,14 @@ fun SiteCard(
                         )
                     }
                     Spacer(modifier = Modifier.padding(10.dp))
-                    // Delete collection sites name
                     IconButton(
                         onClick = {
                             onDeleteClick()
                         },
                         modifier =
-                            Modifier
-                                .size(24.dp)
-                                .padding(4.dp),
+                        Modifier
+                            .size(24.dp)
+                            .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,

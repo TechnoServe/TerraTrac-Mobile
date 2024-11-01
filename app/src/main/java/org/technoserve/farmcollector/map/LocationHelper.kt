@@ -1,4 +1,4 @@
-package org.technoserve.farmcollector.database
+package org.technoserve.farmcollector.map
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -9,29 +9,14 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -48,16 +33,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.technoserve.farmcollector.map.MapViewModel
-import org.technoserve.farmcollector.ui.screens.isLocationEnabled
+import org.technoserve.farmcollector.R
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 
 data class LocationState(
@@ -121,56 +100,56 @@ class LocationHelper(private val context: Context) : SensorEventListener {
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
-    // Primary location update function
-    @SuppressLint("MissingPermission")
-    fun getLocationUpdates(): Flow<Location> = callbackFlow {
-        if (!hasLocationPermission()) {
-            showPermissionRequest.value = true
-            throw LocationException("Missing location permission")
-        }
-
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-
-        if (!isGpsEnabled && !isNetworkEnabled) {
-            showLocationDialog.value = true
-            startDeadReckoning()
-            throw LocationException("GPS and Network are disabled")
-        }
-
-        val locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { location ->
-                    trySend(location)
-                    updateLocationState(
-                        location.latitude,
-                        location.longitude,
-                        location.accuracy,
-                        isUsingGPS = true
-                    )
-                }
-            }
-        }
-
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
-        ).addOnFailureListener {
-            _locationState.value = LocationState(
-                error = it.message,
-                isLoading = false,
-                isUsingGPS = false
-            )
-            startDeadReckoning()
-        }
-
-        awaitClose {
-            fusedLocationClient.removeLocationUpdates(locationCallback)
-            stopSensorUpdates()
-        }
-    }
+//    // Primary location update function
+//    @SuppressLint("MissingPermission")
+//    fun getLocationUpdates(): Flow<Location> = callbackFlow {
+//        if (!hasLocationPermission()) {
+//            showPermissionRequest.value = true
+//            throw LocationException("Missing location permission")
+//        }
+//
+//        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+//        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+//        val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+//
+//        if (!isGpsEnabled && !isNetworkEnabled) {
+//            showLocationDialog.value = true
+//            startDeadReckoning()
+//            throw LocationException("GPS and Network are disabled")
+//        }
+//
+//        val locationCallback = object : LocationCallback() {
+//            override fun onLocationResult(result: LocationResult) {
+//                result.lastLocation?.let { location ->
+//                    trySend(location)
+//                    updateLocationState(
+//                        location.latitude,
+//                        location.longitude,
+//                        location.accuracy,
+//                        isUsingGPS = true
+//                    )
+//                }
+//            }
+//        }
+//
+//        fusedLocationClient.requestLocationUpdates(
+//            locationRequest,
+//            locationCallback,
+//            Looper.getMainLooper()
+//        ).addOnFailureListener {
+//            _locationState.value = LocationState(
+//                error = it.message,
+//                isLoading = false,
+//                isUsingGPS = false
+//            )
+//            startDeadReckoning()
+//        }
+//
+//        awaitClose {
+//            fusedLocationClient.removeLocationUpdates(locationCallback)
+//            stopSensorUpdates()
+//        }
+//    }
 
     // Fallback method using dead reckoning with sensors
     private fun startDeadReckoning() {
@@ -190,12 +169,14 @@ class LocationHelper(private val context: Context) : SensorEventListener {
                 accelerometerValues = event.values.clone()
                 detectStep(event.values)
             }
+
             Sensor.TYPE_MAGNETIC_FIELD -> calculateDirection(event.values)
         }
     }
 
     private fun detectStep(values: FloatArray) {
-        val magnitude = Math.sqrt((values[0] * values[0] + values[1] * values[1] + values[2] * values[2]).toDouble())
+        val magnitude =
+            Math.sqrt((values[0] * values[0] + values[1] * values[1] + values[2] * values[2]).toDouble())
         if (magnitude > 12) {
             stepCount++
             updateLocationWithDeadReckoning()
@@ -206,7 +187,13 @@ class LocationHelper(private val context: Context) : SensorEventListener {
         val rotationMatrix = FloatArray(9)
         val orientation = FloatArray(3)
 
-        if (SensorManager.getRotationMatrix(rotationMatrix, null, accelerometerValues, magneticField)) {
+        if (SensorManager.getRotationMatrix(
+                rotationMatrix,
+                null,
+                accelerometerValues,
+                magneticField
+            )
+        ) {
             SensorManager.getOrientation(rotationMatrix, orientation)
             previousAzimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
         }
@@ -230,10 +217,22 @@ class LocationHelper(private val context: Context) : SensorEventListener {
         }
     }
 
-    private fun updateLocationState(latitude: Double, longitude: Double, accuracy: Float, isUsingGPS: Boolean) {
+    private fun updateLocationState(
+        latitude: Double,
+        longitude: Double,
+        accuracy: Float,
+        isUsingGPS: Boolean
+    ) {
         if (accuracy > 0) accuracyArray.add(accuracy)
         val meanAccuracy = accuracyArray.average().toFloat()
-        _locationState.value = LocationState(latitude, longitude, isLoading = false, error = null, isUsingGPS, meanAccuracy)
+        _locationState.value = LocationState(
+            latitude,
+            longitude,
+            isLoading = false,
+            error = null,
+            isUsingGPS,
+            meanAccuracy
+        )
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -260,13 +259,6 @@ class LocationHelper(private val context: Context) : SensorEventListener {
                                 val latitude = lastLocation.latitude.toString()
                                 val longitude = lastLocation.longitude.toString()
                                 val accuracy = lastLocation.accuracy.toString()
-
-                                // Log the coordinates and accuracy
-                                Log.d(
-                                    "Coordinates",
-                                    "Coordinates: Lat = $latitude, Long = $longitude"
-                                )
-                                Log.d("Accuracy", "Accuracy: $accuracy")
 
                                 // Call the callback with the obtained values
                                 onLocationResult(latitude, longitude, accuracy)
@@ -318,7 +310,11 @@ class LocationHelper(private val context: Context) : SensorEventListener {
                             location.accuracy.toString()
                         )
                     } else {
-                        onLocationResult(errorResponse.first, errorResponse.second, errorResponse.third)
+                        onLocationResult(
+                            errorResponse.first,
+                            errorResponse.second,
+                            errorResponse.third
+                        )
                     }
                 }.addOnFailureListener {
                     onLocationResult(errorResponse.first, errorResponse.second, errorResponse.third)
@@ -358,45 +354,112 @@ class LocationHelper(private val context: Context) : SensorEventListener {
                 onLocationResult(location)
                 updateLocationState(location.latitude, location.longitude, location.accuracy, true)
             } else {
-                Toast.makeText(context, "Unable to get location", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.can_not_get_location), Toast.LENGTH_LONG).show()
                 onLocationResult(null)
             }
         }.addOnFailureListener {
-            Toast.makeText(context, "Failed to get location", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.location_update_failed), Toast.LENGTH_LONG).show()
             onLocationResult(null)
         }
     }
 
+//    @SuppressLint("MissingPermission")
+//    fun requestLocationUpdates(onLocationUpdate: (Location?) -> Unit) {
+//        if (!hasLocationPermission()) {
+//            showPermissionRequest.value = true
+//            return
+//        }
+//
+//        val locationCallback = object : LocationCallback() {
+//            override fun onLocationResult(locationResult: LocationResult) {
+//                val location = locationResult.lastLocation
+//                onLocationUpdate(location)
+//                location?.let {
+//                    updateLocationState(it.latitude, it.longitude, it.accuracy, true)
+//                }
+//            }
+//        }
+//
+//        fusedLocationClient.requestLocationUpdates(
+//            locationRequest,
+//            locationCallback,
+//            Looper.getMainLooper()
+//        )
+//    }
+
     @SuppressLint("MissingPermission")
     fun requestLocationUpdates(onLocationUpdate: (Location?) -> Unit) {
+        // Check location permission
         if (!hasLocationPermission()) {
             showPermissionRequest.value = true
             return
         }
 
+        // Check if GPS or network is enabled
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+        if (!isGpsEnabled) {
+            showLocationDialog.value = true
+            startDeadReckoning()
+            return
+        }
+
+        // Create location callback
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                val location = locationResult.lastLocation
-                onLocationUpdate(location)
-                location?.let {
-                    updateLocationState(it.latitude, it.longitude, it.accuracy, true)
+                locationResult.lastLocation?.let { location ->
+                    // Update the location state
+                    updateLocationState(
+                        location.latitude,
+                        location.longitude,
+                        location.accuracy,
+                        isUsingGPS = true
+                    )
+
+                    // Notify the callback
+                    onLocationUpdate(location)
                 }
             }
         }
 
+        // Request location updates
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
             Looper.getMainLooper()
-        )
+        ).addOnSuccessListener {
+            _locationState.value = _locationState.value.copy(
+                isLoading = false,
+                isUsingGPS = true,
+                error = null
+            )
+        }.addOnFailureListener { exception ->
+            _locationState.value = LocationState(
+                error = exception.message,
+                isLoading = false,
+                isUsingGPS = false
+            )
+            startDeadReckoning()
+        }
+
+        // Register a cleanup function with the CoroutineScope
+        (context as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                super.onDestroy(owner)
+                fusedLocationClient.removeLocationUpdates(locationCallback)
+                stopSensorUpdates()
+            }
+        })
     }
+
 
     fun cleanup() {
         stopSensorUpdates()
     }
 }
 
-class LocationException(message: String) : Exception(message)
+//class LocationException(message: String) : Exception(message)
 
 
 

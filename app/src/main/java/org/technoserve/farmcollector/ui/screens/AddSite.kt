@@ -65,10 +65,7 @@ fun AddSite(navController: NavController) {
         FarmListHeader(
             title = stringResource(id = R.string.add_site),
             onSearchQueryChanged = {},
-            onAddFarmClicked = { /* Handle adding a farm here */ },
-            onBackSearchClicked = {},
             onBackClicked = { navController.popBackStack() },
-            showAdd = false,
             showSearch = false,
             showRestore = false,
             onRestoreClicked = {}
@@ -126,7 +123,6 @@ fun SiteForm(navController: NavController) {
 
         if (email.isNotBlank() && !email.contains("@")) {
             isValid = false
-            // You can display an error message for this field if needed
         }
 
 
@@ -165,7 +161,12 @@ fun SiteForm(navController: NavController) {
                 ),
                 value = name,
                 onValueChange = { name = it },
-                label = { Text(stringResource(id = R.string.site_name) + " (*)",color = inputLabelColor ) },
+                label = {
+                    Text(
+                        stringResource(id = R.string.site_name) + " (*)",
+                        color = inputLabelColor
+                    )
+                },
                 supportingText = { if (!isValid && name.isBlank()) Text(stringResource(R.string.error_site_name_empty)) },
                 isError = !isValid && name.isBlank(),
                 colors = TextFieldDefaults.colors(
@@ -195,7 +196,12 @@ fun SiteForm(navController: NavController) {
             ),
             value = agentName,
             onValueChange = { agentName = it },
-            label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
+            label = {
+                Text(
+                    stringResource(id = R.string.agent_name) + " (*)",
+                    color = inputLabelColor
+                )
+            },
             supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
             isError = !isValid && agentName.isBlank(),
             colors = TextFieldDefaults.colors(
@@ -207,9 +213,9 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester2)
-                    .onKeyEvent { keyEvent ->
+                .fillMaxWidth()
+                .focusRequester(focusRequester2)
+                .onKeyEvent { keyEvent ->
                     if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
                         focusRequester2.requestFocus() // Request focus when Enter key is pressed
                     }
@@ -218,40 +224,40 @@ fun SiteForm(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Phone
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { focusRequester3.requestFocus() }
-                ),
-                value = phoneNumber,
-                onValueChange = {
-                    phoneNumber = it
-                    isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
-                },
-                label = {
-                    Text(
-                        stringResource(id = R.string.phone_number),
-                        color = inputLabelColor
-                    )
-                },
-                supportingText = {
-                    if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(
-                        stringResource(R.string.error_invalid_phone_number, phoneNumber)
-                    )
-                },
-                isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
-                colors = TextFieldDefaults.colors(
-                    errorLeadingIconColor = Color.Red,
-                    cursorColor = inputTextColor,
-                    errorCursorColor = Color.Red,
-                    focusedIndicatorColor = inputBorder,
-                    unfocusedIndicatorColor = inputBorder,
-                    errorIndicatorColor = Color.Red
-                ),
-                trailingIcon = {
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Phone
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { focusRequester3.requestFocus() }
+            ),
+            value = phoneNumber,
+            onValueChange = {
+                phoneNumber = it
+                isValid = phoneNumber.isBlank() || isValidPhoneNumber(phoneNumber)
+            },
+            label = {
+                Text(
+                    stringResource(id = R.string.phone_number),
+                    color = inputLabelColor
+                )
+            },
+            supportingText = {
+                if (!isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)) Text(
+                    stringResource(R.string.error_invalid_phone_number, phoneNumber)
+                )
+            },
+            isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
+            colors = TextFieldDefaults.colors(
+                errorLeadingIconColor = Color.Red,
+                cursorColor = inputTextColor,
+                errorCursorColor = Color.Red,
+                focusedIndicatorColor = inputBorder,
+                unfocusedIndicatorColor = inputBorder,
+                errorIndicatorColor = Color.Red
+            ),
+            trailingIcon = {
                 IconButton(onClick = { showDisclaimerPhone = !showDisclaimerPhone }) {
                     Icon(
                         imageVector = Icons.Default.Info,
@@ -261,25 +267,28 @@ fun SiteForm(navController: NavController) {
                 }
             },
             modifier = Modifier
-                        .fillMaxWidth() // Make the element fill the width of its parent
-//                        .padding(bottom = 16.dp) // Add bottom padding
-                        .focusRequester(focusRequester3) // Attach a focus requester
-                         .onKeyEvent { keyEvent ->
-                        // Handle key events
-                        if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                            focusRequester3.requestFocus() // Request focus when Enter key is pressed
-                        }
-                        false // Indicate that the event is not consumed
+                .fillMaxWidth()
+                .focusRequester(focusRequester3)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
+                        focusRequester3.requestFocus()
                     }
-            )
+                    false
+                }
+        )
         if (showDisclaimerPhone) {
             AlertDialog(
                 onDismissRequest = { showDisclaimerPhone = false },
-                title = {Text(stringResource(id=R.string.phone_number)) },
-                text = { Text(stringResource(id=R.string.phone_info), color = MaterialTheme.colorScheme.onBackground) },
+                title = { Text(stringResource(id = R.string.phone_number)) },
+                text = {
+                    Text(
+                        stringResource(id = R.string.phone_info),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
                 confirmButton = {
                     TextButton(onClick = { showDisclaimerPhone = false }) {
-                        Text(stringResource(id=R.string.ok))
+                        Text(stringResource(id = R.string.ok))
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
@@ -299,7 +308,7 @@ fun SiteForm(navController: NavController) {
             ),
             value = email,
             onValueChange = { email = it },
-            label = { Text(stringResource(id = R.string.email),color = inputLabelColor) },
+            label = { Text(stringResource(id = R.string.email), color = inputLabelColor) },
             supportingText = {
                 if (!isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                         email
@@ -328,29 +337,32 @@ fun SiteForm(navController: NavController) {
                 }
             },
             modifier = Modifier
-                    .fillMaxWidth() // Make the element fill the width of its parent
-//                .padding(bottom = 16.dp) // Add bottom padding
-                .focusRequester(focusRequester4) // Attach a focus requester
+                .fillMaxWidth()
+                .focusRequester(focusRequester4)
                 .onKeyEvent { keyEvent ->
-                    // Handle key events
                     if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester4.requestFocus() // Request focus when Enter key is pressed
+                        focusRequester4.requestFocus()
                     }
-                    false // Indicate that the event is not consumed
+                    false
                 }
         )
         if (showDisclaimerEmail) {
             AlertDialog(
                 onDismissRequest = { showDisclaimerEmail = false },
-                title = {Text(stringResource(id=R.string.email)) },
-                text = { Text(stringResource(id=R.string.email_info),color = MaterialTheme.colorScheme.onBackground) },
+                title = { Text(stringResource(id = R.string.email)) },
+                text = {
+                    Text(
+                        stringResource(id = R.string.email_info),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
                 confirmButton = {
                     TextButton(onClick = { showDisclaimerEmail = false }) {
                         Text("OK")
                     }
                 },
-                containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
-                tonalElevation = 6.dp // Adds a subtle shadow for better UX
+                containerColor = MaterialTheme.colorScheme.background,
+                tonalElevation = 6.dp
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -362,7 +374,12 @@ fun SiteForm(navController: NavController) {
             ),
             value = village,
             onValueChange = { village = it },
-            label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
+            label = {
+                Text(
+                    stringResource(id = R.string.village) + " (*)",
+                    color = inputLabelColor
+                )
+            },
             supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
             colors = TextFieldDefaults.colors(
@@ -374,15 +391,13 @@ fun SiteForm(navController: NavController) {
                 errorIndicatorColor = Color.Red
             ),
             modifier = Modifier
-                .fillMaxWidth() // Make the element fill the width of its parent
-//                .padding(bottom = 16.dp) // Add bottom padding
-                .focusRequester(focusRequester5) // Attach a focus requester
+                .fillMaxWidth()
+                .focusRequester(focusRequester5)
                 .onKeyEvent { keyEvent ->
-                    // Handle key events
                     if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-                        focusRequester5.requestFocus() // Request focus when Enter key is pressed
+                        focusRequester5.requestFocus()
                     }
-                    false // Indicate that the event is not consumed
+                    false
                 }
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -394,7 +409,12 @@ fun SiteForm(navController: NavController) {
             ),
             value = district,
             onValueChange = { district = it },
-            label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
+            label = {
+                Text(
+                    stringResource(id = R.string.district) + " (*)",
+                    color = inputLabelColor
+                )
+            },
             supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
             colors = TextFieldDefaults.colors(
@@ -425,10 +445,9 @@ fun SiteForm(navController: NavController) {
                     )
                     val returnIntent = Intent()
                     context.setResult(Activity.RESULT_OK, returnIntent)
-                    // context.finish()  // Uncomment if you want to finish the activity
                     navController.navigate("siteList")
-                    // Show toast indicating success
-                    Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT)
+                        .show()
                 } else {
                     Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
                 }
@@ -461,7 +480,7 @@ fun addSite(
         createdAt = Instant.now().millis,
         updatedAt = Instant.now().millis
     )
-    farmViewModel.addSite(site){isAdded->
+    farmViewModel.addSite(site) { isAdded ->
         if (isAdded) {
             Log.d(TAG, " site added")
         }

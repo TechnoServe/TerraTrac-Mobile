@@ -22,7 +22,7 @@ fun ConfirmDialog(
     message: String,
     showDialog: MutableState<Boolean>,
     onProceedFn: () -> Unit,
-    onCancelFn: () -> Unit,  // Add cancel callback
+    onCancelFn: () -> Unit
 ) {
     if (showDialog.value) {
         AlertDialog(
@@ -44,8 +44,8 @@ fun ConfirmDialog(
                     Text(text = stringResource(id = R.string.no))
                 }
             },
-            containerColor = MaterialTheme.colorScheme.background, // Background that adapts to light/dark
-            tonalElevation = 6.dp // Adds a subtle shadow for better UX
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 6.dp
         )
     }
 }

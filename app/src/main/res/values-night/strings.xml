@@ -56,6 +56,7 @@
     <string name="finish">Finish</string>
     <string name="start">Start</string>
     <string name="can_not_get_location">Can\'t get location, Try again</string>
+    <string name="location_update_failed">Can\'t Update location, Try again</string>
     <string name="add_point">Add Point</string>
     <string name="reset">Reset</string>
     <string name="drop_point">Drop Point</string>
@@ -138,7 +139,7 @@
     <string name="phone_info">Your phone number may be used for data recovery in future.</string>
     <string name="email_info">Your email address will be used for data recovery in future.</string>
     <string name="sync_service_notification_title">Sync Service</string>
-    <string name="sync_service_notification_text">Syncing data...</string>
+    <string name="sync_service_notification_text">Syncing data…</string>
     <string name="sync_service_channel_id">sync_service_channel</string>
     <string name="sync_complete">Sync Complete</string>
     <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>

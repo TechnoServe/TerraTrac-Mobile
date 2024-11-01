@@ -26,7 +26,7 @@ class FarmCollectorApp : Application() {
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "sync_work_tag",
-            ExistingPeriodicWorkPolicy.REPLACE,
+            ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
     }

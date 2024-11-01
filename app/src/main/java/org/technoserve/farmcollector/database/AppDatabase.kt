@@ -17,7 +17,8 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_12_16 = object : Migration(12, 16) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE new_Farms (
                 siteId           INTEGER NOT NULL,
                 remote_id        BLOB    NOT NULL,
@@ -41,10 +42,12 @@ abstract class AppDatabase : RoomDatabase() {
                 REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
                                                     ON DELETE CASCADE
             )
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
+                db.execSQL(
+                    """
             INSERT INTO new_Farms (
                 siteId, remote_id, farmerPhoto, farmerName, memberId,
                 village, district, purchases, size, latitude, longitude,
@@ -55,7 +58,8 @@ abstract class AppDatabase : RoomDatabase() {
                 village, district, purchases, size, latitude, longitude,
                 coordinates, synced, scheduledForSync, createdAt, updatedAt, 0 AS needsUpdate, id
             FROM Farms
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 3: Drop the old table
                 db.execSQL("DROP TABLE Farms")
@@ -69,7 +73,8 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_15_16 = object : Migration(15, 16) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE new_Farms (
                 siteId           INTEGER NOT NULL,
                 remote_id        BLOB    NOT NULL,
@@ -93,10 +98,12 @@ abstract class AppDatabase : RoomDatabase() {
                 REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
                                                     ON DELETE CASCADE
             )
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
+                db.execSQL(
+                    """
             INSERT INTO new_Farms (
                 siteId, remote_id, farmerPhoto, farmerName, memberId,
                 village, district, purchases, size, latitude, longitude,
@@ -107,7 +114,8 @@ abstract class AppDatabase : RoomDatabase() {
                 village, district, purchases, size, latitude, longitude,
                 coordinates, synced, scheduledForSync, createdAt, updatedAt,0 AS needsUpdate, id
             FROM Farms
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 3: Drop the old table
                 db.execSQL("DROP TABLE Farms")
@@ -121,7 +129,8 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_16_17 = object : Migration(16, 17) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE new_Farms (
                 siteId           INTEGER NOT NULL,
                 remote_id        BLOB    NOT NULL,
@@ -145,10 +154,12 @@ abstract class AppDatabase : RoomDatabase() {
                 REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
                                                     ON DELETE CASCADE
             )
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
+                db.execSQL(
+                    """
             INSERT INTO new_Farms (
                 siteId, remote_id, farmerPhoto, farmerName, memberId,
                 village, district, purchases, size, latitude, longitude,
@@ -159,7 +170,8 @@ abstract class AppDatabase : RoomDatabase() {
                 village, district, purchases, size, latitude, longitude,
                 coordinates, 0 AS synced, 0 AS scheduledForSync, createdAt, updatedAt,0 AS needsUpdate, id
             FROM Farms
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 3: Drop the old table
                 db.execSQL("DROP TABLE Farms")
@@ -173,7 +185,8 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_17_18 = object : Migration(17, 18) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE new_Farms (
                 siteId           INTEGER NOT NULL,
                 remote_id        BLOB    NOT NULL,
@@ -197,10 +210,12 @@ abstract class AppDatabase : RoomDatabase() {
                 REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
                                                     ON DELETE CASCADE
             )
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
+                db.execSQL(
+                    """
             INSERT INTO new_Farms (
                 siteId, remote_id, farmerPhoto, farmerName, memberId,
                 village, district, purchases, size, latitude, longitude,
@@ -211,7 +226,8 @@ abstract class AppDatabase : RoomDatabase() {
                 village, district, purchases, size, latitude, longitude,
                 coordinates, 0 AS synced, 0 AS scheduledForSync, createdAt, updatedAt,0 AS needsUpdate, id
             FROM Farms
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // Step 3: Drop the old table
                 db.execSQL("DROP TABLE Farms")
@@ -223,7 +239,8 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_18_19 = object : Migration(18, 19) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE new_Farms (
                 siteId           INTEGER NOT NULL,
                 remote_id        BLOB    NOT NULL,
@@ -247,9 +264,11 @@ abstract class AppDatabase : RoomDatabase() {
                 REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
                                                     ON DELETE CASCADE
             )
-        """.trimIndent())
+        """.trimIndent()
+                )
 
-                db.execSQL("""
+                db.execSQL(
+                    """
             INSERT INTO new_Farms (
                 siteId, remote_id, farmerPhoto, farmerName, memberId,
                 village, district, purchases, size, latitude, longitude,
@@ -260,7 +279,8 @@ abstract class AppDatabase : RoomDatabase() {
                 village, district, purchases, size, latitude, longitude,
                 coordinates, 0 AS synced, 0 AS scheduledForSync, createdAt, updatedAt, 0 AS needsUpdate, id
             FROM Farms
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 db.execSQL("DROP TABLE Farms")
                 db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
@@ -271,7 +291,8 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_19_20 = object : Migration(19, 20) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Create a new table `new_Farms` with `accuracyArray` field
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE new_Farms (
                 siteId           INTEGER NOT NULL,
                 remote_id        BLOB    NOT NULL,
@@ -296,10 +317,12 @@ abstract class AppDatabase : RoomDatabase() {
                 REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
                                                     ON DELETE CASCADE
             )
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // 2. Copy existing data from `Farms` to `new_Farms`, initializing `accuracyArray`
-                db.execSQL("""
+                db.execSQL(
+                    """
             INSERT INTO new_Farms (
                 siteId, remote_id, farmerPhoto, farmerName, memberId,
                 village, district, purchases, size, latitude, longitude,
@@ -312,7 +335,8 @@ abstract class AppDatabase : RoomDatabase() {
                 coordinates, '[]' AS accuracyArray, -- Initialize new field as an empty array
                 synced, scheduledForSync, createdAt, updatedAt, needsUpdate, id
             FROM Farms
-        """.trimIndent())
+        """.trimIndent()
+                )
 
                 // 3. Drop the old `Farms` table
                 db.execSQL("DROP TABLE Farms")
@@ -321,7 +345,6 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
             }
         }
-
 
 
         fun getInstance(context: Context): AppDatabase {
@@ -334,7 +357,14 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "farm_collector_database"
                     )
-                        .addMigrations(MIGRATION_12_16,MIGRATION_15_16,MIGRATION_16_17,MIGRATION_17_18,MIGRATION_18_19,MIGRATION_19_20)
+                        .addMigrations(
+                            MIGRATION_12_16,
+                            MIGRATION_15_16,
+                            MIGRATION_16_17,
+                            MIGRATION_17_18,
+                            MIGRATION_18_19,
+                            MIGRATION_19_20
+                        )
                         .build()
 
                     INSTANCE = instance

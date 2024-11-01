@@ -56,6 +56,7 @@
     <string name="finish">Maliza</string>
     <string name="start">Anza</string>
     <string name="can_not_get_location">Huwezi kupata eneo, Jaribu tena</string>
+    <string name="location_update_failed">Sasisho la eneo limefeli</string>
     <string name="add_point">Ongeza Kituo</string>
     <string name="reset">Rekebisha</string>
     <string name="drop_point">Ondoa Kituo</string>

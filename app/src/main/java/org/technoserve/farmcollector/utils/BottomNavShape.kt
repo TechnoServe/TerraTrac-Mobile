@@ -42,7 +42,7 @@ class BottomNavCurve : Shape {
             )
 
             // same thing for the second curve
-            mSecondCurveStartPoint = mFirstCurveEndPoint;
+            mSecondCurveStartPoint = mFirstCurveEndPoint
             mSecondCurveEndPoint.set(
                 (size.width / 2) + (CURVE_CIRCLE_RADIUS * 2) + (CURVE_CIRCLE_RADIUS / 3),
                 curveDepth

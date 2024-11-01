@@ -39,7 +39,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolygonOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
@@ -50,6 +49,7 @@ import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.R
+
 @OptIn(MapsComposeExperimentalApi::class)
 @SuppressLint("PotentialBehaviorOverride")
 @Composable
@@ -71,7 +71,9 @@ fun MapScreen(
     )
 
     Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
         var isLayerCardVisible by remember { mutableStateOf(false) }
 
@@ -120,14 +122,8 @@ fun MapScreen(
                     map.setMinZoomPreference(4f)
                     map.uiSettings.isMapToolbarEnabled = true
                     map.uiSettings.isCompassEnabled = true
-                    // map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
                         map.addPolygon(clusterItem.polygonOptions)
-//                            .apply {
-//                            strokeColor(android.graphics.Color.BLUE) // Highlight the stroke
-//                            strokeWidth(5f)
-//                            fillColor(android.graphics.Color.argb(128, 255, 255, 0)) // Semi-transparent fill
-//                        })
                     }
                     map.setOnMapLoadedCallback {
                         if (state.clusterItems.isNotEmpty()) {
@@ -235,8 +231,6 @@ fun MapScreen(
                 contentDescription = "Layer Selector"
             )
         }
-
-//    // Center camera to include all the Zones.
         LaunchedEffect(state.clusterItems) {
             if (state.clusterItems.isNotEmpty()) {
                 cameraPositionState.animate(

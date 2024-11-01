@@ -57,7 +57,7 @@ data class Farm(
     var accuracyArray: List<Float?>?,     // List to store accuracies
     @ColumnInfo(name = "synced", defaultValue = "0")
     val synced: Boolean = false,
-    @ColumnInfo(name = "scheduledForSync",defaultValue = "0")
+    @ColumnInfo(name = "scheduledForSync", defaultValue = "0")
     val scheduledForSync: Boolean = false,
     @ColumnInfo(name = "createdAt")
     @TypeConverters(DateConverter::class)
@@ -65,7 +65,7 @@ data class Farm(
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
     var updatedAt: Long,
-    @ColumnInfo(name = "needsUpdate",defaultValue = "0")
+    @ColumnInfo(name = "needsUpdate", defaultValue = "0")
     var needsUpdate: Boolean = false,
 ) : Parcelable {
     @PrimaryKey(autoGenerate = true)
@@ -105,7 +105,7 @@ data class Farm(
         id = parcel.readLong()
     }
 
-    override fun  describeContents(): Int = 0
+    override fun describeContents(): Int = 0
 
     companion object : Parceler<Farm> {
 
@@ -121,12 +121,19 @@ data class Farm(
             parcel.writeFloat(size)
             parcel.writeString(latitude)
             parcel.writeString(longitude)
-            parcel.writeTypedList(coordinates?.map { it.first?.let { it1 -> it.second?.let { it2 ->
-                ParcelablePair(it1,
-                    it2
-                )
-            } } })
-            parcel.writeFloatArray(accuracyArray?.filterNotNull()?.toFloatArray())  // Write accuracyArray
+            parcel.writeTypedList(coordinates?.map {
+                it.first?.let { it1 ->
+                    it.second?.let { it2 ->
+                        ParcelablePair(
+                            it1,
+                            it2
+                        )
+                    }
+                }
+            })
+            parcel.writeFloatArray(
+                accuracyArray?.filterNotNull()?.toFloatArray()
+            )  // Write accuracyArray
             parcel.writeByte(if (synced) 1 else 0)
             parcel.writeByte(if (scheduledForSync) 1 else 0)
             parcel.writeLong(createdAt)
@@ -140,7 +147,6 @@ data class Farm(
         }
     }
 }
-
 
 
 data class CollectionSiteDto(
@@ -182,7 +188,7 @@ fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<Dev
             val collectionSiteDto = CollectionSiteDto(
                 local_cs_id = collectionSite.siteId,
                 name = collectionSite.name,
-                agent_name = collectionSite.agentName ?: "Unknown",
+                agent_name = collectionSite.agentName,
                 phone_number = collectionSite.phoneNumber,
                 email = collectionSite.email,
                 village = collectionSite.village,
@@ -190,11 +196,12 @@ fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<Dev
             )
 
             // Map the farms
-            val farmDtos = farms.mapNotNull { farm ->
-                farm.remoteId?.let { remoteId ->
+            val farmDtos = farms.map { farm ->
+                farm.remoteId.let { remoteId ->
                     // Ensure latitude and longitude are not empty or null before parsing
                     val latitude = farm.latitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
-                    val longitude = farm.longitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
+                    val longitude =
+                        farm.longitude.takeIf { it.isNotBlank() }?.toDoubleOrNull() ?: 0.0
 
                     FarmDetailDto(
                         remote_id = remoteId.toString(),
@@ -205,7 +212,8 @@ fun List<Farm>.toDeviceFarmDtoList(deviceId: String, farmDao: FarmDAO): List<Dev
                         size = farm.size,
                         latitude = latitude,
                         longitude = longitude,
-                        coordinates = farm.coordinates?.map { listOf(it.first, it.second) } ?: emptyList() ,// Convert coordinate pairs
+                        coordinates = farm.coordinates?.map { listOf(it.first, it.second) }
+                            ?: emptyList(),// Convert coordinate pairs
                         accuracies = farm.accuracyArray?.filterNotNull() // Filter out null values
                     )
                 }

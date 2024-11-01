@@ -10,12 +10,19 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ *  This implementation  of DeviceIdUtil object is  used to identify  advertisingId or deviceId for a specific device
+ *
+ */
+
+
 object DeviceIdUtil {
 
     @SuppressLint("HardwareIds")
     fun getAndroidId(context: Context): String {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
+
     suspend fun getAdvertisingId(context: Context): String? {
         return withContext(Dispatchers.IO) {
             try {

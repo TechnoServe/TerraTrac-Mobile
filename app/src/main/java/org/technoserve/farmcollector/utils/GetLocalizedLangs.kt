@@ -10,7 +10,7 @@ fun getLocalizedLanguages(context: Context): List<Language> {
         Language("es", context.getString(R.string.spanish)),
         Language("am", context.getString(R.string.amharic)),
         Language("om", context.getString(R.string.oromo)),
-        Language("sw",context.getString(R.string.swahili))
+        Language("sw", context.getString(R.string.swahili))
     )
 
     return languages.map { language ->

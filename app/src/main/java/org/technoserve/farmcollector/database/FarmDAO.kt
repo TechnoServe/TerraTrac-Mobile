@@ -38,14 +38,14 @@ interface FarmDAO {
     fun getData(): LiveData<List<Farm>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(farm: Farm):Long
+    fun insert(farm: Farm): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(farms: List<Farm>)
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertSite(site: CollectionSite) : Long
+    fun insertSite(site: CollectionSite): Long
 
     @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId")
     suspend fun getSiteById(siteId: Long): CollectionSite?
@@ -105,10 +105,20 @@ interface FarmDAO {
     suspend fun deleteFarmByRemoteId(remoteId: UUID)
 
     @Query("SELECT * FROM Farms WHERE remote_id = :remoteId OR (farmerName = :farmerName AND village = :village AND district = :district) LIMIT 1")
-    suspend fun getFarmByDetails(remoteId: UUID, farmerName: String, village: String, district: String): Farm?
+    suspend fun getFarmByDetails(
+        remoteId: UUID,
+        farmerName: String,
+        village: String,
+        district: String
+    ): Farm?
 
     @Query("SELECT * FROM CollectionSites WHERE siteId = :localCsId OR (name = :siteName AND village = :village AND district = :district) LIMIT 1")
-    suspend fun getSiteByDetails(localCsId: Long, siteName: String, village: String, district: String): CollectionSite?
+    suspend fun getSiteByDetails(
+        localCsId: Long,
+        siteName: String,
+        village: String,
+        district: String
+    ): CollectionSite?
 
     @Transaction
     suspend fun insertAllIfNotExists(farms: List<Farm>) {

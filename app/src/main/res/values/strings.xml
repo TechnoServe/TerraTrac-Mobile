@@ -138,7 +138,7 @@
     <string name="phone_info">Your phone number may be used for data recovery in future.</string>
     <string name="email_info">Your email address will be used for data recovery in future.</string>
     <string name="sync_service_notification_title">Sync Service</string>
-    <string name="sync_service_notification_text">Syncing data...</string>
+    <string name="sync_service_notification_text">Syncing data…</string>
     <string name="sync_service_channel_id">sync_service_channel</string>
     <string name="sync_complete">Sync Complete</string>
     <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>

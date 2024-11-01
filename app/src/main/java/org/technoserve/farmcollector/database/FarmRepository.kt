@@ -38,11 +38,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
             val existingFarm = isFarmDuplicate(farm)
             if (existingFarm == null) {
                 farmDAO.insert(farm)
-
-//                if (insertResult != -1L) {
-//
-//                } else {
-//                }
             } else {
                 Log.d(TAG, "Farm already exists: $existingFarm")
 
@@ -59,30 +54,13 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         }
     }
 
-
-//    private suspend fun addFarms(farms: List<Farm>) {
-//        farmDAO.insertAllIfNotExists(farms)
-//    }
-
-
     suspend fun addSite(site: CollectionSite): Boolean {
-        // Check if the site already exists
         val existingSite = isSiteDuplicate(site)
-
-        if (existingSite == null) {
-            Log.d(TAG, "Attempting to insert new site: $site")
+        return if (existingSite == null) {
             val insertResult = farmDAO.insertSite(site)
-            Log.d(TAG, "Insert operation result: $insertResult")
-            if (insertResult != -1L) {
-                Log.d(TAG, "New site inserted: $site")
-                return true
-            } else {
-                Log.d(TAG, "Insertion was ignored (likely due to conflict strategy)")
-                return false
-            }
+            insertResult != -1L
         } else {
-            Log.d(TAG, "Site already exists: $existingSite")
-            return false
+            false
         }
     }
 
@@ -91,18 +69,9 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         return farmDAO.getLastFarm()
     }
 
-//    suspend fun getFarmBySiteId(siteId: Long): Farm? {
-//        return farmDAO.getFarmBySiteId(siteId)
-//    }
-
-
     fun updateFarm(farm: Farm) {
         farmDAO.update(farm)
     }
-
-//    private suspend fun updateFarms(farms: List<Farm>) {
-//        farms.forEach { updateFarm(it) }
-//    }
 
     fun updateSite(site: CollectionSite) {
         farmDAO.updateSite(site)
@@ -116,19 +85,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     suspend fun deleteFarmById(farm: Farm) {
         farmDAO.deleteFarmByRemoteId(farm.remoteId)
     }
-
-
-//    suspend fun deleteAllFarms() {
-//        farmDAO.deleteAll()
-//    }
-//
-//    suspend fun updateSyncStatus(id: Long) {
-//        farmDAO.updateSyncStatus(id)
-//    }
-//
-//    suspend fun updateSyncListStatus(ids: List<Long>) {
-//        farmDAO.updateSyncListStatus(ids)
-//    }
 
     fun deleteList(ids: List<Long>) {
         farmDAO.deleteList(ids)
@@ -165,7 +121,6 @@ class FarmRepository(private val farmDAO: FarmDAO) {
         )
     }
 
-    // Function to fetch a farm by remote ID, farmer name, and address
     suspend fun getFarmByDetails(farm: Farm): Farm? {
         return farmDAO.getFarmByDetails(
             farm.remoteId,
