@@ -83,7 +83,6 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var sensorManager: SensorManager
 
-
     @SuppressLint("InlinedApi")
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
