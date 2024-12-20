@@ -4,24 +4,25 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-// This class converts long list of latitude and longitude pair into json format so that can be kept in database easily!
+/**
+This class converts a list of latitude and longitude pair into a json string and vice versa
+ *
+ * Note: This converter assumes that the latitude and longitude are stored as Double values.
+ * If they are stored as strings, you would need to modify this converter to handle that case.
+
+ */
 class CoordinateListConvert {
+    private val gson = Gson()
+
     @TypeConverter
-    fun fromCoordinates(coordinates: List<Pair<Double, Double>>?): String {
-        if (coordinates == null) {
-            return ""
-        }
-        val gson = Gson()
-        return gson.toJson(coordinates)
+    fun fromCoordinateList(coordinates: List<Pair<Double?, Double?>>?): String? {
+        return if (coordinates == null) null else gson.toJson(coordinates)
     }
 
     @TypeConverter
-    fun toCoordinates(data: String): List<Pair<Double, Double>> {
-        if (data.isEmpty()) {
-            return emptyList()
-        }
-        val gson = Gson()
-        val listType = object : TypeToken<List<Pair<Double, Double>>>() {}.type
-        return gson.fromJson(data, listType)
+    fun toCoordinateList(data: String?): List<Pair<Double?, Double?>>? {
+        if (data == null) return null
+        val type = object : TypeToken<List<Pair<Double?, Double?>>>() {}.type
+        return gson.fromJson(data, type)
     }
 }

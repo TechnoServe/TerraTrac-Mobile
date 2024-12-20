@@ -1,5 +1,5 @@
 *.iml
-.gradle
+.gradle/
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -8,12 +8,16 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build
-/release
-/captures
-.externalNativeBuild
-.cxx
+/build/
+/release/
+/captures/
+.externalNativeBuild/
+.cxx/
 local.properties
-caches
-wrapper
-daemon
+caches/
+daemon/
+
+# Ignore everything in gradle/wrapper except gradle-wrapper.jar and gradle-wrapper.properties
+gradle/wrapper/*
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties

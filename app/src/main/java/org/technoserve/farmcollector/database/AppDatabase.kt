@@ -7,11 +7,28 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import org.technoserve.farmcollector.database.converters.BitmapConverter
+import org.technoserve.farmcollector.database.converters.AccuracyListConvert
+import org.technoserve.farmcollector.database.converters.CoordinateListConvert
 import org.technoserve.farmcollector.database.converters.DateConverter
+import org.technoserve.farmcollector.database.dao.FarmDAO
+import org.technoserve.farmcollector.database.helpers.ContextProvider
+import org.technoserve.farmcollector.database.helpers.MigrationHelper
+import org.technoserve.farmcollector.database.models.CollectionSite
+import org.technoserve.farmcollector.database.models.Farm
 
-@Database(entities = [Farm::class, CollectionSite::class], version = 19, exportSchema = true)
-@TypeConverters(BitmapConverter::class, DateConverter::class)
+/**
+ * This class is used to create app database and to run migrations from one db version to another
+ *
+ * @Database annotation is used to define the database.
+ * The entities array contains all the entities that will be included in the database.
+ * The version attribute specifies the version of the database.
+ * The exportSchema attribute is set to true to include a schema.sql file in the APK.
+ *  The typeConverter annotation is used to define the type of the database.
+ *
+ */
+
+@Database(entities = [Farm::class, CollectionSite::class], version = 20, exportSchema = true)
+@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class, DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun farmsDAO(): FarmDAO
 
@@ -20,257 +37,53 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_12_16 = object : Migration(12, 16) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
-            CREATE TABLE new_Farms (
-                siteId           INTEGER NOT NULL,
-                remote_id        BLOB    NOT NULL,
-                farmerPhoto      TEXT    NOT NULL,
-                farmerName       TEXT    NOT NULL,
-                memberId         TEXT    NOT NULL,
-                village          TEXT    NOT NULL,
-                district         TEXT    NOT NULL,
-                purchases        REAL,
-                size             REAL    NOT NULL,
-                latitude         TEXT    NOT NULL,
-                longitude        TEXT    NOT NULL,
-                coordinates      TEXT,
-                synced           INTEGER NOT NULL DEFAULT 0,
-                scheduledForSync INTEGER NOT NULL DEFAULT 0,
-                createdAt        INTEGER NOT NULL,
-                updatedAt        INTEGER NOT NULL,
-                needsUpdate      INTEGER NOT NULL DEFAULT 0,
-                id               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                FOREIGN KEY (siteId)
-                REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
-                                                    ON DELETE CASCADE
-            )
-        """.trimIndent())
-
-                // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
-            INSERT INTO new_Farms (
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt, needsUpdate, id
-            )
-            SELECT
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt, 0 AS needsUpdate, id
-            FROM Farms
-        """.trimIndent())
-
-                // Step 3: Drop the old table
-                db.execSQL("DROP TABLE Farms")
-
-                // Step 4: Rename the new table to the original table name
-                db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
+                val context = ContextProvider.getContext()
+                MigrationHelper(context).executeSqlFromFile(db, "migration_12_16.sql")
             }
         }
+
 
         // Define a migration from version 15 to 16
         private val MIGRATION_15_16 = object : Migration(15, 16) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
-            CREATE TABLE new_Farms (
-                siteId           INTEGER NOT NULL,
-                remote_id        BLOB    NOT NULL,
-                farmerPhoto      TEXT    NOT NULL,
-                farmerName       TEXT    NOT NULL,
-                memberId         TEXT    NOT NULL,
-                village          TEXT    NOT NULL,
-                district         TEXT    NOT NULL,
-                purchases        REAL,
-                size             REAL    NOT NULL,
-                latitude         TEXT    NOT NULL,
-                longitude        TEXT    NOT NULL,
-                coordinates      TEXT,
-                synced           INTEGER NOT NULL DEFAULT 0,
-                scheduledForSync INTEGER NOT NULL DEFAULT 0,
-                createdAt        INTEGER NOT NULL,
-                updatedAt        INTEGER NOT NULL,
-                needsUpdate      INTEGER NOT NULL DEFAULT 0,
-                id               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                FOREIGN KEY (siteId)
-                REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
-                                                    ON DELETE CASCADE
-            )
-        """.trimIndent())
-
-                // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
-            INSERT INTO new_Farms (
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt, needsUpdate, id
-            )
-            SELECT
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt,0 AS needsUpdate, id
-            FROM Farms
-        """.trimIndent())
-
-                // Step 3: Drop the old table
-                db.execSQL("DROP TABLE Farms")
-
-                // Step 4: Rename the new table to the original table name
-                db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
+                val context = ContextProvider.getContext()
+                MigrationHelper(context).executeSqlFromFile(db, "migration_15_16.sql")
             }
         }
+
 
         // Define a migration from version 16 to 17
         private val MIGRATION_16_17 = object : Migration(16, 17) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
-            CREATE TABLE new_Farms (
-                siteId           INTEGER NOT NULL,
-                remote_id        BLOB    NOT NULL,
-                farmerPhoto      TEXT    NOT NULL,
-                farmerName       TEXT    NOT NULL,
-                memberId         TEXT    NOT NULL,
-                village          TEXT    NOT NULL,
-                district         TEXT    NOT NULL,
-                purchases        REAL,
-                size             REAL    NOT NULL,
-                latitude         TEXT    NOT NULL,
-                longitude        TEXT    NOT NULL,
-                coordinates      TEXT,
-                synced           INTEGER NOT NULL DEFAULT 0,
-                scheduledForSync INTEGER NOT NULL DEFAULT 0,
-                createdAt        INTEGER NOT NULL,
-                updatedAt        INTEGER NOT NULL,
-                needsUpdate      INTEGER NOT NULL DEFAULT 0,
-                id               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                FOREIGN KEY (siteId)
-                REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
-                                                    ON DELETE CASCADE
-            )
-        """.trimIndent())
-
-                // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
-            INSERT INTO new_Farms (
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt, needsUpdate, id
-            )
-            SELECT
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, 0 AS synced, 0 AS scheduledForSync, createdAt, updatedAt,0 AS needsUpdate, id
-            FROM Farms
-        """.trimIndent())
-
-                // Step 3: Drop the old table
-                db.execSQL("DROP TABLE Farms")
-
-                // Step 4: Rename the new table to the original table name
-                db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
+                val context = ContextProvider.getContext()
+                MigrationHelper(context).executeSqlFromFile(db, "migration_16_17.sql")
             }
         }
 
         // Define a migration from version 17 to 18
         private val MIGRATION_17_18 = object : Migration(17, 18) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Step 1: Create a new temporary table with the updated schema
-                db.execSQL("""
-            CREATE TABLE new_Farms (
-                siteId           INTEGER NOT NULL,
-                remote_id        BLOB    NOT NULL,
-                farmerPhoto      TEXT    NOT NULL,
-                farmerName       TEXT    NOT NULL,
-                memberId         TEXT    NOT NULL,
-                village          TEXT    NOT NULL,
-                district         TEXT    NOT NULL,
-                purchases        REAL,
-                size             REAL    NOT NULL,
-                latitude         TEXT    NOT NULL,
-                longitude        TEXT    NOT NULL,
-                coordinates      TEXT,
-                synced           INTEGER NOT NULL DEFAULT 0,
-                scheduledForSync INTEGER NOT NULL DEFAULT 0,
-                createdAt        INTEGER NOT NULL,
-                updatedAt        INTEGER NOT NULL,
-                needsUpdate      INTEGER NOT NULL DEFAULT 0,
-                id               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                FOREIGN KEY (siteId)
-                REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
-                                                    ON DELETE CASCADE
-            )
-        """.trimIndent())
-
-                // Step 2: Copy data from the old table to the new table, setting needsUpdate to 0
-                db.execSQL("""
-            INSERT INTO new_Farms (
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt, needsUpdate, id
-            )
-            SELECT
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, 0 AS synced, 0 AS scheduledForSync, createdAt, updatedAt,0 AS needsUpdate, id
-            FROM Farms
-        """.trimIndent())
-
-                // Step 3: Drop the old table
-                db.execSQL("DROP TABLE Farms")
-
-                // Step 4: Rename the new table to the original table name
-                db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
+                val context = ContextProvider.getContext()
+                MigrationHelper(context).executeSqlFromFile(db, "migration_17_18.sql")
             }
+
         }
 
         private val MIGRATION_18_19 = object : Migration(18, 19) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
-            CREATE TABLE new_Farms (
-                siteId           INTEGER NOT NULL,
-                remote_id        BLOB    NOT NULL,
-                farmerPhoto      TEXT    NOT NULL,
-                farmerName       TEXT    NOT NULL,
-                memberId         TEXT    NOT NULL,
-                village          TEXT    NOT NULL,
-                district         TEXT    NOT NULL,
-                purchases        REAL,
-                size             REAL    NOT NULL,
-                latitude         TEXT    NOT NULL,
-                longitude        TEXT    NOT NULL,
-                coordinates      TEXT,
-                synced           INTEGER NOT NULL DEFAULT 0,
-                scheduledForSync INTEGER NOT NULL DEFAULT 0,
-                createdAt        INTEGER NOT NULL,
-                updatedAt        INTEGER NOT NULL,
-                needsUpdate      INTEGER NOT NULL DEFAULT 0,
-                id               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                FOREIGN KEY (siteId)
-                REFERENCES CollectionSites (siteId) ON UPDATE NO ACTION
-                                                    ON DELETE CASCADE
-            )
-        """.trimIndent())
-
-                db.execSQL("""
-            INSERT INTO new_Farms (
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, synced, scheduledForSync, createdAt, updatedAt, needsUpdate, id
-            )
-            SELECT
-                siteId, remote_id, farmerPhoto, farmerName, memberId,
-                village, district, purchases, size, latitude, longitude,
-                coordinates, 0 AS synced, 0 AS scheduledForSync, createdAt, updatedAt, 0 AS needsUpdate, id
-            FROM Farms
-        """.trimIndent())
-
-                db.execSQL("DROP TABLE Farms")
-                db.execSQL("ALTER TABLE new_Farms RENAME TO Farms")
+                val context = ContextProvider.getContext()
+                MigrationHelper(context).executeSqlFromFile(db, "migration_18_19.sql")
             }
+
         }
 
+        private val MIGRATION_19_20 = object : Migration(19, 20) {
+
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val context = ContextProvider.getContext()
+                MigrationHelper(context).executeSqlFromFile(db, "migration_19_20.sql")
+            }
+        }
 
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
@@ -282,7 +95,14 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "farm_collector_database"
                     )
-                        .addMigrations(MIGRATION_12_16,MIGRATION_15_16,MIGRATION_16_17,MIGRATION_17_18,MIGRATION_18_19)
+                        .addMigrations(
+                            MIGRATION_12_16,
+                            MIGRATION_15_16,
+                            MIGRATION_16_17,
+                            MIGRATION_17_18,
+                            MIGRATION_18_19,
+                            MIGRATION_19_20
+                        )
                         .build()
 
                     INSTANCE = instance
