@@ -4,19 +4,16 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-08-06T13:37:17.789956800Z">
+        <DropdownSelection timestamp="2024-12-20T10:06:27.044568100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=OZDMOFKFBA6HR8S4" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\nireg\.android\avd\Pixel_9_Pro.avd" />
             </handle>
           </Target>
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="MainActivityTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="ExampleInstrumentedTest">
+      <SelectionState runConfigName="Tests in 'org.technoserve.farmcollector'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

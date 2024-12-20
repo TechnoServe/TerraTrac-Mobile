@@ -21,6 +21,14 @@ private val mSecondCurveControlPoint2 = PointF()
 private var mSecondCurveStartPoint = PointF()
 private var mSecondCurveEndPoint = PointF()
 
+/**
+ * Custom shape for the bottom navigation bar with curve
+ *
+ * This shape is created using a combination of two cubic curves to create a rounded shape.
+ * The first curve starts from the center of the navigation bar and ends at the end of the bar.
+ * The second curve starts from the end of the first curve and ends at the start of the bar.
+ */
+
 class BottomNavCurve : Shape {
     override fun createOutline(
         size: Size,

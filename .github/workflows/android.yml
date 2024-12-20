@@ -1,0 +1,113 @@
+name: Android CI
+
+env:
+  main_project_module: app
+  dev_name: Lucien Shema
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Create local.properties with environment variables
+      - name: Create local.properties
+        run: |
+          cat <<EOF > ./local.properties
+          GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+          BASE_URL=${{ secrets.BASE_URL }}
+          EOF
+
+      # Set the current date as an environment variable
+      - name: Set current date as environment variable
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set repository name as an environment variable
+      - name: Set repository name as environment variable
+        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      # Set up JDK
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '21.0.4+7.0.LTS'
+
+      # Set up Gradle with caching for dependencies
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+          distribution-url: "https://services.gradle.org/distributions/gradle-8.10.2-bin.zip"
+
+      # Change Gradle wrapper permissions
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      # Check for gradle-wrapper.jar and regenerate if missing
+      - name: Check and regenerate Gradle wrapper if missing
+        run: |
+          if [ ! -f ./gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "gradle-wrapper.jar is missing. Regenerating wrapper..."
+            ./gradlew wrapper
+          fi
+
+      # Build the project
+      - name: Build Gradle project
+        run: ./gradlew build
+
+      # Run tests
+      - name: Run Gradle tests
+        run: ./gradlew test
+
+#      # Create APK Debug
+#      - name: Build apk debug project (APK)-${{ env.main_project_module }} module
+#        run: ./gradlew assembleDebug
+#
+#      # Create APK Release
+#      - name: Build apk release project (APK)-${{ env.main_project_module }} module
+#        run: ./gradlew assemble
+#
+#      # Create Bundle AAB Release
+#      # Noted for main module build [main_project_module]:bundleRelease
+#      - name: Build app bundle release (AAB)-${{ env.main_project_module }} module
+#        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
+#
+#      # Upload Artifact Build
+#      # Noted For Output [main_project_module]/build/outputs/apk/debug/app-debug.apk
+#      - name: Upload file debug-${{ env.repository_name }}.apk
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ env.date_today }}-${{ env.dev_name }}-${{ env.repository_name }}.apk
+#          path: ${{ env.main_project_module }}/build/outputs/apk/debug/app-debug.apk
+#
+#      # Upload Artifact Build
+#      # Noted For Output [main_project_module]/build/outputs/apk/debug/
+#      - name: Upload APK Debug-${{ env.repository_name }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ env.date_today }}-${{ env.dev_name }}-${{ env.repository_name }}-APK(s) debug generated
+#          path: ${{ env.main_project_module }}/build/outputs/apk/debug/
+#
+#      # Noted For Output [main_project_module]/build/outputs/apk/release/
+#      - name: Upload APK Release-${{ env.repository_name }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ env.date_today }}-${{ env.dev_name }}-${{ env.repository_name }}-APK(s) release generated
+#          path: ${{ env.main_project_module }}/build/outputs/apk/release/
+#
+#      # Noted For Output [main_project_module]/build/outputs/bundle/release/
+#      - name: Upload AAB (App Bundle) Release-${{ env.repository_name }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ env.date_today }}-${{ env.dev_name }}-${{ env.repository_name }}-App bundle(s) AAB release generated
+#          path: ${{ env.main_project_module }}/build/outputs/bundle/release/

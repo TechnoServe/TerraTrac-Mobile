@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -16,13 +17,19 @@ import okhttp3.OkHttpClient
 import org.technoserve.farmcollector.BuildConfig
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.AppDatabase
-import org.technoserve.farmcollector.database.remote.ApiService
-import org.technoserve.farmcollector.database.toDeviceFarmDtoList
+import org.technoserve.farmcollector.database.mappers.toDeviceFarmDtoList
+import org.technoserve.farmcollector.database.sync.remote.ApiService
+import org.technoserve.farmcollector.utils.DeviceIdUtil
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-
+/**
+ * This Worker class handles the synchronization process between the local database and the remote server.
+ * It uses Retrofit to make API calls, processes the response, and updates the local database accordingly.
+ * It Divides the data into chunks and processes them accordingly to ensure that they are properly processed before
+ * synchronization is complete
+ */
 class SyncWorker(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
@@ -36,11 +43,16 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) :
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
 
+        println("Started sync worker")
+
         val db = AppDatabase.getInstance(applicationContext)
         val farmDao = db.farmsDAO()
         val unsyncedFarms = farmDao.getUnsyncedFarms()
+        Log.d(TAG, "UNSYNCED FARMS ${unsyncedFarms.size}")
 
         totalItems = unsyncedFarms.size
+        if (totalItems == 0) return Result.success()
+
         val okHttpClient = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS) // Adjust the timeout as needed
             .readTimeout(30, TimeUnit.SECONDS)
@@ -55,25 +67,35 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) :
 
         val api = retrofit.create(ApiService::class.java)
 
+        val chunkSize = 20 // Number of farms to process in each batch
+        val chunks = unsyncedFarms.chunked(chunkSize)
+
         try {
             val deviceId = DeviceIdUtil.getDeviceId(applicationContext)
-            val farmDtos = unsyncedFarms.toDeviceFarmDtoList(deviceId, farmDao)
 
-            val response = api.syncFarms(farmDtos)
+            for (chunk in chunks) {
+                val farmDtos = chunk.toDeviceFarmDtoList(deviceId, farmDao)
+                // Display the farmDtoList
+                Log.d(TAG, "FarmDtos: ${farmDtos}")
 
-            if (response.isSuccessful) {
-                unsyncedFarms.forEach { farm ->
-                    farmDao.updateFarmSyncStatus(farm.remoteId, true)
+
+                val response = api.syncFarms(farmDtos)
+
+                if (response.isSuccessful) {
+                    chunk.forEach { farm ->
+                        farmDao.updateFarmSyncStatus(farm.remoteId, true)
+                    }
+                } else {
+                    Log.e(TAG, "Sync failed for chunk with size: ${chunk.size}")
+                    createSyncFailedNotification() // Notify sync failure
+                    return Result.failure() // Exit on the first failed batch
                 }
-                if (totalItems > 0) {
-                    createNotificationChannelAndShowCompleteNotification() // Notify sync success
-                }
-            } else {
-                createSyncFailedNotification() // Notify sync failure
-                return Result.failure() // Return failure result
             }
-        } catch (e: Exception) {
 
+            createNotificationChannelAndShowCompleteNotification() // Notify sync success
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during sync: ${e.message}", e)
             createSyncFailedNotification() // Notify sync failure
             return Result.retry() // Retry if an exception occurred
         }

@@ -173,6 +173,11 @@
     <string name="site_will_be_deleted">Ce site et toutes les fermes associées seront supprimés</string>
     <string name="warning">Avertissements</string>
 
+    <string name="total_farms">%1$d fermes au total</string>
+    <string name="total_farms_with_incomplete_data">%1$d avec des données incomplètes</string>
+    <string name="error_loading_more_sites">Erreur de chargement de sites supplémentaires</string>
+
+
 
 
 

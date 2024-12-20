@@ -174,5 +174,10 @@
     <string name="site_will_be_deleted">Bakka kana fi qonnaa walitti dhufeenya qabaniin ni haqamu</string>
     <string name="warning">Eegumsa</string>
 
+    <string name="total_farms">%1$d lafa guutuu</string>
+    <string name="total_farms_with_incomplete_data">%1$d odeeffannoo hin guutamne waliin</string>
+    <string name="error_loading_more_sites">Bakkaa dabalataa fe’uuf dogoggora</string>
+
+
 
 </resources>

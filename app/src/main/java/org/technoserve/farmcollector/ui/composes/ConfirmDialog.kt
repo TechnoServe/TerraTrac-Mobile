@@ -13,8 +13,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
 
+
 /**
+ * Function to display the confirmation dialog with two buttons
  * This popup dialog allows you to confirm and deny moving forward.
+ *
+ * @param title: Title of the dialog
+ * @param message: Message to be displayed in the dialog
+ * @param showDialog: Mutable state to control the visibility of the dialog
+ * @param onProceedFn: Function to be called when the user selects "Yes"
  */
 @Composable
 fun ConfirmDialog(

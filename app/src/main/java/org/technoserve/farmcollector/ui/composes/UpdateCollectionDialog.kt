@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -15,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -22,16 +24,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.CollectionSite
-import org.technoserve.farmcollector.database.FarmViewModel
+import org.technoserve.farmcollector.database.models.CollectionSite
+import org.technoserve.farmcollector.utils.isSystemInDarkTheme
+
+import org.technoserve.farmcollector.viewmodels.FarmViewModel
 
 fun isValidPhoneNumber(phoneNumber: String): Boolean {
     val regex = Regex("^\\+?(?:[0-9] ?){6,14}[0-9]\$")
@@ -75,7 +81,15 @@ fun validateForm(
 
     return isValid
 }
-
+/**
+ * Update Collection Site Dialog
+ *
+ * This composable function displays a dialog for updating a collection site.
+ *
+ * @param site The collection site to be updated.
+ * @param showDialog A mutable state indicating whether the dialog is visible or not.
+ * @param farmViewModel
+ */
 @Composable
 fun UpdateCollectionDialog(
     site: CollectionSite,
@@ -99,22 +113,28 @@ fun UpdateCollectionDialog(
     val villageFocusRequester = remember { FocusRequester() }
     val districtFocusRequester = remember { FocusRequester() }
 
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val inputLabelColor = MaterialTheme.colorScheme.onBackground
+    val inputTextColor = if (isDarkTheme) Color.White else Color.Black
+    val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
+
     if (showDialog.value) {
         AlertDialog(
             modifier = Modifier.padding(horizontal = 10.dp),
             onDismissRequest = { showDialog.value = false },
             title = { Text(stringResource(id = R.string.update_site)) },
             text = {
-                // Scrollable column
+
                 Column(
                     modifier = Modifier
                         .fillMaxHeight(0.75f) // Set max height to limit size
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(stringResource(id = R.string.confirm_update_site))
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-                    // Name Field
                     TextField(
                         value = name,
                         onValueChange = { name = it },
@@ -124,11 +144,24 @@ fun UpdateCollectionDialog(
                         keyboardActions = KeyboardActions(
                             onNext = { agentNameFocusRequester.requestFocus() }
                         ),
-                        modifier = Modifier.focusRequester(nameFocusRequester)
+                        modifier = Modifier
+                            .focusRequester(nameFocusRequester)
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = inputBorder,
+                            unfocusedIndicatorColor = inputBorder,
+                            errorIndicatorColor = Color.Red,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            disabledContainerColor = MaterialTheme.colorScheme.background,
+                        )
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+                    // Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-                    // Agent Name Field
+
                     TextField(
                         value = agentName,
                         onValueChange = { agentName = it },
@@ -138,11 +171,23 @@ fun UpdateCollectionDialog(
                         keyboardActions = KeyboardActions(
                             onNext = { phoneNumberFocusRequester.requestFocus() }
                         ),
-                        modifier = Modifier.focusRequester(agentNameFocusRequester)
+                        modifier = Modifier
+                            .focusRequester(agentNameFocusRequester)
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = inputBorder,
+                            unfocusedIndicatorColor = inputBorder,
+                            errorIndicatorColor = Color.Red,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            disabledContainerColor = MaterialTheme.colorScheme.background,
+                        )
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+                   //  Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-                    // Phone Number Field
                     TextField(
                         value = phoneNumber,
                         onValueChange = { phoneNumber = it },
@@ -157,11 +202,23 @@ fun UpdateCollectionDialog(
                         keyboardActions = KeyboardActions(
                             onNext = { emailFocusRequester.requestFocus() }
                         ),
-                        modifier = Modifier.focusRequester(phoneNumberFocusRequester)
+                        modifier = Modifier
+                            .focusRequester(phoneNumberFocusRequester)
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = inputBorder,
+                            unfocusedIndicatorColor = inputBorder,
+                            errorIndicatorColor = Color.Red,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            disabledContainerColor = MaterialTheme.colorScheme.background,
+                        )
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+                    // Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-                    // Email Field
                     TextField(
                         value = email,
                         onValueChange = { email = it },
@@ -174,11 +231,24 @@ fun UpdateCollectionDialog(
                         keyboardActions = KeyboardActions(
                             onNext = { villageFocusRequester.requestFocus() }
                         ),
-                        modifier = Modifier.focusRequester(emailFocusRequester)
+                        modifier = Modifier
+                            .focusRequester(emailFocusRequester)
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = inputBorder,
+                            unfocusedIndicatorColor = inputBorder,
+                            errorIndicatorColor = Color.Red,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            disabledContainerColor = MaterialTheme.colorScheme.background,
+                        )
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+                    // Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-                    // Village Field
+
                     TextField(
                         value = village,
                         onValueChange = { village = it },
@@ -188,18 +258,43 @@ fun UpdateCollectionDialog(
                         keyboardActions = KeyboardActions(
                             onNext = { districtFocusRequester.requestFocus() }
                         ),
-                        modifier = Modifier.focusRequester(villageFocusRequester)
+                        modifier = Modifier
+                            .focusRequester(villageFocusRequester)
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = inputBorder,
+                            unfocusedIndicatorColor = inputBorder,
+                            errorIndicatorColor = Color.Red,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            disabledContainerColor = MaterialTheme.colorScheme.background,
+                        )
                     )
-                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+                    // Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-                    // District Field
                     TextField(
                         value = district,
                         onValueChange = { district = it },
                         label = { Text(stringResource(id = R.string.district)) },
                         isError = district.isBlank(),
                         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        modifier = Modifier.focusRequester(districtFocusRequester)
+                        modifier = Modifier
+                            .focusRequester(districtFocusRequester)
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            errorLeadingIconColor = Color.Red,
+                            cursorColor = inputTextColor,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = inputBorder,
+                            unfocusedIndicatorColor = inputBorder,
+                            errorIndicatorColor = Color.Red,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            disabledContainerColor = MaterialTheme.colorScheme.background,
+                        )
                     )
                 }
             },

@@ -17,6 +17,11 @@ import org.technoserve.farmcollector.R
 
 /**
  * This popup dialog allows you to choose from the entered size and calculated area from the captured polygon.
+ *
+ * @param showDialog whether the dialog is shown
+ * @param onDismiss callback for when the dialog is dismissed
+ * @param onConfirm callback for when the user confirms their choice
+ * @param calculatedArea the calculated area from the captured polygon
  */
 
 const val CALCULATED_AREA_OPTION = "CALCULATED_AREA"
