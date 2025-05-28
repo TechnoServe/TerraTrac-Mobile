@@ -50,12 +50,13 @@
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">Avez-vous fini de définir le polygone? Si tel est le cas, continuez et enregistrez en sélectionnant le bouton « Oui ».</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continúe con \'oui\' si desea actualizar el nombre del sitio de la colección.</string>
-    <string name="update_site">Actualizar el sitio de recopilación</string>
+    <string name="confirm_update_site">Continuez avec \'oui\' si vous souhaitez mettre à jour depuis le site de collecte.</string>
+    <string name="update_site">Mettre à jour le site de collecte</string>
     <string name="farm_info">Informations sur le parcelle</string>
     <string name="finish">Finir</string>
     <string name="start">Commencer</string>
     <string name="can_not_get_location">Impossible d\'obtenir la localisation, réessayer</string>
+    <string name="location_update_failed">Mise à jour de la localisation échouée</string>
     <string name="add_point">Ajouter un point</string>
     <string name="reset">Réinitialisation</string>
     <string name="drop_point">Point de chute</string>
@@ -161,11 +162,57 @@
     <string name="keep_existing">Garder l\'existant</string>
     <string name="capture_new">Capturer un nouveau</string>
 
-    <string name="warning_difference">Attention : La différence entre la surface saisie et la surface calculée est significative (%.2f). Envisagez d\'utiliser la valeur calculée à la place.</string>
+    <string name="warning_difference">Attention : La différence entre la surface saisie et la surface calculée est significative (%.2f) ha. Envisagez d\'utiliser la valeur calculée à la place.</string>
     <string name="polygon_saved">"Polygone enregistré avec succès"</string>
     <string name="invalid_polygon_title">"Polygone invalide"</string>
     <string name="invalid_polygon_message">"Les points capturés sont invalides ou forment une ligne droite. Veuillez réessayer."</string>
 
+    <string name="delete_this_farm">Supprimer cette ferme</string>
+    <string name="farm_will_be_deleted">Cette ferme sera supprimée</string>
+    <string name="delete_this_site">Supprimer ce site</string>
+    <string name="site_will_be_deleted">Ce site et toutes les fermes associées seront supprimés</string>
+    <string name="warning">Avertissements</string>
+
+    <string name="total_farms">%1$d fermes au total</string>
+    <string name="total_farms_with_incomplete_data">%1$d avec des données incomplètes</string>
+    <string name="error_loading_more_sites">Erreur de chargement de sites supplémentaires</string>
+
+    <string name="press_back_again">Appuyez à nouveau sur retour pour quitter</string>
+    <string name="permission_required">Autorisation requise</string>
+    <string name="go_to_settings_msg">Vous avez définitivement refusé l\'autorisation de localisation.Veuillez aller dans les paramètres pour l\'activer.</string>
+    <string name="map_tiles_cached">Les tuiles de la carte ont été mises en cache avec succès.</string>
+    <string name="unable_to_get_location">Impossible d\'obtenir l\'emplacement. Mise en cache de la carte ignorée.</string>
+    <string name="no_internet">Pas de connexion Internet. Mise en cache de la carte ignorée.</string>
+    <string name="include_farmer_names_title">Inclure les noms des agriculteurs ?</string>
+    <string name="include_farmer_names_text">Voulez-vous inclure les noms des agriculteurs dans l\'exportation ?</string>
+
+    <string name="back">Retour</string>
+    <string name="last_synced">Dernière synchronisation :</string>
+    <string name="backup_now">Sauvegarde</string>
+    <string name="restore">Restaurer</string>
+    <string name="share">Partager</string>
+    <string name="import_">Importer</string>
+    <string name="enable_backup_title">Activer la sauvegarde ?</string>
+    <string name="disable_backup_title">Désactiver la sauvegarde ?</string>
+    <string name="proceed_question">Voulez-vous continuer ?</string>
+    <string name="enable_data_backup_title">Activer la sauvegarde des données ?</string>
+    <string name="enable_backup_message">L\'activation de la sauvegarde stocke en toute sécurité vos données sur le serveur dès qu\'une connexion Internet est disponible. Cela vous permet de les restaurer en cas de perte, de dommage ou de réinitialisation de votre appareil. Voulez-vous continuer ?</string>
+    <string name="disable_backup_message">La désactivation de la sauvegarde empêchera l\'enregistrement automatique de vos données sur le serveur lorsque vous êtes connecté à Internet. Les données précédemment sauvegardées resteront accessibles pour la restauration, mais les nouvelles modifications ne seront pas enregistrées. Voulez-vous continuer ?</string>
+
+    <string name="enable_backup">Activer la sauvegarde</string>
+    <string name="disable_backup">Désactiver la sauvegarde</string>
+    <string name="location_permission_required_for_this_feature">Les autorisations de localisation sont requises pour cette fonctionnalité</string>
+    <string name="fetching_location">Récupération de la localisation…</string>
+
+    <string name="user_guide_title">Guide d\'utilisation</string>
+    <string name="welcome_message">
+        Bienvenue dans le guide d\'utilisation ! Ce guide vous offre un aperçu des fonctionnalités de l\'application. Pour des instructions détaillées, téléchargez le guide complet depuis nos ressources.
+    </string>
+    <string name="download_user_guide">Télécharger le guide d\'utilisation</string>
+
+    <string name="download_success">Guide d\'utilisation téléchargé avec succès.</string>
+    <string name="download_failed">Échec du téléchargement : %1$s</string>
+    <string name="no_location_selected">Aucun emplacement sélectionné.</string>
 
 
 </resources>

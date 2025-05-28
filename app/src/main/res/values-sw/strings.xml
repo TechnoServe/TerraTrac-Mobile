@@ -43,7 +43,7 @@
     <string name="accuracy">Usahihi</string>
     <string name="confirm_set_polygon">Je, umemaliza kuweka poligoni? Ikiwa ndio, endelea na uhifadhi kwa kubofya ‘Ndio’.</string>
     <string name="clear_map">Je, unataka kufuta ramani?</string>
-    <string name="confirm_update_site">Endelea kwa ‘ndio’ ikiwa unataka kusasisha jina la tovuti ya mkusanyiko.</string>
+    <string name="confirm_update_site">Endelea \'ndiyo\' ikiwa ungependa kusasisha tovuti ya mkusanyiko.</string>
     <string name="update_site">Sasisha Tovuti ya Mkusanyiko</string>
     <string name="unit">Kipimo</string>
     <string name="agent_name">Jina la Wakala</string>
@@ -56,6 +56,7 @@
     <string name="finish">Maliza</string>
     <string name="start">Anza</string>
     <string name="can_not_get_location">Huwezi kupata eneo, Jaribu tena</string>
+    <string name="location_update_failed">Sasisho la eneo limefeli</string>
     <string name="add_point">Ongeza Kituo</string>
     <string name="reset">Rekebisha</string>
     <string name="drop_point">Ondoa Kituo</string>
@@ -161,11 +162,60 @@
     <string name="keep_existing">Weka Iliyoopo</string>
     <string name="capture_new">Nasa Mpya</string>
 
-    <string name="warning_difference">Tahadhari: Tofauti kati ya eneo lililoingizwa na eneo lililohesabiwa ni kubwa (%.2f). Fikiria kutumia thamani iliyohesabiwa badala yake.</string>
+    <string name="warning_difference">Tahadhari: Tofauti kati ya eneo lililoingizwa na eneo lililohesabiwa ni kubwa (%.2f) ha. Fikiria kutumia thamani iliyohesabiwa badala yake.</string>
 
     <string name="polygon_saved">"Poligoni imehifadhiwa kwa mafanikio"</string>
     <string name="invalid_polygon_title">"Poligoni Batili"</string>
     <string name="invalid_polygon_message">"Nukta zilizorekodiwa ni batili au zinaunda mstari ulionyooka. Tafadhali jaribu tena."</string>
+
+    <string name="delete_this_farm">Futa shamba hili</string>
+    <string name="farm_will_be_deleted">Shamba hili litafutwa</string>
+    <string name="delete_this_site">Futa tovuti hii</string>
+    <string name="site_will_be_deleted">Tovuti hii na mashamba yote yanayohusiana yatafutwa</string>
+    <string name="warning">Onyo</string>
+
+    <string name="total_farms">%1$d mashamba kwa jumla</string>
+    <string name="total_farms_with_incomplete_data">%1$d na data isiyo kamili</string>
+    <string name="error_loading_more_sites">Hitilafu katika kupakia tovuti zaidi</string>
+
+
+    <string name="press_back_again">Bonyeza nyuma tena ili utoke</string>
+    <string name="permission_required">Ruhusa Inahitajika</string>
+    <string name="go_to_settings_msg">Umezuia ruhusa ya eneo kabisa. Tafadhali nenda kwenye mipangilio ili kuiwezesha.</string>
+    <string name="map_tiles_cached">Vigae vya ramani vimehifadhiwa kwenye kache kwa mafanikio.</string>
+    <string name="unable_to_get_location">Imeshindikana kupata eneo. Uhifadhi wa ramani umepitwa.</string>
+    <string name="no_internet">Hakuna muunganisho wa intaneti. Uhifadhi wa ramani umepitwa.</string>
+    <string name="include_farmer_names_title">Je, ujumuishwe majina ya wakulima?</string>
+    <string name="include_farmer_names_text">Je, unataka kujumuisha majina ya wakulima katika usafirishaji wa data?</string>
+
+    <string name="back">Rudi</string>
+    <string name="last_synced">Mwisho kusawazishwa:</string>
+    <string name="backup_now">Hifadhi</string>
+    <string name="restore">Rejesha</string>
+    <string name="share">Shiriki</string>
+    <string name="import_">Ingiza</string>
+    <string name="enable_backup_title">Washa chelezo?</string>
+    <string name="disable_backup_title">Zima chelezo?</string>
+    <string name="proceed_question">Je, unataka kuendelea?</string>
+    <string name="enable_data_backup_title">Washa chelezo cha data?</string>
+    <string name="enable_backup_message">Kuwasha chelezo huhifadhi data yako salama kwenye seva kila wakati unapo kuwa na muunganisho wa intaneti. Hii inahakikisha kuwa unaweza kuirejesha ikiwa kifaa chako kitapotea, kuharibika, au kurejeshwa upya. Je, unataka kuendelea?</string>
+    <string name="disable_backup_message">Kuzima chelezo kutazuia kuhifadhi data yako moja kwa moja kwenye seva wakati kuna muunganisho wa intaneti. Data zilizochelezwa hapo awali zitaendelea kupatikana kwa urejeshaji, lakini mabadiliko mapya hayatahifadhiwa. Je, unataka kuendelea?</string>
+
+    <string name="enable_backup">Washa chelezo</string>
+    <string name="disable_backup">Zima chelezo</string>
+    <string name="location_permission_required_for_this_feature">Ruhusa ya mahali inahitajika kwa kipengele hiki</string>
+    <string name="fetching_location">Inapata eneo…</string>
+
+    <string name="user_guide_title">Mwongozo wa Mtumiaji</string>
+    <string name="welcome_message">
+        Karibu kwenye Mwongozo wa Mtumiaji! Mwongozo huu unatoa muhtasari wa vipengele na utendaji wa programu. Kwa maelekezo kamili, pakua mwongozo kamili kutoka rasilimali zetu.
+    </string>
+    <string name="download_user_guide">Pakua Mwongozo wa Mtumiaji</string>
+    <string name="download_success">Mwongozo wa Mtumiaji umefanikiwa kupakuliwa.</string>
+    <string name="download_failed">Pakua imeshindwa: %1$s</string>
+    <string name="no_location_selected">Hakuna eneo lililochaguliwa.</string>
+
+
 
 
 

@@ -50,12 +50,13 @@
     <string name="accuracy">ትክክለኝነት</string>
     <string name="confirm_set_polygon">ብዙ ጊዜ ማመቻቸትህን ጨርሰሃል? ከሆነ የ አዎ የሚለውን ቁልፍ በመምረጥ አስቀምጥና አስቀምጥ።</string>
     <string name="clear_map">ካርታውን ማጽዳት ትፈልጋለህ?</string>
-    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ስም ማሻሻል ከፈለጋችሁ አዎ ጋር ይቀጥሉ።</string>
+    <string name="confirm_update_site">የመሰብሰቢያ ቦታውን ማዘመን ከፈለጉ \'አዎ\' ይቀጥሉ</string>
     <string name="update_site">የውሂብ ማሰባሰቢያ ስሪት</string>
     <string name="farm_info">ሴራ መረጃ</string>
     <string name="finish">ጨርስ</string>
     <string name="start">ጀምር</string>
     <string name="can_not_get_location">ቦታ ማግኘት አይቻልም, እንደገና ይሞክሩ</string>
+    <string name="location_update_failed">እንቅስቃሴ መሻሻል አልተሳካም</string>
     <string name="add_point">ነጥብ ጨምር</string>
     <string name="reset">መልሶ ማቋቋም</string>
     <string name="drop_point">ነጥብ አወረደ</string>
@@ -162,10 +163,61 @@
     <string name="keep_existing">ያለውን ግበር</string>
     <string name="capture_new">አዲስ አንሳ</string>
 
-    <string name="warning_difference">ማስጠንቀቂያ: እንደገና ያስገቡትና ተንተናውን የተሰራ አካባቢ ብዙ ነው (%.2f)። እባክዎን የተሰራውን እሴት አጠቃቋሚ ይሁን በማለት ይህን እንድታስቡ እባካችሁ።</string>
+    <string name="warning_difference">ማስጠንቀቂያ፡ በገባው ቦታ እና በተሰላው ቦታ መካከል ያለው ልዩነት ከፍተኛ ነው (%2f) ሄክታር። በምትኩ የተሰላውን እሴት ለመጠቀም ያስቡበት።</string>
     <string name="polygon_saved">"ፖሊጎኑ በተሳካ ሁኔታ ተቀምጧል"</string>
     <string name="invalid_polygon_title">"ልክ ያልሆነ ፖሊጎን"</string>
     <string name="invalid_polygon_message">"የተያዙት ነጥቦች ልክ አይደሉም ወይም ቀጥ ሰር ይፈጥራሉ። እባኮትን እንደገና ይሞክሩ።"</string>
+
+    <string name="delete_this_farm">ይህን እርሻ ሰርዝ</string>
+    <string name="farm_will_be_deleted">ይህ እርሻ ተሰርዞ ይጠፋል</string>
+    <string name="delete_this_site">ይህን ስፍራ ሰርዝ</string>
+    <string name="site_will_be_deleted">ይህ ስፍራ እና አካባቢ እርሻዎች ሁሉ ተሰርዘው ይጠፋሉ</string>
+    <string name="warning">ማስጠንቀቂያዎች</string>
+
+    <string name="total_farms">%1$d አጠቃላይ ግብሮች</string>
+    <string name="total_farms_with_incomplete_data">%1$d የማይሞላ ዳታ አለበት</string>
+    <string name="error_loading_more_sites">ተጨማሪ ቦታዎችን ማስገባት ላይ ስህተት</string>
+    <string name="press_back_again">ወጣሁ የሚል ለመውጣት ደግሞ ይጫኑ</string>
+    <string name="permission_required">ፈቃድ ያስፈልጋል</string>
+    <string name="go_to_settings_msg">የአንተን የአካባቢ ፈቃድ በቋሚነት ስላስረዳኸው፡፡ እባኮትን ወደ ቅንብሮች ሄደው እንዲሆን ያድርጉ፡፡</string>
+    <string name="map_tiles_cached">የካርታ ጥልፍ በተሳካ ሁኔታ ተከማቹበታል።</string>
+    <string name="unable_to_get_location">አካባቢ ማግኘት አልተቻለም። የካርታ ማስቀመጥ ተወል.</string>
+    <string name="no_internet">የኢንተርኔት ግንኙነት የለም። የካርታ ማስቀመጥ ተወል.</string>
+    <string name="include_farmer_names_title">የገበያ ስሞችን ይያዙ?</string>
+    <string name="include_farmer_names_text">የገበያ ስሞችን በውጭ ላይ መላክ ይፈልጋሉ?</string>
+
+    <string name="back">ተመለስ</string>
+    <string name="last_synced">የቅርብ ጊዜ ማስቀመጫ:</string>
+    <string name="backup_now">ምትኬ</string>
+    <string name="restore">እንደገና መልስ</string>
+    <string name="share">አካፍል</string>
+    <string name="import_">እስከ ውስጥ አስገባ</string>
+    <string name="enable_backup_title">ምትኬን ማብራት?</string>
+    <string name="disable_backup_title">ምትኬን ማጥፋት?</string>\
+    <string name="proceed_question">መቀጠል ይፈልጋሉ?</string>
+    <string name="enable_data_backup_title">የውሂብ ምትኬን ማንቃት?</string>
+
+    <string name="enable_backup_message">ምትኬን ማስቻወት የእርስዎን ውሂብ በደህና በአገልግሎት አጠቃቀም ይሰናከላል እንደ የኢንተርኔት ግንኙነት ቢኖር። ይህ መረጃዎችዎን በመሳሪያዎ ሲጠፋ፣ ሲጎድል፣ ወይም ከላይ ሲያስጀምሩ እንደገና እንድትመልሱት ያረጋግጣል። ለመቀጠል ይፈልጋሉ?</string>
+    <string name="disable_backup_message">ምትኬን ማጥፋት የእርስዎን ውሂብ በአዲስ ዝማኔ ማስቀመጥ ይቆማል። ቀደም ብሎ የተሰናከለ ውሂብ እንደገና ለማስጀምር በቀላሉ ይገኛል፣ ነገር ግን አዲስ ለውጦች አይቀመጡም። ለመቀጠል ይፈልጋሉ?</string>
+
+    <!--    <string name="backup_prompt_message">የውሂብ ምትኬን ማንቃት ዳታዎን በደህና እና በማንኛውም አካባቢ ትገኝ ይደረግልዎታል።</string>-->
+<!--    <string name="backup_disable_warning">የውሂብ ምትኬን ማጥፋት ዳታዎን በስልክዎ ብቻ ይቀመጣል። ከጠፋ ዳታዎን እንደገና ማግኘት አይችሉም።</string>-->
+    <string name="enable_backup">ምትኬን አንቀላፋ</string>
+    <string name="disable_backup">ምትኬን አጥፋ</string>
+    <string name="location_permission_required_for_this_feature">ይህን የባህሪ ስርዓት ለመጠቀም የአካባቢ ፍቃድ ያስፈልጋል</string>
+
+    <string name="fetching_location">አካባቢን በማግኘት ላይ…</string>
+
+    <string name="user_guide_title">የተጠቃሚ መመሪያ</string>
+    <string name="welcome_message">
+        ወደ የተጠቃሚ መመሪያ እንኳን ደህና መጡ! ይህ መመሪያ የመተግበሪያውን ባህላዊ ባለሞያነት እና ስርዓተ ስራዎችን ይገልጻል። ሙሉ መመሪያ ለማውሰድ ከአሳሽ ምንጮቻችን ይውሰዱ።
+    </string>
+    <string name="download_user_guide">የተጠቃሚ መመሪያ አውርድ</string>
+    <string name="download_success">የተጠቃሚ መመሪያ በተሳካ ሁኔታ ተወስዷል።</string>
+    <string name="download_failed">ማውሰድ አልተሳካም: %1$s</string>
+    <string name="no_location_selected">ምንም ቦታ አልተመረጠም።</string>
+
+
 
 
 </resources>

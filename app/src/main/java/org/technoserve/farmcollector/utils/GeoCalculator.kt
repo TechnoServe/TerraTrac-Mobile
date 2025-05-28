@@ -4,8 +4,13 @@ import android.annotation.SuppressLint
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil
 
+/**
+ * A utility class for calculating the area of a polygon given its vertices.
+ */
 object GeoCalculator {
-    // The function to calculate the Area using the captured Polygons
+    /**
+     * The function to calculate the Area using the captured Polygons
+     */
     @SuppressLint("DefaultLocale")
     fun calculateArea(polygon: List<Pair<Double, Double>>?): Double {
         if (polygon == null || polygon.size < 3) {

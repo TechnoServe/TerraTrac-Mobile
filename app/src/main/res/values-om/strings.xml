@@ -50,12 +50,13 @@
     <string name="accuracy">Dogoggoraala</string>
     <string name="confirm_set_polygon">Pooligoonii saaguu xumurteettaa? Yoo akkas ta\'e, itti fufii qaree \'Eeyyee\' filachuudhaan saagi.</string>
     <string name="clear_map">Kaartaa qulqulleessuu barbaadduu?</string>
-    <string name="confirm_update_site">Yoo maqaa saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
+    <string name="confirm_update_site">Yoo saayitii walitti qabaa haaromsuu barbaadde \'eeyyee\' itti fufi.</string>
     <string name="update_site">Saayitii Walitti Qabuu Fooyyessi</string>
     <string name="farm_info">Odeeffannoo Lafaa</string>
     <string name="finish">Xumuruu</string>
     <string name="start">Eegaluu</string>
     <string name="can_not_get_location">Bakka argachuu hin dandeenye, Irra deebi\'ii yaalaa</string>
+    <string name="location_update_failed">Haala iddoo jijjiiruu hin milkoofne</string>
     <string name="add_point">Qabxii Dabaluu</string>
     <string name="reset">Reset gochuu</string>
     <string name="drop_point">Qabxii Kufaatii</string>
@@ -161,11 +162,59 @@
     <string name="keep_existing">Kan Jiru Qabadhu</string>
     <string name="capture_new">Haaraa Qabsiisi</string>
 
-    <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f). Gatii herreeffame fayyadamuuf yaadaa.</string>
+    <string name="warning_difference">Cimina: Garaagarummaan gidduu naannoo galchameefi naannoo herreeffame bal\'aa dha (%.2f) ha. Gatii herreeffame fayyadamuuf yaadaa.</string>
 
     <string name="polygon_saved">"Poligooniin milkaa'inaan kuusameera"</string>
     <string name="invalid_polygon_title">"Poligoonii sirrii hin ta'in"</string>
     <string name="invalid_polygon_message">"Qarqara qabaman sirrii miti yookiinis sarara qajeelaa uumu. Mee irra deebi'ii yaali."</string>
+
+    <string name="delete_this_farm">Qonna kana haqi</string>
+    <string name="farm_will_be_deleted">Qonni kun ni haqama</string>
+    <string name="delete_this_site">Bakka kana haqi</string>
+    <string name="site_will_be_deleted">Bakka kana fi qonnaa walitti dhufeenya qabaniin ni haqamu</string>
+    <string name="warning">Eegumsa</string>
+
+    <string name="total_farms">%1$d lafa guutuu</string>
+    <string name="total_farms_with_incomplete_data">%1$d odeeffannoo hin guutamne waliin</string>
+    <string name="error_loading_more_sites">Bakkaa dabalataa fe’uuf dogoggora</string>
+
+    <string name="press_back_again">Dubbii duubatti deebi’aa ba’uu</string>
+    <string name="permission_required">Hayyama Barbaachisa</string>
+    <string name="go_to_settings_msg">Hayyama bakka argachuu idilee dhoorkiteetta. Maaloo gara settings deemi itti dabaluu.</string>
+    <string name="map_tiles_cached">Kaartaan fayyadamaa milkaa’inaan kuufame.</string>
+    <string name="unable_to_get_location">Iddoo argachuu hin dandeenye. Kuufama kaartaa dhiisame.</string>
+    <string name="no_internet">Toora interneetii hin jiru. Kuufama kaartaa dhiisame.</string>
+    <string name="include_farmer_names_title">Maqaa qonnaan bultoota dabaluu?</string>
+    <string name="include_farmer_names_text">Maqaa qonnaan bultoota erguuf dabaluuf barbaadaa?</string>
+
+    <string name="back">Gadi Deebi’i</string>
+    <string name="last_synced">Waggaa Dhuma Simimne:</string>
+    <string name="backup_now">Kuusdeebi’aa</string>
+    <string name="restore">Deebisi</string>
+    <string name="share">Qooduu</string>
+    <string name="import_">Galeessa</string>
+    <string name="enable_backup_title">Kuusdeebi’aa bana?</string>
+    <string name="disable_backup_title">Kuusdeebi’aa cufaa?</string>
+    <string name="proceed_question">Sii deemsaa?</string>
+    <string name="enable_data_backup_title">Kuusdeebi’aa bana?</string>
+    <string name="enable_backup_message">Deebisaa haalaa gochuun, yommuu walqunnaamtii interneetii argattu, odeeffannoo kee sirriitti tajaajilaa irratti kuusa. Kun yoo meeshaan kee badaa, manca’a yookaan haaraa ta’ee, deebisuu akka dandeessu siif mirkaneessa. Itti fufuu barbaaddaa?</string>
+    <string name="disable_backup_message">Deebisaa haalaa gochuu dhiisuu, yeroo interneetiin jiru, odeeffannoo kee tajaajilaa irratti otuu hin kuufamin hambisa. Odeeffannoon duraan kuufamee ture deebisuu ni danda’ama, garuu jijjiirraan haaraan hin kuufamu. Itti fufuu barbaaddaa?</string>
+
+    <string name="enable_backup">Kuusdeebi’aa bana</string>
+    <string name="disable_backup">Kuusdeebi’aa cufaa</string>
+    <string name="location_permission_required_for_this_feature">Ijaarsa kana fayyadamuuf eeyyama iddoo barbaachisa</string>
+    <string name="fetching_location">Bakka argachaa jira…</string>
+
+    <string name="user_guide_title">Qajeelfama Fayyadamtootaa</string>
+    <string name="welcome_message">
+        Baga nagaan dhufte! Qajeelfamni kun muuxannoo gabaabaa amaloota fi tajaajiloota app kanaa ibsa. Qajeelfama guutuu argachuuf, galmee guutuu assets irraa buufadhaa.
+    </string>
+    <string name="download_user_guide">Qajeelfama Fayyadamtootaa Buufadhu</string>
+    <string name="download_success">Qajeelfamni Fayyadamtootaa milkaa’inaan buufameera.</string>
+    <string name="download_failed">Buufachuun hin milkoofne: %1$s</string>
+    <string name="no_location_selected">Bakki filatame hin jiru.</string>
+
+
 
 
 

@@ -50,12 +50,13 @@
     <string name="accuracy">Exactitud</string>
     <string name="confirm_set_polygon">Has terminado de configurar el polígono? Si es así, proceda y guarde seleccionando el botón \'Sí\'.</string>
     <string name="clear_map">Quieres borrar el mapa?</string>
-    <string name="confirm_update_site">Continúe con yes si desea actualizar el nombre del sitio de la colección.</string>
+    <string name="confirm_update_site">Continúe con sí si desea actualizar el sitio de recopilación.</string>
     <string name="update_site">Actualizar el sitio de recopilación</string>
     <string name="farm_info">Información de la trama</string>
     <string name="finish">Terminar</string>
     <string name="start">Empezar</string>
     <string name="can_not_get_location">No puedo obtener la ubicación, inténtalo de nuevo</string>
+    <string name="location_update_failed">Actualización de ubicación fallida</string>
     <string name="add_point">Agregar punto</string>
     <string name="reset">Restablecimiento</string>
     <string name="drop_point">Punto de caída</string>
@@ -162,11 +163,59 @@
     <string name="keep_existing">Mantener existente</string>
     <string name="capture_new">Capturar nuevo</string>
 
-    <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f). Considere usar el valor calculado en su lugar.</string>
+    <string name="warning_difference">Advertencia: La diferencia entre el área ingresada y el área calculada es significativa (%.2f) ha. Considere usar el valor calculado en su lugar.</string>
 
     <string name="polygon_saved">"Polígono guardado con éxito"</string>
     <string name="invalid_polygon_title">"Polígono inválido"</string>
     <string name="invalid_polygon_message">"Los puntos capturados son inválidos o forman una línea recta. Por favor, inténtalo de nuevo."</string>
+
+    <string name="delete_this_farm">Eliminar esta granja</string>
+    <string name="farm_will_be_deleted">Esta granja será eliminada</string>
+    <string name="delete_this_site">Eliminar este sitio</string>
+    <string name="site_will_be_deleted">Este sitio y todas las granjas asociadas serán eliminados</string>
+    <string name="warning">Advertencias</string>
+
+    <string name="total_farms">%1$d granjas en total</string>
+    <string name="total_farms_with_incomplete_data">%1$d con datos incompletos</string>
+    <string name="error_loading_more_sites">Error al cargar más sitios</string>
+    <string name="press_back_again">Presiona atrás otra vez para salir</string>
+    <string name="permission_required">Permiso Requerido</string>
+    <string name="go_to_settings_msg">Has denegado permanentemente el permiso de ubicación. Por favor, ve a la configuración para habilitarlo.</string>
+    <string name="map_tiles_cached">Los mosaicos del mapa se almacenaron en caché con éxito.</string>
+    <string name="unable_to_get_location">No se pudo obtener la ubicación. Se omitió el almacenamiento en caché del mapa.</string>
+    <string name="no_internet">Sin conexión a Internet. Se omitió el almacenamiento en caché del mapa.</string>
+    <string name="include_farmer_names_title">¿Incluir nombres de agricultores?</string>
+    <string name="include_farmer_names_text">¿Quieres incluir los nombres de los agricultores en la exportación?</string>
+
+    <string name="back">Atrás</string>
+    <string name="last_synced">Última sincronización:</string>
+    <string name="backup_now">Copia de seguridad</string>
+    <string name="restore">Restaurar</string>
+    <string name="share">Compartir</string>
+    <string name="import_">Importar</string>
+    <string name="enable_backup_title">¿Habilitar copia de seguridad?</string>
+    <string name="disable_backup_title">¿Deshabilitar copia de seguridad?</string>
+    <string name="proceed_question">¿Quieres continuar?</string>
+    <string name="enable_data_backup_title">¿Habilitar copia de seguridad de datos?</string>
+    <string name="enable_backup_message">Habilitar la copia de seguridad almacena de forma segura tus datos en el servidor siempre que haya conexión a Internet. Esto garantiza que puedas restaurarlos si tu dispositivo se pierde, se daña o se restablece. ¿Quieres continuar?</string>
+    <string name="disable_backup_message">Deshabilitar la copia de seguridad detendrá el guardado automático de tus datos en el servidor cuando haya conexión a Internet. Los datos previamente respaldados seguirán estando disponibles para su restauración, pero los cambios nuevos no se guardarán. ¿Quieres continuar?</string>
+
+    <string name="enable_backup">Habilitar copia de seguridad</string>
+    <string name="disable_backup">Deshabilitar copia de seguridad</string>
+    <string name="location_permission_required_for_this_feature">Se requieren permisos de ubicación para esta función</string>
+    <string name="fetching_location">Obteniendo ubicación…</string>
+    <string name="user_guide_title">Guía del Usuario</string>
+    <string name="welcome_message">
+        ¡Bienvenido a la Guía del Usuario! Esta guía ofrece una breve visión general de las características y funcionalidades de la aplicación. Para instrucciones detalladas, descarga la guía completa de nuestros recursos.
+    </string>
+    <string name="download_user_guide">Descargar Guía del Usuario</string>
+    <string name="download_success">La Guía del Usuario se descargó correctamente.</string>
+    <string name="download_failed">Fallo en la descarga: %1$s</string>
+    <string name="no_location_selected">No se seleccionó ubicación.</string>
+
+
+
+
 
 
 

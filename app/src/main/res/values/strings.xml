@@ -42,7 +42,7 @@
     <string name="accuracy">Accuracy</string>
     <string name="confirm_set_polygon">Have you finished setting the polygon? If so, proceed and save by selecting the \'Yes\' button.</string>
     <string name="clear_map">Do you want to clear the map?</string>
-    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site name.</string>
+    <string name="confirm_update_site">Continue with \'yes\' if you want to update the collection site.</string>
     <string name="update_site">Update Collection Site</string>
     <string name="unit">Unit</string>
     <string name="agent_name">Agent Name</string>
@@ -55,6 +55,7 @@
     <string name="finish">Finish</string>
     <string name="start">Start</string>
     <string name="can_not_get_location">Can\'t get location, Try again</string>
+    <string name="location_update_failed">Can\'t Update location, Try again</string>
     <string name="add_point">Add Point</string>
     <string name="reset">Reset</string>
     <string name="drop_point">Drop Point</string>
@@ -137,7 +138,7 @@
     <string name="phone_info">Your phone number may be used for data recovery in future.</string>
     <string name="email_info">Your email address will be used for data recovery in future.</string>
     <string name="sync_service_notification_title">Sync Service</string>
-    <string name="sync_service_notification_text">Syncing data...</string>
+    <string name="sync_service_notification_text">Syncing data…</string>
     <string name="sync_service_channel_id">sync_service_channel</string>
     <string name="sync_complete">Sync Complete</string>
     <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>
@@ -158,10 +159,70 @@
     <string name="keep_existing_polygon_or_capture_new">Would you like to keep the existing polygon or capture a new one?</string>
     <string name="keep_existing">Keep Existing</string>
     <string name="capture_new">Capture New</string>
-    <string name="warning_difference">Warning: The difference between the entered area and the calculated area is significant (%.2f). Consider using the calculated value instead.</string>
+    <string name="warning_difference">Warning: The difference between the entered area and the calculated area is significant (%.2f) ha. Consider using the calculated value instead.</string>
     <string name="polygon_saved">"Polygon saved successfully"</string>
     <string name="invalid_polygon_title">Invalid Polygon</string>
     <string name="invalid_polygon_message">The captured points are invalid or form a straight line. Please try again.</string>
+
+    <string name="delete_this_farm">Delete this Farm</string>
+    <string name="farm_will_be_deleted">This Farm will be deleted</string>
+    <string name="delete_this_site">Delete this Site</string>
+    <string name="site_will_be_deleted">This site and all associated farms will be deleted</string>
+    <string name="warning">Warnings</string>
+
+    <string name="total_farms">%1$d total farms</string>
+    <string name="total_farms_with_incomplete_data">%1$d with incomplete data</string>
+    <string name="error_loading_more_sites">Error Loading More Sites</string>
+    <string name="press_back_again">Press back again to exit</string>
+
+    <string name="permission_required">Permission Required</string>
+    <string name="go_to_settings_msg">You have permanently denied location permission. Please go to settings to enable it.</string>
+    <string name="map_tiles_cached">Map tiles cached successfully.</string>
+    <string name="unable_to_get_location">Unable to get location. Map caching skipped.</string>
+    <string name="no_internet">No internet connection. Map caching skipped.</string>
+    <string name="include_farmer_names_title">Include Farmer Names?</string>
+    <string name="include_farmer_names_text">Do you want to include farmer names in the export?</string>
+
+    <string name="back">Back</string>
+    <string name="last_synced">Last Synced:</string>
+    <string name="backup_now">Backup</string>
+    <string name="restore">Restore</string>
+    <string name="share">Share</string>
+    <string name="import_">Import</string>
+
+    <string name="enable_backup_title">Enable Backup?</string>
+    <string name="disable_backup_title">Disable Backup?</string>
+    <string name="proceed_question">Do you want to proceed?</string>
+    <string name="enable_data_backup_title">Enable Data Backup?</string>
+    <string name="enable_backup_message">Enabling backup securely stores your data on the server whenever an internet connection is available. This ensures you can restore it if your device is lost, damaged, or reset. Do you want to proceed?</string>
+    <string name="disable_backup_message">Disabling backup will stop automatically saving your data on the server when an internet connection is available. Any previously backed-up data will remain accessible for restoration, but new changes won\'t be saved. Do you want to proceed?.</string>
+<!--    <string name="backup_prompt_message">Enabling backup securely stores your data on the server whenever an internet connection is available. This ensures you can restore it if your device is lost, damaged, or reset. Do you want to proceed?</string>-->
+<!--    <string name="backup_disable_warning">Disabling backup will stop automatically saving your data on the server when an internet connection is available. Any previously backed-up data will remain accessible for restoration, but new changes won\'t be saved. Do you want to proceed?</string>-->
+    <string name="enable_backup">Enable Backup</string>
+    <string name="disable_backup">Disable Backup</string>
+    <string name="location_permission_required_for_this_feature">Location permissions are required for this feature</string>
+    <string name="fetching_location">Fetching location…</string>
+
+    <string name="user_guide_title">User Guide</string>
+    <string name="welcome_message">
+        Welcome to the User Guide! This guide provides a brief overview of the app\'s features and functionalities. For detailed instructions, download the complete guide from our assets.
+    </string>
+    <string name="download_user_guide">Download User Guide</string>
+    <string name="download_success">User Guide downloaded successfully.</string>
+    <string name="download_failed">Download failed: %1$s</string>
+    <string name="no_location_selected">No location selected.</string>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </resources>

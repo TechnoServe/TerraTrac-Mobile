@@ -852,6 +852,7 @@ fun FarmForm(
                 )
                 navController.navigate("setPolygon")
                 mapViewModel.clearCoordinates()
+                // mapViewModel.clearPolygon()
             }
         }
 
