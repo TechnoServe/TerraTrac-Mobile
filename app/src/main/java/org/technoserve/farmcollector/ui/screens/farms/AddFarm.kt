@@ -84,8 +84,6 @@ fun AddFarm(
     Column(
         modifier = Modifier
             .fillMaxSize()
-//            .statusBarsPadding()
-//            .padding(WindowInsets.safeDrawing.asPaddingValues()) // Respect safe areas,
             .fillMaxWidth()
     ) {
         FarmListHeader(
@@ -115,13 +113,6 @@ fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
         value.substring(0, dotIndex + decimalPlaces + 1)
     }
 }
-
-//// Function to read and format stored value
-//fun readStoredValue(sharedPref: SharedPreferences): String {
-//    val storedValue = sharedPref.getString("plot_size", "") ?: ""
-//    val formattedValue = truncateToDecimalPlaces(storedValue, 9)
-//    return formattedValue
-//}
 
 fun formatInput(input: String): String {
     return try {
@@ -207,71 +198,6 @@ fun promptEnableLocation(context: Context) {
     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
     context.startActivity(intent)
 }
-
-
-//@OptIn(ExperimentalPermissionsApi::class)
-//@Composable
-//fun LocationPermissionRequest(
-//    onLocationEnabled: () -> Unit,
-//    onPermissionsGranted: () -> Unit,
-//    showLocationDialogNew: MutableState<Boolean>,
-//    hasToShowDialog: Boolean
-//) {
-//    val context = LocalContext.current
-//    val multiplePermissionsState = rememberMultiplePermissionsState(
-//        listOf(
-//            Manifest.permission.ACCESS_COARSE_LOCATION,
-//            Manifest.permission.ACCESS_FINE_LOCATION
-//        )
-//    )
-//
-//    LaunchedEffect(Unit) {
-//        if (isLocationEnabled(context)) {
-//            if (multiplePermissionsState.allPermissionsGranted) {
-//                onPermissionsGranted()
-//            } else {
-//                multiplePermissionsState.launchMultiplePermissionRequest()
-//            }
-//        } else {
-//            onLocationEnabled()
-//        }
-//    }
-//
-//
-//    if ((!multiplePermissionsState.allPermissionsGranted) && hasToShowDialog) {
-//        Column {
-//            AlertDialog(
-//                onDismissRequest = { showLocationDialogNew.value = false },
-//                title = { Text(stringResource(id = R.string.enable_location)) },
-//                text = { Text(stringResource(id = R.string.enable_location_msg)) },
-//                confirmButton = {
-//                    Button(onClick = {
-//                        // Perform action to enable location permissions
-//                        promptEnableLocation(context)
-//                        showLocationDialogNew.value = false
-//                    }) {
-//                        Text(stringResource(id = R.string.yes))
-//                    }
-//                },
-//                dismissButton = {
-//                    Button(onClick = {
-//                        // Show a toast message indicating that the permission was denied
-//                        Toast.makeText(
-//                            context,
-//                            R.string.location_permission_denied_message,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                        showLocationDialogNew.value = false
-//                    }) {
-//                        Text(stringResource(id = R.string.no))
-//                    }
-//                },
-//                containerColor = MaterialTheme.colorScheme.background,
-//                tonalElevation = 6.dp
-//            )
-//        }
-//    }
-//}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

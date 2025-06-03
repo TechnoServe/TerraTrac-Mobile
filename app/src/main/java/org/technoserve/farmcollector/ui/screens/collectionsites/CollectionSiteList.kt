@@ -72,7 +72,6 @@ import org.technoserve.farmcollector.ui.components.SkeletonSiteCard
 import org.technoserve.farmcollector.viewmodels.FarmViewModel
 import org.technoserve.farmcollector.viewmodels.FarmViewModelFactory
 import org.technoserve.farmcollector.viewmodels.RestoreStatus
-import org.technoserve.farmcollector.viewmodels.UndoDeleteSnackbar
 import org.technoserve.farmcollector.utils.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import org.technoserve.farmcollector.utils.BackupPreferences
@@ -147,16 +146,16 @@ fun CollectionSiteList(navController: NavController) {
 
     val coroutineScope = rememberCoroutineScope()
 
-    // ✅ Observe backup state
+    //  Observe backup state
     val isBackupEnabled by BackupPreferences.isBackupEnabled(context).collectAsState(initial = false)
 
-    // ✅ Observe last sync time
+    //  Observe last sync time
     val lastSyncTime by BackupPreferences.getLastBackupTime(context).collectAsState(initial = "Never")
 
-    // ✅ Boolean state to control if Last Sync Time is shown
+    //  Boolean state to control if Last Sync Time is shown
     var showLastSync by remember { mutableStateOf(true) } // Default is true, can be toggled
 
-    // ✅ State for Confirmation Dialog
+    //  State for Confirmation Dialog
     var showDialog by remember { mutableStateOf(false) }
     var pendingBackupState by remember { mutableStateOf(isBackupEnabled) }
 
@@ -184,9 +183,9 @@ fun CollectionSiteList(navController: NavController) {
                 onRestoreClicked = {
                     showRestoreAlert = true
                 },
-                isBackupEnabled = isBackupEnabled, // ✅ Pass backup state
-                showLastSync = showLastSync, // ✅ Boolean to toggle visibility
-                lastSyncTime = lastSyncTime, // ✅ Pass last sync timestamp
+                isBackupEnabled = isBackupEnabled, //  Pass backup state
+                showLastSync = showLastSync, //  Boolean to toggle visibility
+                lastSyncTime = lastSyncTime, //  Pass last sync timestamp
                 onBackupToggleClicked = { newState ->
                     pendingBackupState = newState // Store user's choice before confirmation
                     showDialog = true // Show confirmation dialog
@@ -236,7 +235,6 @@ fun CollectionSiteList(navController: NavController) {
                 }
 
                 // Restore Alert Dialog
-                // Show restore alert dialog
                 RestoreDataAlert(
                     showDialog = showRestoreAlert,
                     onDismiss = { showRestoreAlert = false },
@@ -244,7 +242,7 @@ fun CollectionSiteList(navController: NavController) {
                     farmViewModel = farmViewModel
                 )
 
-                // ✅ Show Confirmation Dialog when toggling backup
+                //  Show Confirmation Dialog when toggling backup
                 if (showDialog) {
                     BackupConfirmationDialog(
                         isEnablingBackup = pendingBackupState,
@@ -260,16 +258,6 @@ fun CollectionSiteList(navController: NavController) {
                         onCancel = { showDialog = false }
                     )
                 }
-//
-//                // Undo Delete Snackbar
-//                UndoDeleteSnackbar(
-//                    show = showUndoSnackbar,
-//                    onDismiss = { showUndoSnackbar = false },
-//                    onUndo = {
-//                        // Implement undo logic here
-//                        showUndoSnackbar = false
-//                    }
-//                )
 
                 when {
                     pagedData.loadState.refresh is LoadState.Loading -> {
@@ -569,7 +557,6 @@ fun CollectionSiteList(navController: NavController) {
     }
 
     if (showDeleteDialog.value) {
-       // SiteDeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
 
         selectedSite.value?.let {
             SiteDeleteAllDialogPresenter(
@@ -579,7 +566,6 @@ fun CollectionSiteList(navController: NavController) {
                 snackbarHostState = snackbarHostState,
                 onProceedFn = {
                     farmViewModel.deleteListSite(selectedIds)
-                    // Show the undo snackbar
                 },
                 showUndoSnackbar = showUndoSnackbar
 

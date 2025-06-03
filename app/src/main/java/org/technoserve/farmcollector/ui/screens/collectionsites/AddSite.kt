@@ -74,8 +74,6 @@ fun AddSite(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-//            .statusBarsPadding()
-//            .padding(WindowInsets.safeDr awing.asPaddingValues()) // Respect safe areas,
             .fillMaxWidth()
     ) {
         FarmListHeader(

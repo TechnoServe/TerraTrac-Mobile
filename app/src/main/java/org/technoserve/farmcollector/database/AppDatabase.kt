@@ -98,22 +98,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
 
-//        val MIGRATION_21_22 = object : Migration(21, 22) {
-//            override fun migrate(db: SupportSQLiteDatabase) {
-//                // No schema changes necessary since we're just using a TypeConverter
-//                Timber.tag("Database")
-//                    .d("Migration 21_22: No schema changes, commodity enum TypeConverter enabled")
-//            }
-//        }
-//        val MIGRATION_22_23 = object : Migration(22, 23) {
-//            override fun migrate(db: SupportSQLiteDatabase) {
-//                // No schema changes necessary since we're just using a TypeConverter
-//                Timber.tag("Database")
-//                    .d("Migration 22_23: No schema changes, commodity enum TypeConverter enabled")
-//            }
-//        }
-
-
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
                 var instance = INSTANCE
@@ -131,9 +115,7 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_17_18,
                             MIGRATION_18_19,
                             MIGRATION_19_20,
-                            MIGRATION_20_21,
-//                            MIGRATION_21_22,
-//                            MIGRATION_22_23
+                            MIGRATION_20_21
                         )
                         .build()
 

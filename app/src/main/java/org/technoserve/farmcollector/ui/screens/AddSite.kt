@@ -171,7 +171,7 @@ fun SiteForm(navController: NavController) {
                 label = { Text(stringResource(id = R.string.site_name) + " (*)",color = inputLabelColor ) },
                 supportingText = { if (!isValid && name.isBlank()) Text(stringResource(R.string.error_site_name_empty)) },
                 isError = !isValid && name.isBlank(),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.colors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
@@ -202,7 +202,7 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.agent_name) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && agentName.isBlank()) Text(stringResource(R.string.error_agent_name_empty)) },
             isError = !isValid && agentName.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -249,7 +249,7 @@ fun SiteForm(navController: NavController) {
                     )
                 },
                 isError = !isValid && phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.colors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
@@ -316,7 +316,7 @@ fun SiteForm(navController: NavController) {
             isError = !isValid && email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                 email
             ).matches(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -371,7 +371,7 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && village.isBlank()) Text(stringResource(R.string.error_village_empty)) },
             isError = !isValid && village.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -403,7 +403,7 @@ fun SiteForm(navController: NavController) {
             label = { Text(stringResource(id = R.string.district) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isValid && district.isBlank()) Text(stringResource(R.string.error_district_empty)) },
             isError = !isValid && district.isBlank(),
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,

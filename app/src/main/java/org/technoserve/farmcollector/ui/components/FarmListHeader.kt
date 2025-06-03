@@ -73,16 +73,13 @@ fun FarmListHeader(
     showSearch: Boolean,
     showRestore: Boolean,
     onRestoreClicked: () -> Unit,
-    isBackupEnabled: Boolean, // ✅ Backup toggle state
-    showLastSync: Boolean, // ✅ Boolean to show/hide last sync time
-    lastSyncTime: String, // ✅ Last sync timestamp
-    onBackupToggleClicked: (Boolean) -> Unit // ✅ Callback for toggling backup
+    isBackupEnabled: Boolean, // Backup toggle state
+    showLastSync: Boolean, // Boolean to show/hide last sync time
+    lastSyncTime: String, // Last sync timestamp
+    onBackupToggleClicked: (Boolean) -> Unit // Callback for toggling backup
 ) {
     // State to hold the search query
     var searchQuery by remember { mutableStateOf("") }
-
-
-
 
     // State to determine if the search mode is active
     var isSearchVisible by remember { mutableStateOf(false) }
@@ -340,11 +337,11 @@ fun FarmListHeader(
                         cursorColor = MaterialTheme.colorScheme.onSurface,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         errorCursorColor = Color.Red,
-                        // ✅ Ensure Border Always Stays Visible
+                        //Ensure Border Always Stays Visible
                         focusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant, // Border when focused
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant, // Border when unfocused
                         errorIndicatorColor = Color.Red, // Border when error state
-                        // ✅ Add Background Colors
+                        //Add Background Colors
                         focusedContainerColor = MaterialTheme.colorScheme.background,  // Background when focused
                         unfocusedContainerColor = MaterialTheme.colorScheme.background, // Background when not focused
                         errorContainerColor =  Color.Red// Light red for error state

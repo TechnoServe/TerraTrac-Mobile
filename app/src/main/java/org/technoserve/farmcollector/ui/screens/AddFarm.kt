@@ -483,7 +483,7 @@ fun FarmForm(
                 }
             },
             isError =!isfarmerNameValid,
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -534,7 +534,7 @@ fun FarmForm(
             label = { Text(stringResource(id = R.string.village) + " (*)",color = inputLabelColor) },
             supportingText = { if (!isvillageValid){ Text(stringResource(R.string.error_village_empty))} },
             isError = !isvillageValid,
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -563,7 +563,7 @@ fun FarmForm(
                 Text(text = stringResource(R.string.error_district_empty))
             }},
             isError = !isDistrictValid,
-            colors = TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.colors(
                 errorLeadingIconColor = Color.Red,
                 cursorColor = inputTextColor,
                 errorCursorColor = Color.Red,
@@ -624,7 +624,7 @@ fun FarmForm(
                     }
                 },
                 isError = isFormSubmitted && (!isValidSize || size.isBlank()),
-                colors = TextFieldDefaults.textFieldColors(
+                colors = TextFieldDefaults.colors(
                     errorLeadingIconColor = Color.Red,
                     cursorColor = inputTextColor,
                     errorCursorColor = Color.Red,
@@ -722,7 +722,7 @@ fun FarmForm(
                         )
                     },
                     isError = !isValid && latitude.split(".").last().length < 6,
-                    colors = TextFieldDefaults.textFieldColors(
+                    colors = TextFieldDefaults.colors(
                         errorLeadingIconColor = Color.Red,
                     ),
                     modifier = Modifier
@@ -761,7 +761,7 @@ fun FarmForm(
                         )
                     },
                     isError = !isValid && longitude.split(".").last().length < 6,
-                    colors = TextFieldDefaults.textFieldColors(
+                    colors = TextFieldDefaults.colors(
                         errorLeadingIconColor = Color.Red,
                     ),
                     modifier = Modifier

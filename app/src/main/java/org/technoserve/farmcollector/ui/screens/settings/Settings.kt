@@ -56,8 +56,6 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-//            .statusBarsPadding(),
-//            .padding(WindowInsets.safeDrawing.asPaddingValues()) // Respect safe areas,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -1,6 +1,7 @@
 package org.technoserve.farmcollector.ui.screens
 
 import android.app.Application
+import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -51,8 +52,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.CollectionSite
-import org.technoserve.farmcollector.database.FarmViewModel
 import org.technoserve.farmcollector.database.FarmViewModelFactory
 import org.technoserve.farmcollector.ui.composes.UpdateCollectionDialog
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,8 +65,10 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import org.technoserve.farmcollector.database.RestoreStatus
+import org.technoserve.farmcollector.database.models.CollectionSite
 import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
+import org.technoserve.farmcollector.viewmodels.FarmViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,11 +141,6 @@ fun CollectionSiteList(navController: NavController) {
         // After loading data, set isLoading to false
         isLoading.value = false
     }
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp),
-//    ) {
     Scaffold(
         topBar = {
         FarmListHeader(
@@ -198,31 +194,6 @@ fun CollectionSiteList(navController: NavController) {
                     .fillMaxSize()
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
-
-//                if (isSearchActive) {
-//                    OutlinedTextField(
-//                        value = searchQuery,
-//                        onValueChange = { setSearchQuery = it },
-//                        placeholder = { Text("Search...") },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(horizontal = 8.dp)
-//                            .padding(top = 8.dp),
-//                        singleLine = true,
-//                        leadingIcon = {
-//                            IconButton(onClick = { isSearchActive = false; setSearchQuery = "" }) {
-//                                Icon(Icons.Default.ArrowBack, contentDescription = "Close Search")
-//                            }
-//                        },
-//                        trailingIcon = {
-//                            if (searchQuery.isNotEmpty()) {
-//                                IconButton(onClick = { setSearchQuery = "" }) {
-//                                    Icon(Icons.Default.Clear, contentDescription = "Clear Search")
-//                                }
-//                            }
-//                        }
-//                    )
-//                }
 
                 // Show loader while data is loading
                 if (isLoading.value) {
@@ -384,7 +355,7 @@ fun CollectionSiteList(navController: NavController) {
                                 )
                             },
                             isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -406,16 +377,16 @@ fun CollectionSiteList(navController: NavController) {
                                 )
                             },
                             supportingText = {
-                                if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                if (email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(
                                         email
                                     ).matches()
                                 )
                                     Text(stringResource(R.string.error_invalid_email_address))
                             },
-                            isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                            isError = email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(
                                 email
                             ).matches(),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -503,6 +474,10 @@ fun CollectionSiteList(navController: NavController) {
                 }
             }
         }
+
+        is org.technoserve.farmcollector.viewmodels.RestoreStatus.Error -> TODO()
+        org.technoserve.farmcollector.viewmodels.RestoreStatus.InProgress -> TODO()
+        is org.technoserve.farmcollector.viewmodels.RestoreStatus.Success -> TODO()
     }
 
         // Display delete dialog if showDeleteDialog is true

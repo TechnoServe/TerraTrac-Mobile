@@ -8,42 +8,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.technoserve.farmcollector.R
 
-//@Composable
-//fun BackupConfirmationDialog(
-//    isEnablingBackup: Boolean,
-//    onConfirm: () -> Unit,
-//    onCancel: () -> Unit
-//) {
-//    AlertDialog(
-//        onDismissRequest = onCancel,
-//        title = { Text(if (isEnablingBackup) "Enable Backup?" else "Disable Backup?") },
-//        text = {
-//            Column {
-//                Text(
-//                    if (isEnablingBackup) {
-//                        "Enabling backup will store your data securely on the server. You can restore it if your device is lost."
-//                    } else {
-//                        "Disabling backup means your data will only be stored on your device. If lost, it cannot be restored."
-//                    }
-//                )
-//                Spacer(modifier = Modifier.height(10.dp))
-//                Text("Do you want to proceed?")
-//            }
-//        },
-//        confirmButton = {
-//            Button(onClick = onConfirm) {
-//                Text("Confirm")
-//            }
-//        },
-//        dismissButton = {
-//            Button(onClick = onCancel) {
-//                Text("Cancel")
-//            }
-//        }
-//    )
-//}
-
-
 @Composable
 fun BackupConfirmationDialog(
     isEnablingBackup: Boolean,

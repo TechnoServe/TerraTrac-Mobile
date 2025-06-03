@@ -123,11 +123,6 @@ fun MapScreen(
                     // map.setOnMarkerClickListener(clusterManager)
                     state.clusterItems.forEach { clusterItem ->
                         map.addPolygon(clusterItem.polygonOptions)
-//                            .apply {
-//                            strokeColor(android.graphics.Color.BLUE) // Highlight the stroke
-//                            strokeWidth(5f)
-//                            fillColor(android.graphics.Color.argb(128, 255, 255, 0)) // Semi-transparent fill
-//                        })
                     }
                     map.setOnMapLoadedCallback {
                         if (state.clusterItems.isNotEmpty()) {

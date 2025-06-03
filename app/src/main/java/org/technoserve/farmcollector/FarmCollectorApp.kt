@@ -20,59 +20,29 @@ import kotlinx.coroutines.runBlocking
  *
  */
 
-//class FarmCollectorApp : Application(){
-//
-//    override fun onCreate() {
-//        super.onCreate()
-//        ContextProvider.initialize(this)
-//        initializeWorkManager()
-//    }
-//
-//    private fun initializeWorkManager() {
-//        // Build the constraints for the work
-//        val constraints = Constraints.Builder()
-//            .setRequiredNetworkType(NetworkType.CONNECTED) // Requires a connected network
-//            .build()
-//
-//        // Create the periodic work request
-//        val workRequest = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.MINUTES)
-//            .setConstraints(constraints)
-//            .build()
-//
-//        // Enqueue the periodic work with a unique name to avoid duplicate schedules
-//        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-//            "sync_work_tag", // Unique name for the work
-//            ExistingPeriodicWorkPolicy.UPDATE, // Replace if already exists
-//            workRequest
-//        )
-//
-//        Log.d("WorkManager", "WorkManager is initialized successfully")
-//    }
-//}
-
 class FarmCollectorApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
         ContextProvider.initialize(this)
-        observeBackupPreference() // ✅ Start observing backup setting
+        observeBackupPreference() // colors Start observing backup setting
     }
 
     /**
-     * ✅ Observe user's backup setting and enable WorkManager only when backup is ON
+     * colors Observe user's backup setting and enable WorkManager only when backup is ON
      */
     private fun observeBackupPreference() {
         val isBackupEnabled = runBlocking { BackupPreferences.isBackupEnabled(this@FarmCollectorApp).first() }
 
         if (isBackupEnabled) {
-            initializeWorkManager() // ✅ Start WorkManager if backup is enabled
+            initializeWorkManager() // colors Start WorkManager if backup is enabled
         } else {
-            cancelWorkManager() // ❌ Stop WorkManager if backup is disabled
+            cancelWorkManager() // colors Stop WorkManager if backup is disabled
         }
     }
 
     /**
-     * ✅ Initialize WorkManager when backup is enabled
+     * colors Initialize WorkManager when backup is enabled
      */
     private fun initializeWorkManager() {
         val constraints = Constraints.Builder()
@@ -93,7 +63,7 @@ class FarmCollectorApp : Application() {
     }
 
     /**
-     * ❌ Cancel WorkManager when backup is disabled
+     * colors Cancel WorkManager when backup is disabled
      */
     private fun cancelWorkManager() {
         WorkManager.getInstance(this).cancelUniqueWork("sync_work_tag")

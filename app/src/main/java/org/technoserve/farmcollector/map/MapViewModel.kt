@@ -43,19 +43,11 @@ class MapViewModel @Inject constructor() : ViewModel() {
         get() = _coordinates
 
     private val _calculatedArea = MutableLiveData<Double>()
-//    val calculatedArea: LiveData<Double>
-//        get() = _calculatedArea
-
     private val _size = MutableStateFlow("")
     val size: StateFlow<String> = _size.asStateFlow()
 
     private val _showDialog = MutableStateFlow(false)
     val showDialog: StateFlow<Boolean> = _showDialog.asStateFlow()
-
-//    // Property to store user's choice (0 for calculated, 1 for entered)
-//    private val _userChoice = MutableLiveData<Int>()
-//    val userChoice: LiveData<Int>
-//        get() = _userChoice
 
     // Method to set coordinates and calculated area
     fun calculateArea(coordinates: List<Pair<Double, Double>>?) : Double {
@@ -64,21 +56,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
         _calculatedArea.value = area
         return area
     }
-
-//    // Method to set entered area
-//    fun setSize(size: String) {
-//        _size.value = size
-//    }
-//
-//    // Method to update the size
-//    fun updateSize(newSize: String) {
-//        _size.value = newSize
-//    }
-//
-//    // Method to handle user's choice
-//    fun setUserChoice(choice: Int) {
-//        _userChoice.value = choice
-//    }
 
     // Method to show dialog for choosing area
     fun showAreaDialog(calculatedArea: String, enteredArea: String) {
@@ -95,29 +72,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
     fun dismissDialog() {
         _showDialog.value = false
     }
-
-//    fun updateSizeWithChoice(choice: String) {
-//        _size.value = choice
-//        _showDialog.value = false
-//    }
-//    // Method to retrieve the size input
-//    fun getSizeInput(): Double? {
-//        return _size.value.toDoubleOrNull()
-//    }
-//
-//    // Save the Calculate Area if the entered Size is greater than 4 otherwise keep the entered size Value
-//    fun saveSize(selectedUnit: String, coordinatesData: List<Pair<Double, Double>>?): Number {
-//        val currentSize = size.value.toFloatOrNull() ?: 0.0f
-//        val finalSize = if (currentSize < 4f) {
-//            convertSize(currentSize.toDouble(), selectedUnit)
-//        } else {
-//            calculateArea(coordinatesData)
-//        }
-//        updateSize(finalSize.toString())
-//        return finalSize
-//    }
-
-
 
     @SuppressLint("MissingPermission")
     fun getDeviceLocation(
@@ -162,40 +116,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
         return LatLngBounds(LatLng(0.0, 0.0), LatLng(0.0, 0.0))
     }
 
-//    fun calculateZoneLatLngBounds(): LatLngBounds {
-//        // Predefined list of colors for polygons
-//        val polygonColors = listOf(
-//            Color.argb(128, 255, 0, 0), // Red with transparency
-//            Color.argb(128, 0, 255, 0), // Green with transparency
-//            Color.argb(128, 0, 0, 255), // Blue with transparency
-//            Color.argb(128, 255, 255, 0), // Yellow with transparency
-//            Color.argb(128, 255, 165, 0)  // Orange with transparency
-//        )
-//
-//        try {
-//            val latLongs = state.value.clusterItems.mapIndexed { index, clusterItem ->
-//                // Cycle through predefined colors, or generate new ones if needed
-//                val fillColor = polygonColors.getOrNull(index % polygonColors.size)
-//                    ?: Color.argb(128, Random.nextInt(256), Random.nextInt(256), Random.nextInt(256)) // Generate a random color if colors run out
-//
-//                // Update the polygon options with the distinct color
-//                clusterItem.polygonOptions.fillColor(fillColor)
-//
-//                // Return the list of points from the polygon
-//                clusterItem.polygonOptions.points.map { LatLng(it.latitude, it.longitude) }
-//            }.flatten()
-//
-//            // Return the camera view bounds calculated from all LatLng points
-//            return latLongs.calculateCameraViewPoints().getCenterOfPolygon()
-//        } catch (e: IllegalStateException) {
-//            println("Cannot calculate the view coordinates of nothing: ${e.message}")
-//        }
-//
-//        // Fallback in case of failure
-//        return LatLngBounds(LatLng(0.0, 0.0), LatLng(0.0, 0.0))
-//    }
-
-
     companion object {
         private val POLYGON_FILL_COLOR = Color.parseColor("#ABF44336")
     }
@@ -213,58 +133,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
         currentClusterItems.add(newClusterItem)
         state.value = state.value.copy(clusterItems = currentClusterItems)
     }
-
-//    private val capturedCoordinates = mutableListOf<LatLng>()
-//    private var currentPolygonItem: ZoneClusterItem? = null
-//
-//    fun addCoordinate(latitude: Double, longitude: Double) {
-//        val currentClusterItems = state.value.clusterItems.toMutableList()
-//        val lastItemId = currentClusterItems.lastOrNull()?.id?.substringAfter("-")?.toIntOrNull() ?: 0
-//
-//        // Add individual point
-//        val newPoint = ZoneClusterItem(
-//            id = "point-${lastItemId + 1}",
-//            title = "Coords:",
-//            snippet = "($latitude, $longitude)",
-//            polygonOptions = polygonOptions { add(LatLng(latitude, longitude)) }
-//        )
-//        currentClusterItems.add(newPoint)
-//
-//        // Add to captured coordinates
-//        if (!capturedCoordinates.contains(LatLng(latitude, longitude))) {
-//            capturedCoordinates.add(LatLng(latitude, longitude))
-//        }
-//
-////        // Update or create polygon if there are at least 3 points
-//        if (capturedCoordinates.size >= 2) {
-//            updatePolygon(currentClusterItems)
-//        }
-//
-//        state.value = state.value.copy(clusterItems = currentClusterItems)
-//    }
-//
-//    private fun updatePolygon(currentClusterItems: MutableList<ZoneClusterItem>) {
-//        // Remove the current polygon if it exists
-//        currentPolygonItem?.let { currentClusterItems.remove(it) }
-//
-//        val fillColor = Color.argb(128, 0, 0, 255)
-//        val polygonOptions = polygonOptions {
-//            addAll(capturedCoordinates)
-//            fillColor(fillColor)
-//            strokeColor(Color.RED)
-//            strokeWidth(5f)
-//        }
-//
-//        val newPolygon = ZoneClusterItem(
-//            id = "polygon-${System.currentTimeMillis()}",
-//            title = "Captured Area",
-//            snippet = "Points: ${capturedCoordinates.size}",
-//            polygonOptions = polygonOptions
-//        )
-//
-//        currentClusterItems.add(newPolygon)
-//        currentPolygonItem = newPolygon
-//    }
 
     fun addCoordinates(coordinates: List<Pair<Double?, Double?>>) {
         // Add coordinates on the map, this list of of LatLong form a polygons
@@ -306,18 +174,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
         addCoordinate(coordinate.first, coordinate.second)
     }
 
-//    fun addMarker(coordinate: Pair<Double, Double>) {
-//        // Add marker to the list of markers
-//        val currentMarkers = state.value.markers?.toMutableList() ?: mutableListOf()
-//        if (!currentMarkers.contains(coordinate)) {
-//            currentMarkers.add(coordinate)
-//            state.value = state.value.copy(markers = currentMarkers)
-//        }
-//
-//        // Add coordinate to the polygon
-//        addCoordinate(coordinate.first, coordinate.second)
-//    }
-
     fun clearCoordinates() {
         // Clear everything on google map (poly-lines, polygons, markers,etc)
         try {
@@ -328,16 +184,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-//    fun clearPolygon() {
-//        capturedCoordinates.clear()
-//        val currentClusterItems = state.value.clusterItems.toMutableList()
-//
-//        // Remove all points and the polygon
-//        currentClusterItems.removeAll { it.id.startsWith("point-") || it.id.startsWith("polygon-") }
-//
-//        currentPolygonItem = null
-//        state.value = state.value.copy(clusterItems = currentClusterItems)
-//    }
 
     fun removeLastCoordinate() {
         // Remove the last added marker on the map
@@ -350,38 +196,5 @@ class MapViewModel @Inject constructor() : ViewModel() {
     fun onMapTypeChange(mapType: MapType) {
         state.value = state.value.copy(mapType = mapType)
     }
-
-//    fun showPolygonOnMap(coordinates: List<Pair<Double, Double>>) {
-//        // Check if the coordinates list is valid
-//        if (coordinates.isEmpty()) return
-//
-//        // Convert the list of coordinate pairs into LatLng for map
-//        val latLngList = coordinates.map { (lat, lng) -> LatLng(lat, lng) }
-//
-//        // Create polygon options
-//        val polygonOptions = PolygonOptions().apply {
-//            addAll(latLngList) // Add all points to the polygon
-//            fillColor(POLYGON_FILL_COLOR) // Set the fill color of the polygon
-//            strokeColor(Color.BLACK) // Set the border/stroke color of the polygon
-//            strokeWidth(5f) // Set the stroke width
-//        }
-//
-//        // Update the clusterItems in the state with the new polygon
-//        val currentClusterItems = state.value.clusterItems.toMutableList()
-//        val lastItemId = currentClusterItems.lastOrNull()?.id?.substringAfter("-")?.toIntOrNull() ?: 0
-//
-//        val newClusterItem = ZoneClusterItem(
-//            id = "polygon-${lastItemId + 1}",
-//            title = "Polygon Preview",
-//            snippet = "Coordinates: ${latLngList.first()} to ${latLngList.last()}",
-//            polygonOptions = polygonOptions
-//        )
-//
-//        // Add the new polygon to the map by updating the state
-//        currentClusterItems.add(newClusterItem)
-//        state.value = state.value.copy(clusterItems = currentClusterItems)
-//    }
-
-
 
 }

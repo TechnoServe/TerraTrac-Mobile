@@ -90,8 +90,8 @@ fun FarmListHeaderPlots(
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     var isImportDisabled by remember { mutableStateOf(false) }
-    var isMenuExpanded by remember { mutableStateOf(false) } // ✅ Controls dropdown visibility
-    var isInfoExpanded by remember { mutableStateOf(false) } // ✅ Controls info dropdown visibility
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    var isInfoExpanded by remember { mutableStateOf(false) }
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -126,11 +126,10 @@ fun FarmListHeaderPlots(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .weight(1f)
-                        .statusBarsPadding(),
-//                        .padding(WindowInsets.safeDrawing.asPaddingValues()) // Ensures title is within the safe area
+                        .statusBarsPadding()
                 )
 
-                // ✅ Info Icon for Last Sync
+                // Info Icon for Last Sync
                 if (showLastSync) {
                     if (screenWidth >= 450.dp) {
                         // Show regular column on larger screens
@@ -209,11 +208,11 @@ fun FarmListHeaderPlots(
             }
         },
         actions = {
-            // ✅ Always Visible Icons: Backup, Restore, and Search
+            // Always Visible Icons: Backup, Restore, and Search
             if (showLastSync) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = 4.dp) // ✅ Reduced spacing
+                    modifier = Modifier.padding(end = 4.dp)
                 ) {
                     Text(
                         text = stringResource(id = R.string.backup_now),
@@ -305,7 +304,7 @@ fun FarmListHeaderPlots(
 
                 if (screenWidth <= 450.dp) {
 
-                    // ✅ Move Export, Share, and Import to a dropdown on small screens
+                    // Move Export, Share, and Import to a dropdown on small screens
                     Box {
                         IconButton(
                             onClick = { isMenuExpanded = !isMenuExpanded },
@@ -322,7 +321,7 @@ fun FarmListHeaderPlots(
                             expanded = isMenuExpanded,
                             onDismissRequest = { isMenuExpanded = false },
                             modifier = Modifier
-                                .background(MaterialTheme.colorScheme.surface) // ✅ Dropdown aligned to the right
+                                .background(MaterialTheme.colorScheme.surface) // Dropdown aligned to the right
                         ) {
                             if (showExport) {
                                 DropdownMenuItem(
@@ -432,11 +431,9 @@ fun FarmListHeaderPlots(
                         cursorColor = MaterialTheme.colorScheme.onSurface,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         errorCursorColor = Color.Red,
-                        // ✅ Ensure Border Always Stays Visible
                         focusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant, // Border when focused
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant, // Border when unfocused
                         errorIndicatorColor = Color.Red, // Border when error state
-                        // ✅ Add Background Colors
                         focusedContainerColor = MaterialTheme.colorScheme.background,  // Background when focused
                         unfocusedContainerColor = MaterialTheme.colorScheme.background, // Background when not focused
                         errorContainerColor = Color.Red// Light red for error state

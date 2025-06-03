@@ -127,23 +127,12 @@ fun FarmForm(
 ) {
     val context = LocalContext.current as Activity
     var isValid by remember { mutableStateOf(true) }
-//    var farmerName by rememberSaveable { mutableStateOf("") }
-//    var memberId by rememberSaveable { mutableStateOf("") }
-//    val farmerPhoto by rememberSaveable { mutableStateOf("") }
-//    var village by rememberSaveable { mutableStateOf("") }
-//    var district by rememberSaveable { mutableStateOf("") }
-//    var latitude by rememberSaveable { mutableStateOf("") }
-//    var longitude by rememberSaveable { mutableStateOf("") }
-    //var accuracyArray by rememberSaveable { mutableStateOf(listOf<Float>()) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
-    // val mapViewModel: MapViewModel = viewModel()
-    //var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
-    //var size by remember { mutableStateOf("0.0") }
     var selectedUnit by rememberSaveable {
         mutableStateOf(
             sharedPref.getString(
@@ -164,26 +153,15 @@ fun FarmForm(
     var coordinates by remember { mutableStateOf(farmData.coordinates) }
     var latitude by remember { mutableStateOf(farmData.latitude) }
     var longitude by remember { mutableStateOf(farmData.longitude) }
-//    var size by remember { mutableStateOf(truncateToDecimalPlaces(farmData.size.toString(), 9)) }
     var size by remember { mutableStateOf(truncateToDecimalPlaces(farmData.size.takeIf { it != 0f }?.toString().orEmpty(), 9)) }
     var accuracyArray by remember { mutableStateOf(farmData.accuracyArray) }
-
-//    var selectedCommodity by remember { mutableStateOf(Commodity.COFFEE) }
-
-
-
-
-
-
-
-    // ✅ Handle Back Press to Clear Form Only on Back Navigation
+    // Handle Back Press to Clear Form Only on Back Navigation
     BackHandler {
-        mapViewModel.submitForm() // ✅ Clears form ONLY when the user presses back
-        navController.popBackStack() // ✅ Navigate back
+        mapViewModel.submitForm() // Clears form ONLY when the user presses back
+        navController.popBackStack() // Navigate back
     }
 
-
-    // ✅ Ensure state updates when farmData changes
+    // Ensure state updates when farmData changes
     LaunchedEffect(farmData) {
         Log.d("SITE ID", "$siteId")
         Log.d("FarmDataChanged", "FarmData changed: $farmData")
@@ -280,42 +258,6 @@ fun FarmForm(
         )
     }
 
-//    if (showLocationDialog.value) {
-//        AlertDialog(
-//            onDismissRequest = { showLocationDialog.value = false },
-//            title = { Text(stringResource(id = R.string.enable_location)) },
-//            text = { Text(stringResource(id = R.string.enable_location_msg)) },
-//            confirmButton = {
-//                Button(onClick = {
-//                    showLocationDialog.value = false
-//                    promptEnableLocation(context)
-//                }) {
-//                    Text(stringResource(id = R.string.yes))
-//                }
-//            },
-//            dismissButton = {
-//                Button(onClick = {
-//                    showLocationDialog.value = false
-//                    Toast.makeText(
-//                        context,
-//                        context.getString(R.string.location_permission_denied_message),
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//
-//                    // Re-prompt user for permission even if they denied it before
-//                    Handler(Looper.getMainLooper()).postDelayed({
-//                        showLocationDialog.value = true
-//                    }, 2000) // 2-second delay before re-showing the dialog
-//                }) {
-//                    Text(stringResource(id = R.string.no))
-//                }
-//            },
-//            containerColor = MaterialTheme.colorScheme.background,
-//            tonalElevation = 6.dp
-//        )
-//    }
-
-
     fun saveFarm() {
         Log.d("Save Farm", " Data to save  $farmData")
         // Validate size input if the size is empty we use the default size 0
@@ -356,8 +298,8 @@ fun FarmForm(
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
         navController.navigate("farmList/${siteId}")
-        // ✅ Submit the form
-        mapViewModel.submitForm() // ✅ Submits and clears the form
+        // Submit the form
+        mapViewModel.submitForm() // Submits and clears the form
     }
     if (showDialog.value) {
         AlertDialog(
@@ -436,11 +378,6 @@ fun FarmForm(
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
-//        CommodityDropdownField(
-//            commodities = Commodity.entries,
-//            selectedCommodity = selectedCommodity,
-//            onCommoditySelected = { selectedCommodity = it }
-//
         FarmCommodityText(
             siteId = siteId,
             farmViewModel = farmViewModel
@@ -847,28 +784,6 @@ fun FarmForm(
         /**
          * Function to handle location permission and coordinate calculation
          */
-//        fun handleLocationAndNavigate(size: String, selectedUnit: String) {
-//            val enteredSize =
-//                size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
-//            if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
-//                val center = coordinatesData.toLatLngList().getCenterOfPolygon()
-//                val bounds: LatLngBounds = center
-//                latitude = roundToDecimalPlaces(bounds.northeast.longitude.toString().toDouble())
-//                longitude = roundToDecimalPlaces(bounds.southwest.latitude.toString().toDouble())
-//            }
-//            locationHelper.requestLocationPermissionAndUpdateCoordinates(
-//                enteredSize = enteredSize,
-//                navController = navController,
-//                mapViewModel = mapViewModel,
-//                onLocationResult = { newLatitude, newLongitude, accuracy ->
-//                    latitude = newLatitude
-//                    longitude = newLongitude
-//                    //accuracyArray = accuracyArray + accuracy.toFloat()
-//                    accuracyArrayData
-//
-//                }
-//            )
-//        }
 
         suspend fun handleLocationAndNavigate(size: String, selectedUnit: String) {
             val enteredSize =
@@ -881,7 +796,7 @@ fun FarmForm(
                 longitude = roundToDecimalPlaces(bounds.southwest.latitude.toString().toDouble())
             }
 
-            // ✅ Ensure permission request runs asynchronously
+            // Ensure permission request runs asynchronously
             withContext(Dispatchers.Main) { // Runs on the UI thread
                 locationHelper.requestLocationPermissionAndUpdateCoordinates(
                     enteredSize = enteredSize,
@@ -895,57 +810,6 @@ fun FarmForm(
                 )
             }
         }
-
-
-
-
-//        Button(
-////            onClick = {
-////                if (isLocationEnabled(context)) {
-////                    handleLocationAndNavigate(size, selectedUnit)
-////                }
-////                else
-////                    showPermissionRequest.value = true
-////            },
-//            onClick = {
-//                if (isLocationEnabled(context)) {
-//                    handleLocationAndNavigate(size, selectedUnit)
-//                } else {
-//                    // Increment denial count when permission is not granted
-//                    permissionDenialCount++
-//
-//                    // Show permission request if not denied too many times
-//                    if (permissionDenialCount <= 2) {
-//                        showLocationDialog.value = true
-//                        showPermissionRequest.value = true
-//                    } else {
-//                        // After multiple denials, open app settings
-//                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-//                        val uri: Uri = Uri.fromParts("package", context.packageName, null)
-//                        intent.data = uri
-//                        context.startActivity(intent)
-//                    }
-//                }
-//            },
-//            modifier = Modifier
-//                .background(MaterialTheme.colorScheme.background)
-//                .align(Alignment.CenterHorizontally)
-//                .fillMaxWidth(0.7f)
-//                .height(50.dp)
-//                .padding(bottom = 5.dp),
-//            enabled = size.isNotBlank()
-//        ) {
-//            val enteredSize =
-//                size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
-//
-//            Text(
-//                text = if (enteredSize >= 4f) {
-//                    stringResource(id = R.string.set_polygon)
-//                } else {
-//                    stringResource(id = R.string.get_coordinates)
-//                }
-//            )
-//        }
 
         Button(
             onClick = {
@@ -1042,9 +906,4 @@ fun FarmForm(
             locationHelper.cleanup()
         }
     }
-}
-
-@Composable
-fun isTablet(): Boolean {
-    return LocalConfiguration.current.screenWidthDp > 600
 }

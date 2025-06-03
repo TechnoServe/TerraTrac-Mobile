@@ -511,16 +511,16 @@ fun PlotVisualizationApp(
     val locationHelper = LocationHelper(context)
 
 
-    // ✅ Observe language from ViewModel (Assuming it's an object)
+    // Observe language from ViewModel (Assuming it's an object)
     val currentLanguageObject by languageViewModel.currentLanguage.collectAsState()
 
-    // ✅ Extract only the `code` field (e.g., "es")
+    // Extract only the `code` field (e.g., "es")
     val languageCode = currentLanguageObject.code // Extract only the code part
 
-    // ✅ Append language as a query parameter
+    // Append language as a query parameter
     val url = "file:///android_asset/leaflet_map.html?siteId=$siteId&lang=$languageCode"
 
-    println("URL Language Code: $languageCode") // ✅ This should print "es"
+    println("URL Language Code: $languageCode") // This should print "es"
 
 
 

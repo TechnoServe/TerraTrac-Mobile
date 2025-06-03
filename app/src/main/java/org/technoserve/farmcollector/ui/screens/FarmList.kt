@@ -444,9 +444,6 @@ fun FarmList(
                                         // Always include brackets, even for a single point
                                         coordinates.joinToString(", ", prefix = "[", postfix = "]")
                                     } else {
-//                                        val lon = farm.longitude ?: "0.0"
-//                                        val lat = farm.latitude ?: "0.0"
-//                                        "[$lon, $lat]"
                                         ""
                                     }
                                 }
@@ -1072,7 +1069,7 @@ fun FarmList(
                                 )
                             },
                             isError = phone.isNotEmpty() && !isValidPhoneNumber(phone),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -1103,7 +1100,7 @@ fun FarmList(
                             isError = email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
                                 email
                             ).matches(),
-                            colors = TextFieldDefaults.textFieldColors(
+                            colors = TextFieldDefaults.colors(
                                 errorLeadingIconColor = Color.Red,
                                 cursorColor = inputTextColor,
                                 errorCursorColor = Color.Red,
@@ -1387,96 +1384,6 @@ fun DeleteAllDialogPresenter(
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-//@Composable
-//fun FarmListHeader(
-//    title: String,
-//    onSearchQueryChanged: (String) -> Unit,
-//    onAddFarmClicked: () -> Unit,
-//    onBackClicked: () -> Unit,
-//    onBackSearchClicked: () -> Unit,
-//    showAdd: Boolean,
-//    showSearch: Boolean,
-//) {
-//    // State for holding the search query
-//    var searchQuery by remember { mutableStateOf("") }
-//
-//    var isSearchVisible by remember { mutableStateOf(false) }
-//
-//    TopAppBar(
-//        modifier =
-//            Modifier
-//                .background(MaterialTheme.colorScheme.primary)
-//                .fillMaxWidth(),
-//        navigationIcon = {
-//            IconButton(onClick = onBackClicked) {
-//                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",tint = MaterialTheme.colorScheme.onPrimary)
-//            }
-//        },
-//        title = {
-//            Text(
-//                text = title,
-//                color = MaterialTheme.colorScheme.onPrimary,
-//                fontSize = 22.sp,
-//                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
-//            )
-//        },
-//        actions = {
-//            if (showAdd) {
-////                IconButton(onClick = onAddFarmClicked) {
-////                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-////                }
-//            }
-//            if (showSearch) {
-//                IconButton(onClick = {
-//                    isSearchVisible = !isSearchVisible
-//                }) {
-//                    Icon(Icons.Default.Search, contentDescription = "Search")
-//                }
-//            }
-//        },
-//    )
-//    // Conditional rendering of the search field
-//    if (isSearchVisible && showSearch) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier =
-//                Modifier
-//                    .padding(horizontal = 16.dp)
-//                    .fillMaxWidth(),
-//        ) {
-//            OutlinedTextField(
-//                value = searchQuery,
-//                onValueChange = {
-//                    searchQuery = it
-//                    onSearchQueryChanged(it)
-//                },
-//                modifier =
-//                    Modifier
-//                        .padding(start = 8.dp)
-//                        .weight(1f),
-//                label = { Text(stringResource(R.string.search)) },
-//                leadingIcon = {
-//                    IconButton(onClick = {
-//                        // onBackSearchClicked()
-//                        searchQuery = ""
-//                        onSearchQueryChanged("")
-//                        isSearchVisible = !isSearchVisible
-//                    }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                },
-//                singleLine = true,
-//                colors =
-//                    TextFieldDefaults.outlinedTextFieldColors(
-//                        cursorColor = MaterialTheme.colorScheme.onSurface,
-//                    ),
-//            )
-//        }
-//    }
-//}
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FarmListHeader(
@@ -1618,11 +1525,15 @@ fun FarmListHeader(
                         }
                     },
                     singleLine = true,
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        cursorColor = MaterialTheme.colorScheme.onSurface,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedTrailingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedTrailingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        cursorColor = MaterialTheme.colorScheme.onPrimary,
+                        errorCursorColor = Color.Red
                     ),
                     shape = RoundedCornerShape(0.dp) // Set the shape for the field to rounded
                 )
@@ -1844,11 +1755,14 @@ fun FarmListHeaderPlots(
                         }
                     },
                     singleLine = true,
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                    colors = TextFieldDefaults.colors(
                         cursorColor = MaterialTheme.colorScheme.onSurface,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        errorLeadingIconColor = Color.Red,
+                        errorCursorColor = Color.Red,
+                        errorIndicatorColor = Color.Red
                     ),
                     shape = RoundedCornerShape(0.dp) // Set the shape for the field to rounded
                 )
@@ -2480,7 +2394,7 @@ fun UpdateFarmForm(
                 label = { Text(stringResource(id = R.string.size_in_hectares) + " (*)", color = inputLabelColor) },
                 isError = size.toFloatOrNull() == null || size.toFloat() <= 0, // Validate size
                 colors =
-                    TextFieldDefaults.textFieldColors(
+                    TextFieldDefaults.colors(
                         errorLeadingIconColor = Color.Red,
                         cursorColor = inputTextColor,
                         errorCursorColor = Color.Red,

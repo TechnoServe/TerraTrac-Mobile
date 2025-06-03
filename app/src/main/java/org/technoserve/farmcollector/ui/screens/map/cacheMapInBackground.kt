@@ -44,42 +44,6 @@ fun getUserLocation(context: Context): Location? {
         ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 }
 
-//@RequiresApi(Build.VERSION_CODES.M)
-//fun cacheMapInBackground(context: Context, mapUrl: String) {
-//    val sharedPreferences: SharedPreferences =
-//        context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-//    val isMapCached = sharedPreferences.getBoolean("MapCached", false)
-//
-//    if (!isMapCached) {
-//        if (isConnected(context)) {
-//            // Create a WebView for caching
-//            val webView = WebView(context).apply {
-//                settings.javaScriptEnabled = true
-//                settings.domStorageEnabled = true
-//                settings.cacheMode = WebSettings.LOAD_DEFAULT
-//                webViewClient = object : WebViewClient() {
-//                    override fun onPageFinished(view: WebView?, url: String?) {
-//                        super.onPageFinished(view, url)
-//
-//                        // Mark map caching as complete
-//                        sharedPreferences.edit().putBoolean("MapCached", true).apply()
-//                        Toast.makeText(context, "Map tiles cached successfully.", Toast.LENGTH_LONG).show()
-//                        println("Map tiles cached successfully.")
-//                        // Destroy the WebView to free resources
-//                        destroy()
-//                    }
-//                }
-//
-//                // Load the map URL in the WebView
-//                loadUrl(mapUrl)
-//            }
-//        } else {
-//            Toast.makeText(context, "No internet connection. Map caching skipped.", Toast.LENGTH_LONG).show()
-//        }
-//    }
-//}
-
-
 @RequiresApi(Build.VERSION_CODES.M)
 fun cacheMapInBackground(context: Context, mapUrl: String) {
     val sharedPreferences: SharedPreferences =

@@ -145,7 +145,7 @@ fun FarmList(
         viewModel(
             factory = FarmViewModelFactory(context.applicationContext as Application),
         )
-    val mapViewModel: MapViewModel =  viewModel(factory = MapViewModelFactory())// ✅ Use Hilt's hiltViewModel()
+    val mapViewModel: MapViewModel =  viewModel(factory = MapViewModelFactory())// Use Hilt's hiltViewModel()
     val selectedIds = remember { mutableStateListOf<Long>() }
     val selectedFarm = remember { mutableStateOf<Farm?>(null) }
     val showDeleteDialog = remember { mutableStateOf(false) }
@@ -184,16 +184,16 @@ fun FarmList(
 
     // val coroutineScope = rememberCoroutineScope()
 
-    // ✅ Observe backup state
+    // Observe backup state
     val isBackupEnabled by BackupPreferences.isBackupEnabled(context).collectAsState(initial = false)
 
-    // ✅ Observe last sync time
+    // Observe last sync time
     val lastSyncTime by BackupPreferences.getLastBackupTime(context).collectAsState(initial = "Never")
 
-    // ✅ Boolean state to control if Last Sync Time is shown
+    // Boolean state to control if Last Sync Time is shown
     var showLastSync by remember { mutableStateOf(true) } // Default is true, can be toggled
 
-    // ✅ State for Confirmation Dialog
+    // State for Confirmation Dialog
     var showDialog by remember { mutableStateOf(false) }
     var pendingBackupState by remember { mutableStateOf(isBackupEnabled) }
 
@@ -235,23 +235,6 @@ fun FarmList(
                 }
             }
         }
-
-//    fun initiateFileCreation() {
-//        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-//        val intent =
-//            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-//                addCategory(Intent.CATEGORY_OPENABLE)
-//                type = mimeType
-//                val getSiteById = cwsListItems.find { it.siteId == siteID }
-//                val siteName = getSiteById?.name ?: "SiteName"
-//                val timestamp =
-//                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-//                val filename =
-//                    if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-//                putExtra(Intent.EXTRA_TITLE, filename)
-//            }
-//        createDocumentLauncher.launch(intent)
-//    }
 // Function to initiate file creation with the selected data
 fun initiateFileCreation(selectedList: List<Farm>) {
     finalList = selectedList // Store the filtered list before export
@@ -312,11 +295,6 @@ fun initiateFileCreation(selectedList: List<Farm>) {
                 exportFormat = format
                 showFormatDialog = false
                 showIncludeFarmerNamesDialog = true // Show the next dialog
-//                when (action) {
-//                    Action.Export -> exportFile()
-//                    Action.Share -> shareFileAction()
-//                    else -> {}
-//                }
             },
         )
     }
@@ -505,105 +483,6 @@ fun initiateFileCreation(selectedList: List<Farm>) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-//                HorizontalPager(
-//                    state = pagerState,
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxWidth(),
-//                ) { page ->
-//                    // Determine which category to display based on the current tab index
-//                    val filteredListItems = when (page) {
-//                        1 -> filteredListItemsNeedUpdate // Farms that need update
-//                        else -> filteredListItemsNoUpdate // Farms that do not need update
-//                    }
-//                    if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
-//                        LazyColumn(
-//                            modifier = Modifier
-//                                .fillMaxSize()
-//                                .padding(bottom = 90.dp)
-//                        ) {
-//                            val pageSize = 5
-//                            val startIndex = maxOf(0, (currentPage - 1) * pageSize) // Ensure startIndex is non-negative
-//                            val endIndex = minOf(filteredListItems.size, startIndex + pageSize) // Ensure endIndex is within bounds
-//
-//                            // Safeguard: Ensure indices are within bounds
-//                            if (filteredListItems.isNotEmpty()) {
-//                                // Show the items for the current page
-//                                items(endIndex - startIndex) { index ->
-//                                    val item = filteredListItems[startIndex + index]
-//                                    FarmCard(
-//                                        farm = item,
-//                                        onCardClick = {
-//                                            navController.currentBackStackEntry?.arguments?.apply {
-//                                                putParcelableArrayList(
-//                                                    "coordinates",
-//                                                    item.coordinates?.map {
-//                                                        it.first?.let { it1 ->
-//                                                            it.second?.let { it2 ->
-//                                                                ParcelablePair(it1, it2)
-//                                                            }
-//                                                        }
-//                                                    }?.let { ArrayList(it) }
-//                                                )
-//                                                putParcelable(
-//                                                    "farmData",
-//                                                    ParcelableFarmData(item, "view")
-//                                                )
-//                                            }
-//                                            mapViewModel.submitForm() // ✅ Submits and clears the form
-//                                            navController.navigate(route = "setPolygon/${siteId}")
-//                                        },
-//                                        onDeleteClick = {
-//                                            selectedIds.add(item.id)
-//                                            selectedFarm.value = item
-//                                            showDeleteDialog.value = true
-//                                        }
-//                                    )
-//                                   // Spacer(modifier = Modifier.height(16.dp))
-//                                }
-//
-//                                item {
-//                                    CustomPaginationControls(
-//                                        currentPage = currentPage,
-//                                        totalPages = when (currentCategoryIndex) {
-//                                            0 -> totalPagesNoUpdate // Pages for farms that do not need updates
-//                                            1 -> totalPagesNeedUpdate // Pages for farms needing updates
-//                                            else -> 0
-//                                        },
-//                                        onPageChange = { newPage ->
-//                                            currentPage = newPage
-//                                        }
-//                                    )
-//                                }
-//                            }
-//
-//                            else {
-//                                item {
-//                                    Text(
-//                                        text = stringResource(R.string.no_results_found),
-//                                        modifier = Modifier
-//                                            .padding(16.dp)
-//                                            .fillMaxWidth(),
-//                                        textAlign = TextAlign.Center,
-//                                        style = MaterialTheme.typography.bodyMedium,
-//                                    )
-//                                }
-//                            }
-//
-//                        }
-//                    } else {
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Image(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .align(Alignment.CenterHorizontally)
-//                                .padding(16.dp, 8.dp),
-//                            painter = painterResource(id = R.drawable.no_data2),
-//                            contentDescription = null
-//                        )
-//                    }
-//                }
-
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -742,9 +621,9 @@ fun initiateFileCreation(selectedList: List<Farm>) {
                 onRestoreClicked = {
                     showRestoreAlert = true
                 },
-                isBackupEnabled = isBackupEnabled, // ✅ Pass backup state
-                showLastSync = showLastSync, // ✅ Boolean to toggle visibility
-                lastSyncTime = lastSyncTime, // ✅ Pass last sync timestamp
+                isBackupEnabled = isBackupEnabled, // Pass backup state
+                showLastSync = showLastSync, // Boolean to toggle visibility
+                lastSyncTime = lastSyncTime, // Pass last sync timestamp
                 onBackupToggleClicked = { newState ->
                     pendingBackupState = newState // Store user's choice before confirmation
                     showDialog = true // Show confirmation dialog
@@ -801,7 +680,7 @@ fun initiateFileCreation(selectedList: List<Farm>) {
                 )
 
 
-                // ✅ Show Confirmation Dialog when toggling backup
+                // Show Confirmation Dialog when toggling backup
                 if (showDialog) {
                     BackupConfirmationDialog(
                         isEnablingBackup = pendingBackupState,

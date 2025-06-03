@@ -139,34 +139,6 @@ fun UserGuideScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(paddingValues)
-//                .padding(16.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center
-//        ) {
-//            Text(
-//                text = stringResource(R.string.welcome_message),
-//                style = MaterialTheme.typography.bodyMedium,
-//                textAlign = TextAlign.Center
-//            )
-//            Spacer(modifier = Modifier.height(24.dp))
-//            Button(onClick = {
-//                documentLauncher.launch("TerraTrac Mobile Application User Guide.pdf")
-//            }) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.save),
-//                    contentDescription = stringResource(id = R.string.download_user_guide),
-//                    tint = MaterialTheme.colorScheme.onPrimary
-//                )
-//                Spacer(modifier = Modifier.width(8.dp))
-//                Text(text = stringResource(R.string.download_user_guide))
-//            }
-//        }
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()

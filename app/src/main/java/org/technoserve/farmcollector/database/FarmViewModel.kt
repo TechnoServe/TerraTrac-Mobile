@@ -120,7 +120,7 @@ class FarmViewModel(
 
     init {
         val farmDAO = AppDatabase.getInstance(application).farmsDAO()
-        repository = FarmRepository(farmDAO)
+        repository = FarmRepository(farmDAO as FarmDAO)
         readAllSites = RefreshableLiveData { repository.readAllSites }
         readData = RefreshableLiveData { repository.readData }
         // readData = repository.getAllFarms()

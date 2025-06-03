@@ -64,14 +64,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
     private val _showDialog = MutableStateFlow(false)
     val showDialog: StateFlow<Boolean> = _showDialog.asStateFlow()
-
-//    private val _plotData = MutableStateFlow<Farm?>(null)
-//    val plotData: StateFlow<Farm?> = _plotData
-//
-//    fun updatePlotData(newData: Farm) {
-//        _plotData.value = newData
-//    }
-
     private val _showClearMapDialog: MutableState<Boolean> = mutableStateOf(false)
     val showClearMapDialog: MutableState<Boolean> = _showClearMapDialog
 
@@ -142,39 +134,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
     fun dismissInvalidPolygonDialog() {
         _showInvalidPolygonDialog.value = false
     }
-
-//    fun confirmFinishPolygon(webView: WebView?) {
-////        webView?.post {
-////            Log.d("MapViewModel", "stop button clicked")
-////            webView.evaluateJavascript("stopCaptureConfirmed()", null)
-////            Log.d("MapViewModel", "Confirm Polygon request sent to WebView")
-////        }
-//
-//        Log.d("MapViewModel", "Stop Polygon request")
-//        Handler(Looper.getMainLooper()).post {
-//            Handler(Looper.getMainLooper()).post {
-//                webView?.evaluateJavascript(
-//                    """
-//        (function() {
-//            if (typeof window.stopCaptureConfirmed === "function") {
-//                window.stopCaptureConfirmed();
-//                console.log("stopCaptureConfirmed() executed successfully");
-//                return "success";
-//            } else {
-//                console.error("stopCaptureConfirmed() is not defined");
-//                return "error: function not found";
-//            }
-//        })();
-//        """) { result ->
-//                    Log.d("MapViewModel", "JavaScript execution result: $result")
-//                }
-//                Log.d("MapViewModel", " stopCapture Polygon request sent to WebView")
-//            }
-//        }
-//        dismissConfirmPolygonDialog()
-//    }
-
-
+    
     fun confirmFinishPolygon(webView: WebView?) {
         Log.d("MapViewModel", "confirmFinishPolygon() called")
 
@@ -228,7 +188,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
 
 
-    private val _plotData = MutableStateFlow(Farm()) // ✅ Ensure non-null default value
+    private val _plotData = MutableStateFlow(Farm()) // colors Ensure non-null default value
     val plotData: StateFlow<Farm> = _plotData.asStateFlow()
 
     fun updatePlotData(
@@ -245,7 +205,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
         district: String? = null
     ) {
         _plotData.value = _plotData.value.copy(
-            siteId = siteId ?: _plotData.value.siteId, // ✅ Update siteId if provided
+            siteId = siteId ?: _plotData.value.siteId, // colors Update siteId if provided
             coordinates = coordinates ?: _plotData.value.coordinates,
             latitude = latitude ?: _plotData.value.latitude,
             longitude = longitude ?: _plotData.value.longitude,
@@ -260,9 +220,9 @@ class MapViewModel @Inject constructor() : ViewModel() {
     }
 
     fun submitForm() {
-        // ✅ Perform form submission logic here (e.g., API call, database update)
+        // colors Perform form submission logic here (e.g., API call, database update)
 
-        // ✅ Reset the form after successful submission
+        // colors Reset the form after successful submission
         _plotData.value = Farm() // Clears all values
     }
 
