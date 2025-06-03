@@ -61,12 +61,19 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.hasLocationPermission
-import org.technoserve.farmcollector.map.MapScreen
-import org.technoserve.farmcollector.map.MapViewModel
+//import org.technoserve.farmcollector.hasLocationPermission
+//import org.technoserve.farmcollector.map.MapScreen
+//import org.technoserve.farmcollector.map.MapViewModel
 import org.technoserve.farmcollector.ui.composes.AreaDialog
 import org.technoserve.farmcollector.ui.composes.ConfirmDialog
+import org.technoserve.farmcollector.ui.screens.farms.formatInput
+import org.technoserve.farmcollector.ui.screens.farms.isLocationEnabled
+import org.technoserve.farmcollector.ui.screens.farms.promptEnableLocation
+import org.technoserve.farmcollector.ui.screens.farms.truncateToDecimalPlaces
+import org.technoserve.farmcollector.ui.screens.map.MapScreen
 import org.technoserve.farmcollector.utils.convertSize
+import org.technoserve.farmcollector.utils.hasLocationPermission
+import org.technoserve.farmcollector.viewmodels.MapViewModel
 
 /**
  * This screen helps you to capture and visualize farm polygon.

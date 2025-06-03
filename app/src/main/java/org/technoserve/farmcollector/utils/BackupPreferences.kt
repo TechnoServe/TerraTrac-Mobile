@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ✅ Define the DataStore instance for the Context
+// Define the DataStore instance for the Context
 val Context.dataStore by preferencesDataStore(name = "backup_preferences")
 
 object BackupPreferences {
@@ -19,21 +19,21 @@ object BackupPreferences {
     private val BACKUP_DECISION_MADE_KEY = booleanPreferencesKey("backup_decision_made")
     private val LAST_SYNC_TIMESTAMP_KEY = longPreferencesKey("last_sync_timestamp")
 
-    // ✅ Check if the user has enabled backup
+    // Check if the user has enabled backup
     fun isBackupEnabled(context: Context): Flow<Boolean> {
         return context.dataStore.data.map { preferences ->
             preferences[BACKUP_ENABLED_KEY] ?: false // Default is disabled
         }
     }
 
-    // ✅ Check if the user has made a decision
+    // Check if the user has made a decision
     fun isBackupDecisionMade(context: Context): Flow<Boolean> {
         return context.dataStore.data.map { preferences ->
             preferences[BACKUP_DECISION_MADE_KEY] ?: false
         }
     }
 
-    // ✅ Save user decision
+    // Save user decision
     suspend fun saveBackupChoice(context: Context, isEnabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[BACKUP_ENABLED_KEY] = isEnabled
@@ -41,7 +41,7 @@ object BackupPreferences {
         }
     }
 
-    // ✅ Read the last sync timestamp
+    // Read the last sync timestamp
     fun getLastBackupTime(context: Context): Flow<String> {
         return context.dataStore.data.map { preferences ->
             val timestamp = preferences[LAST_SYNC_TIMESTAMP_KEY] ?: 0L
@@ -53,14 +53,14 @@ object BackupPreferences {
         }
     }
 
-    // ✅ Save backup toggle state
+    // Save backup toggle state
     suspend fun setBackupEnabled(context: Context, isEnabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[BACKUP_ENABLED_KEY] = isEnabled
         }
     }
 
-    // ✅ Save the last sync timestamp
+    // Save the last sync timestamp
     suspend fun setLastBackupTime(context: Context) {
         context.dataStore.edit { preferences ->
             preferences[LAST_SYNC_TIMESTAMP_KEY] = System.currentTimeMillis()

@@ -111,10 +111,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
-import org.technoserve.farmcollector.database.Farm
-import org.technoserve.farmcollector.database.FarmViewModel
-import org.technoserve.farmcollector.database.FarmViewModelFactory
-import org.technoserve.farmcollector.hasLocationPermission
+//import org.technoserve.farmcollector.database.Farm
+//import org.technoserve.farmcollector.database.FarmViewModel
+//import org.technoserve.farmcollector.database.FarmViewModelFactory
+//import org.technoserve.farmcollector.hasLocationPermission
 import org.technoserve.farmcollector.utils.convertSize
 import java.io.BufferedWriter
 import java.io.File
@@ -127,8 +127,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
-import org.technoserve.farmcollector.database.RestoreStatus
-import org.technoserve.farmcollector.database.sync.DeviceIdUtil
+//import org.technoserve.farmcollector.database.RestoreStatus
+//import org.technoserve.farmcollector.database.sync.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ButtonDefaults
@@ -137,7 +137,21 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.draw.clip
-import org.technoserve.farmcollector.map.MapViewModel
+import org.technoserve.farmcollector.database.models.Farm
+import org.technoserve.farmcollector.ui.screens.farms.LocationPermissionRequest
+import org.technoserve.farmcollector.ui.screens.farms.formatInput
+import org.technoserve.farmcollector.ui.screens.farms.isLocationEnabled
+import org.technoserve.farmcollector.ui.screens.farms.promptEnableLocation
+//import org.technoserve.farmcollector.map.MapViewModel
+import org.technoserve.farmcollector.ui.screens.farms.truncateToDecimalPlaces
+import org.technoserve.farmcollector.ui.screens.farms.validateNumber
+import org.technoserve.farmcollector.ui.screens.farms.validateSize
+import org.technoserve.farmcollector.utils.DeviceIdUtil
+import org.technoserve.farmcollector.utils.hasLocationPermission
+import org.technoserve.farmcollector.viewmodels.FarmViewModel
+import org.technoserve.farmcollector.viewmodels.FarmViewModelFactory
+import org.technoserve.farmcollector.viewmodels.MapViewModel
+import org.technoserve.farmcollector.viewmodels.RestoreStatus
 
 
 var siteID = 0L
@@ -2000,13 +2014,13 @@ fun UpdateFarmForm(
     val showLocationDialog = remember { mutableStateOf(false) }
     val showLocationDialogNew = remember { mutableStateOf(false) }
     val showPermissionRequest = remember { mutableStateOf(false) }
-    val file = context.createImageFile()
-    val uri =
-        FileProvider.getUriForFile(
-            Objects.requireNonNull(context),
-            context.packageName + ".provider",
-            file,
-        )
+//    val file = context.createImageFile()
+//    val uri =
+//        FileProvider.getUriForFile(
+//            Objects.requireNonNull(context),
+//            context.packageName + ".provider",
+//            file,
+//        )
     var expanded by remember { mutableStateOf(false) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var selectedUnit by remember { mutableStateOf(items[0]) }
