@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">Daataan walitti fufaa jira…</string>
     <string name="sync_service_channel_id">sinkii_tajaajila_kaanaalii</string>
     <string name="sync_complete">Sinkii Xumurameera</string>
-    <string name="successfully_syncronized">Lafotuun milkiidhaan sirriitti seerveratti walfudhateera.</string>
+    <string name="successfully_syncronized">Datalawwan qonnaa milkaa’inaan deeggaramanii jiru.</string>
     <string name="sync_channel_name">Kaanaalii Sinkii</string>
     <string name="sync_channel_description">Kaanaalii beeksisa sinkii tajaajilu</string>
     <string name="sync_channel_id">sinkii_kaanaalii_id</string>
@@ -155,7 +155,7 @@
     <string name="restore_data">Odeeffannoo Deebi\'aa</string>
     <string name="restoration_error">Odeeffannoo deebi\'uu hin dandeenye: %1$s</string>
     <string name="sync_failed">Sinksii kufaatee</string>
-    <string name="syncronization_failed">Daataa Fardeen Sinksii Saffisa waliin galchuu hin danda\'amne</string>
+    <string name="syncronization_failed">Datalawwan qonnaa deeggeruun hin milkoofne.</string>
 
     <string name="update_polygon">Poligoonii Haaromsuu?</string>
     <string name="keep_existing_polygon_or_capture_new">Poligoonii jiru qabachuuf moo haaraa qabsiisuuf?</string>

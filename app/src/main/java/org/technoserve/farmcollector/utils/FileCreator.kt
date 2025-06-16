@@ -44,7 +44,6 @@ fun createFile(
     exportFormat: String,
     siteID : Long,
     cwsListItems: List<CollectionSite>
-
 ): Boolean {
 
     val getSiteById = cwsListItems.find { it.siteId == siteID }

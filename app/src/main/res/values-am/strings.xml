@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">ውሂብን እየማቀለሽ ነው…</string>
     <string name="sync_service_channel_id">ማቅለሽ_አገልግሎት_ቻነል</string>
     <string name="sync_complete">ማቅለሽ ተጠናቋል</string>
-    <string name="successfully_syncronized">እርሻዎች ከሰርቨር ጋር በትክክል ተመርተዋል።</string>
+    <string name="successfully_syncronized">የእርሻዎች መረጃ በተሳካ ሁኔታ ተቀምጧል።</string>
     <string name="sync_channel_name">ማቅለሽ ቻነል</string>
     <string name="sync_channel_description">የማቅለሽ ማስታወቂያዎች ለማቀለሽ ቻነል</string>
     <string name="sync_channel_id">ማቅለሽ_ቻነል_id</string>
@@ -156,7 +156,7 @@
     <string name="restoration_error">ውሂብ መልሰው አልተቻለም፦ %1$s</string>
 
     <string name="sync_failed">ማስተካከያው አልተሳካም</string>
-    <string name="syncronization_failed">የእርሻ መረጃን ከአገልጋይ ጋር ማስተካከል አልተሳካም</string>
+    <string name="syncronization_failed">የእርሻዎችን መረጃ ማስቀመጥ አልተቻለም።</string>
 
     <string name="update_polygon">ፖሊጎን አድስ?</string>
     <string name="keep_existing_polygon_or_capture_new">ያለውን ፖሊጎን መጠቀም ወይም አዲስ መቆጣጠር ትፈልጋለህ?</string>

@@ -543,14 +543,32 @@ fun FarmForm(
             TextField(
                 singleLine = true,
 //                value = truncateToDecimalPlaces(size, 9),
-                value = formatInput(size.takeIf { it != "0.0" }?.toString().orEmpty()),
+////                value = formatInput(size.takeIf { it != "0.0" }?.toString().orEmpty()),
+//                onValueChange = { inputValue ->
+//                    val formattedValue = when {
+//                        validateSize(inputValue.takeIf { it != "0.0" }?.toString().orEmpty()) -> inputValue.takeIf { it != "0.0" }?.toString().orEmpty()
+//                        scientificNotationPattern.matcher(inputValue).matches() -> {
+//                            truncateToDecimalPlaces(formatInput(inputValue), 9)
+//                        }
+//                        else -> inputValue.takeIf { it != "0.0" }?.toString().orEmpty()
+//                    }
+//                    size = formattedValue
+//                    isValidSize = validateSize(formattedValue)
+//                    with(sharedPref.edit()) {
+//                        putString("plot_size", formattedValue)
+//                        apply()
+//                    }
+//                },
+
+
+                value = truncateToDecimalPlaces(size, 9),
                 onValueChange = { inputValue ->
                     val formattedValue = when {
-                        validateSize(inputValue.takeIf { it != "0.0" }?.toString().orEmpty()) -> inputValue.takeIf { it != "0.0" }?.toString().orEmpty()
+                        validateSize(inputValue) -> inputValue
                         scientificNotationPattern.matcher(inputValue).matches() -> {
                             truncateToDecimalPlaces(formatInput(inputValue), 9)
                         }
-                        else -> inputValue.takeIf { it != "0.0" }?.toString().orEmpty()
+                        else -> inputValue
                     }
                     size = formattedValue
                     isValidSize = validateSize(formattedValue)

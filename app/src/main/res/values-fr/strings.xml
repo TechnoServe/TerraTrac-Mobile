@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">Synchronisation des données…</string>
     <string name="sync_service_channel_id">canal_service_sync</string>
     <string name="sync_complete">Synchronisation terminée</string>
-    <string name="successfully_syncronized">Les fermes ont été synchronisées avec succès avec le serveur.</string>
+    <string name="successfully_syncronized">Les données des fermes ont été sauvegardées avec succès.</string>
     <string name="sync_channel_name">Canal de synchronisation</string>
     <string name="sync_channel_description">Canal pour les notifications de synchronisation</string>
     <string name="sync_channel_id">canal_sync_id</string>
@@ -155,7 +155,7 @@
     <string name="restore_data">Restaurer les données</string>
     <string name="restoration_error">Échec de la restauration des données : %1$s</string>
     <string name="sync_failed">Échec de la synchronisation</string>
-    <string name="syncronization_failed">Échec de la synchronisation des données des fermes avec le serveur</string>
+    <string name="syncronization_failed">Échec de la sauvegarde des données des fermes.</string>
 
     <string name="update_polygon">Mettre à jour le polygone?</string>
     <string name="keep_existing_polygon_or_capture_new">Voulez-vous garder le polygone existant ou en capturer un nouveau?</string>

@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">Inasawazisha data…</string>
     <string name="sync_service_channel_id">usawazishaji_huduma_kanali</string>
     <string name="sync_complete">Usawazishaji Umekamilika</string>
-    <string name="successfully_syncronized">Mashamba yamesawazishwa kwa mafanikio na seva.</string>
+    <string name="successfully_syncronized">Data za mashamba zimehifadhiwa nakala kwa mafanikio.</string>
     <string name="sync_channel_name">Kanali ya Usawazishaji</string>
     <string name="sync_channel_description">Kanali kwa taarifa za usawazishaji</string>
     <string name="sync_channel_id">kanali_usawazishaji_id</string>
@@ -155,7 +155,7 @@
     <string name="restore_data">Rejesha Data</string>
     <string name="restoration_error">Imeshindwa kurejesha data: %1$s</string>
     <string name="sync_failed">Usawazishaji Umeshindwa</string>
-    <string name="syncronization_failed">Imeshindwa kusawazisha Data za Mashamba na seva</string>
+    <string name="syncronization_failed">Imeshindwa kuhifadhi nakala za data za mashamba.</string>
 
     <string name="update_polygon">Sasisha Poligoni?</string>
     <string name="keep_existing_polygon_or_capture_new">Je, ungependa kuweka poligoni iliyopo au kunasa mpya?</string>

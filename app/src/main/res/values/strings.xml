@@ -141,7 +141,7 @@
     <string name="sync_service_notification_text">Syncing data…</string>
     <string name="sync_service_channel_id">sync_service_channel</string>
     <string name="sync_complete">Sync Complete</string>
-    <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>
+    <string name="successfully_syncronized">Farms data have been backed up successfully. </string>
     <string name="sync_channel_name">Sync Channel</string>
     <string name="sync_channel_description">Channel for sync notifications</string>
     <string name="sync_channel_id">sync_channel_id</string>
@@ -153,7 +153,7 @@
     <string name="restore_data">Restore Data</string>
     <string name="restoration_error">Failed to restore data: %1$s</string>
     <string name="sync_failed">Sync Failed</string>
-    <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
+    <string name="syncronization_failed">Failed to backup the Farms data.</string>
 
     <string name="update_polygon">Update Polygon?"</string>
     <string name="keep_existing_polygon_or_capture_new">Would you like to keep the existing polygon or capture a new one?</string>

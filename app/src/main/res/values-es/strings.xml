@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">Sincronizando datos…</string>
     <string name="sync_service_channel_id">canal_servicio_sync</string>
     <string name="sync_complete">Sincronización Completa</string>
-    <string name="successfully_syncronized">Las granjas se han sincronizado correctamente con el servidor.</string>
+    <string name="successfully_syncronized">Los datos de las granjas se han respaldado correctamente.</string>
     <string name="sync_channel_name">Canal de Sincronización</string>
     <string name="sync_channel_description">Canal para notificaciones de sincronización</string>
     <string name="sync_channel_id">canal_sync_id</string>
@@ -156,7 +156,7 @@
     <string name="restoration_error">No se pudo restaurar los datos: %1$s</string>
 
     <string name="sync_failed">Sincronización fallida</string>
-    <string name="syncronization_failed">Error al sincronizar los datos de las granjas con el servidor</string>
+    <string name="syncronization_failed">Fallo al respaldar los datos de las granjas.</string>
 
     <string name="update_polygon">¿Actualizar polígono?</string>
     <string name="keep_existing_polygon_or_capture_new">¿Te gustaría mantener el polígono existente o capturar uno nuevo?</string>
