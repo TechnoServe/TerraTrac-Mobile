@@ -1310,7 +1310,11 @@ ${currentCity ? currentCity + ", " : ""}${currentCountry}<br>
                 size: area,
                 latitude: centroid.lat,
                 longitude: centroid.lng,
-                coordinates: points.map((point) => [point.lat, point.lng]),
+//                coordinates: points.map((point) => [point.lat, point.lng]),
+                coordinates: [
+                    ...points.map((point) => [point.lat, point.lng]),
+                    ...(points.length > 0 ? [[points[0].lat, points[0].lng]] : []),
+                ],
                 accuracyArray: accuracyArray,
                 createdAt: "2025-01-17T00:00:00Z",
                 updatedAt: "2025-01-17T01:00:00Z",

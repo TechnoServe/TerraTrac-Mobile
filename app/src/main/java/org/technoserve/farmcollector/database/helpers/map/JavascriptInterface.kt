@@ -56,6 +56,12 @@ class JavaScriptInterface(
                         }
                     }
                 }
+
+                // Ensure polygon is closed
+                if (result.isNotEmpty() && result.first() != result.last()) {
+                    result.add(result.first())
+                }
+
             } else if (isPoint) {
                 // Handle Point Format
                 val coords = cleanedString.removePrefix("[").removeSuffix("]").split(", ")
@@ -83,6 +89,8 @@ class JavaScriptInterface(
         try {
             // Parse the JSON string into a JSONObject
             val jsonObject = JSONObject(plotDataJson)
+
+            println("JavaScriptInterface Parsed JSON Object: $jsonObject")
 
             // Extract the coordinates as a string
             val coordinatesArray = jsonObject.getJSONArray("coordinates")
