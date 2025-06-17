@@ -214,5 +214,10 @@
     <string name="download_failed">Échec du téléchargement : %1$s</string>
     <string name="no_location_selected">Aucun emplacement sélectionné.</string>
 
+    <string name="accept_privacy_policy">Acceptez notre </string>
+    <string name="privacy_policy_link_text">politique de confidentialité des données</string>
+    <string name="please_accept_privacy_policy">Veuillez accepter la politique de confidentialité pour continuer.</string>
+
+
 
 </resources>

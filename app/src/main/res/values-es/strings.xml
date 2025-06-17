@@ -213,10 +213,9 @@
     <string name="download_failed">Fallo en la descarga: %1$s</string>
     <string name="no_location_selected">No se seleccionó ubicación.</string>
 
-
-
-
-
+    <string name="accept_privacy_policy">Acepta nuestras </string>
+    <string name="privacy_policy_link_text">políticas de privacidad de datos</string>
+    <string name="please_accept_privacy_policy">Por favor, acepta la política de privacidad para continuar.</string>
 
 
 </resources>

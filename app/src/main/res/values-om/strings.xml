@@ -214,8 +214,8 @@
     <string name="download_failed">Buufachuun hin milkoofne: %1$s</string>
     <string name="no_location_selected">Bakki filatame hin jiru.</string>
 
-
-
-
+    <string name="accept_privacy_policy">Heera dhuunfaa keenya </string>
+    <string name="privacy_policy_link_text">fudhachiisaa</string>
+    <string name="please_accept_privacy_policy">Itti fufuu dura heera dhuunfaa fudhachuu qabda.</string>
 
 </resources>

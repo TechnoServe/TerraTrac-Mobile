@@ -466,10 +466,11 @@ fun SiteForm(navController: NavController) {
             Column {
                 Text(
                     text = buildAnnotatedString {
-                        append(stringResource(R.string.accept_privacy_policy)) // "Accept our "
+                        append(stringResource(R.string.accept_privacy_policy))
+                        append(" ")
                         withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
                             // Make this part clickable to open the policy
-                            append(stringResource(R.string.privacy_policy_link_text)) // "data privacy policies"
+                            append(stringResource(R.string.privacy_policy_link_text))
                         }
                     },
                     modifier = Modifier.clickable {

@@ -213,6 +213,11 @@
     <string name="no_location_selected">No location selected.</string>
 
 
+    <string name="accept_privacy_policy">Accept our </string>
+    <string name="privacy_policy_link_text">data privacy policies</string>
+    <string name="please_accept_privacy_policy">Please accept the privacy policy to continue.</string>
+
+
 
 
 </resources>

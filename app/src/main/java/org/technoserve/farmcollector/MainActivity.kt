@@ -275,20 +275,20 @@ class MainActivity : ComponentActivity() {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
-                            // Check if user has agreed to terms
-                            if (preferencesManager.hasAgreedToTerms) {
-                                ScreenWithSidebar(navController) {
-                                    CollectionSiteList(navController)
-                                }
-                            } else {
-                                // Redirect to privacy policy screen if not agreed
-                                navController.navigate(Routes.PRIVACY_POLICY) {
-                                    popUpTo(Routes.HOME) { inclusive = true } // Clear back stack
-                                }
-                            }
-//                            ScreenWithSidebar(navController) {
-//                                CollectionSiteList(navController)
+//                            // Check if user has agreed to terms
+//                            if (preferencesManager.hasAgreedToTerms) {
+//                                ScreenWithSidebar(navController) {
+//                                    CollectionSiteList(navController)
+//                                }
+//                            } else {
+//                                // Redirect to privacy policy screen if not agreed
+//                                navController.navigate(Routes.PRIVACY_POLICY) {
+//                                    popUpTo(Routes.HOME) { inclusive = true } // Clear back stack
+//                                }
 //                            }
+                            ScreenWithSidebar(navController) {
+                                CollectionSiteList(navController)
+                            }
                         }
                         composable(Routes.FARM_LIST) { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
@@ -384,7 +384,7 @@ class MainActivity : ComponentActivity() {
 
                         composable(Routes.PRIVACY_POLICY) {
                             PrivacyPolicyScreen(BuildConfig.DATA_PRIVACY_URL, onAgree = {
-                                navController.navigate(Routes.SITE_LIST) {
+                                navController.navigate(Routes.ADD_SITE) {
                                     popUpTo(Routes.HOME) { inclusive = true } // Optional: clear back stack
                                 }
 

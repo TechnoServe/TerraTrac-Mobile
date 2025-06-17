@@ -214,10 +214,8 @@
     <string name="download_success">Mwongozo wa Mtumiaji umefanikiwa kupakuliwa.</string>
     <string name="download_failed">Pakua imeshindwa: %1$s</string>
     <string name="no_location_selected">Hakuna eneo lililochaguliwa.</string>
-
-
-
-
-
+    <string name="accept_privacy_policy">Kubali </string>
+    <string name="privacy_policy_link_text">sera zetu za faragha ya data</string>
+    <string name="please_accept_privacy_policy">Tafadhali kubali sera ya faragha ili kuendelea.</string>
 
 </resources>

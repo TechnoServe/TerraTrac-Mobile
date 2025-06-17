@@ -46,7 +46,7 @@ fun PrivacyPolicyScreen(
         // "Agree" button, enabled when user scrolls to the bottom
         Button(
             onClick = {
-                preferencesManager.hasAgreedToTerms = true
+                //preferencesManager.hasAgreedToTerms = true
                 onAgree()
             },
             enabled = isAgreeEnabled,

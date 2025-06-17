@@ -217,7 +217,8 @@
     <string name="download_failed">ማውሰድ አልተሳካም: %1$s</string>
     <string name="no_location_selected">ምንም ቦታ አልተመረጠም።</string>
 
-
-
+    <string name="accept_privacy_policy">የእኛን </string>
+    <string name="privacy_policy_link_text">የግላዊነት መመሪያዎች</string>
+    <string name="please_accept_privacy_policy">ለመቀጠል የግላዊነት መመሪያዎቹን እባክዎን ይቀበሉ።</string>
 
 </resources>
