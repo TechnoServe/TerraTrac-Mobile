@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -51,8 +55,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -125,6 +134,8 @@ fun SiteForm(navController: NavController) {
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
     var selectedCommodity by remember { mutableStateOf(Commodity.COFFEE) }
+
+    var privacyPolicyAccepted by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -436,9 +447,71 @@ fun SiteForm(navController: NavController) {
                 .focusRequester(focusRequester6)
         )
         Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = privacyPolicyAccepted,
+                    onValueChange = { privacyPolicyAccepted = it },
+                    role = Role.Checkbox
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = privacyPolicyAccepted,
+                onCheckedChange = { privacyPolicyAccepted = it }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+          //Text(text = stringResource(R.string.accept_privacy_policy))
+            Column {
+                Text(
+                    text = buildAnnotatedString {
+                        append(stringResource(R.string.accept_privacy_policy)) // "Accept our "
+                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
+                            // Make this part clickable to open the policy
+                            append(stringResource(R.string.privacy_policy_link_text)) // "data privacy policies"
+                        }
+                    },
+                    modifier = Modifier.clickable {
+                        // Navigate to the PrivacyPolicyWebView composable
+                        navController.navigate("privacy_policy")
+                    }
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+//        Button(
+//            onClick = {
+//                if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
+//                    addSite(
+//                        farmViewModel,
+//                        name,
+//                        agentName,
+//                        phoneNumber,
+//                        email,
+//                        village,
+//                        district,
+//                        selectedCommodity
+//                    )
+//                    val returnIntent = Intent()
+//                    context.setResult(Activity.RESULT_OK, returnIntent)
+//                    navController.navigate("siteList")
+//                    Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT)
+//                        .show()
+//                } else {
+//                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+//                }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(50.dp)
+//        ) {
+//            Text(text = stringResource(id = R.string.add_site))
+//        }
         Button(
             onClick = {
-                if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber))) {
+                // Modify the condition to also check if privacyPolicyAccepted is true
+                if (validateForm() && (phoneNumber.isEmpty() || isValidPhoneNumber(phoneNumber)) && privacyPolicyAccepted) {
                     addSite(
                         farmViewModel,
                         name,
@@ -455,7 +528,13 @@ fun SiteForm(navController: NavController) {
                     Toast.makeText(context, R.string.site_added_successfully, Toast.LENGTH_SHORT)
                         .show()
                 } else {
-                    Toast.makeText(context, fillForm, Toast.LENGTH_SHORT).show()
+                    // Provide a more specific message if the checkbox isn't checked
+                    val message = if (!privacyPolicyAccepted) {
+                        context.getString(R.string.please_accept_privacy_policy) // Define this string resource
+                    } else {
+                        fillForm
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier

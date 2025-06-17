@@ -11,6 +11,8 @@ plugins {
 
 def googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY") ?: ""
 def baseUrl = System.getenv("BASE_URL") ?: ""
+def userGuideUrl = System.getenv("USER_GUIDE_URL") ?: ""
+def dataPrivacyUrl = System.getenv("DATA_PRIVACY_URL") ?: ""
 
 android {
     namespace 'org.technoserve.farmcollector'
@@ -20,14 +22,16 @@ android {
         applicationId "org.technoserve.farmcollector"
         minSdk 21
         targetSdk 35
-        versionCode 71
-        versionName "2.49"
+        versionCode 72
+        versionName "2.50"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
         buildConfigField "String", "GOOGLE_MAPS_API_KEY", "\"${googleMapsApiKey}\""
         buildConfigField "String", "BASE_URL", "\"${baseUrl}\""
+        buildConfigField "String", "USER_GUIDE_URL", "\"${userGuideUrl}\""
+        buildConfigField "String", "DATA_PRIVACY_URL","\"${dataPrivacyUrl}\""
     }
 
     buildTypes {
@@ -70,18 +74,38 @@ android {
                 "default_release_user_guide_url"
             }
         }
+        def debugDataPrivacyUrl = project.rootProject.file("local.properties").with { propertiesFile ->
+            if (propertiesFile.exists()) {
+                def properties = new Properties()
+                properties.load(propertiesFile.newInputStream())
+                properties.getProperty("DATA_PRIVACY_URL", "default_data_privacy_url")
+            } else {
+                "default_data_privacy_url"
+            }
+        }
+        def releaseDataPrivacyUrl = project.rootProject.file("local.properties").with { propertiesFile ->
+            if (propertiesFile.exists()) {
+                def properties = new Properties()
+                properties.load(propertiesFile.newInputStream())
+                properties.getProperty("DATA_PRIVACY_URL", "default_data_privacy_url")
+            } else {
+                "default_data_privacy_url"
+            }
+        }
 
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard'
             buildConfigField "String", "BASE_URL", "\"$debugBaseUrl\""
             buildConfigField "String", "USER_GUIDE_URL", "\"$debugUserGuideUrl\""
+            buildConfigField "String", "DATA_PRIVACY_URL", "\"$debugDataPrivacyUrl\""
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             buildConfigField "String", "BASE_URL", "\"$releaseBaseUrl\""
             buildConfigField "String", "USER_GUIDE_URL", "\"$releaseUserGuideUrl\""
+            buildConfigField "String", "DATA_PRIVACY_URL", "\"$releaseDataPrivacyUrl\""
         }
     }
 

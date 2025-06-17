@@ -46,6 +46,7 @@ import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.delay
 import org.json.JSONObject
+import org.technoserve.farmcollector.database.helpers.PreferencesManager
 import org.technoserve.farmcollector.viewmodels.AppUpdateViewModel
 //import org.technoserve.farmcollector.viewmodels.ExitConfirmationDialog
 import org.technoserve.farmcollector.viewmodels.FarmViewModel
@@ -76,6 +77,7 @@ import java.lang.reflect.Type
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
+import org.technoserve.farmcollector.ui.screens.privacy.PrivacyPolicyScreen
 
 
 /**
@@ -100,6 +102,7 @@ object Routes {
     const val UPDATE_FARM = "updateFarm/{farmId}"
     const val SET_POLYGON = "setPolygon/{siteId}"
     const val SETTINGS = "settings"
+    const val PRIVACY_POLICY = "privacy_policy"
 }
 
 var loadURL = "file:///android_asset/leaflet_map.html"
@@ -166,6 +169,8 @@ class MainActivity : ComponentActivity() {
 
         // Apply language preference when the activity starts
         applyLanguagePreference()
+
+        val preferencesManager = PreferencesManager(this)
 
         setContent {
             val navController = rememberNavController()
@@ -270,9 +275,20 @@ class MainActivity : ComponentActivity() {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
-                            ScreenWithSidebar(navController) {
-                                CollectionSiteList(navController)
+                            // Check if user has agreed to terms
+                            if (preferencesManager.hasAgreedToTerms) {
+                                ScreenWithSidebar(navController) {
+                                    CollectionSiteList(navController)
+                                }
+                            } else {
+                                // Redirect to privacy policy screen if not agreed
+                                navController.navigate(Routes.PRIVACY_POLICY) {
+                                    popUpTo(Routes.HOME) { inclusive = true } // Clear back stack
+                                }
                             }
+//                            ScreenWithSidebar(navController) {
+//                                CollectionSiteList(navController)
+//                            }
                         }
                         composable(Routes.FARM_LIST) { backStackEntry ->
                             val siteId = backStackEntry.arguments?.getString("siteId")
@@ -364,6 +380,15 @@ class MainActivity : ComponentActivity() {
                                 languageViewModel,
                                 languages,
                             )
+                        }
+
+                        composable(Routes.PRIVACY_POLICY) {
+                            PrivacyPolicyScreen(BuildConfig.DATA_PRIVACY_URL, onAgree = {
+                                navController.navigate(Routes.SITE_LIST) {
+                                    popUpTo(Routes.HOME) { inclusive = true } // Optional: clear back stack
+                                }
+
+                            })
                         }
                     }
                 }
