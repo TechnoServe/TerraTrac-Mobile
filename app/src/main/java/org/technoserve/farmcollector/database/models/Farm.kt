@@ -28,7 +28,7 @@ TypeConverters: Specifies the converters that will be used to convert certain da
 the database.
 
  */
-
+@Parcelize
 @Entity(
     tableName = "Farms",
     foreignKeys = [
@@ -40,128 +40,27 @@ the database.
         ),
     ],
 )
-@Parcelize
-@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class)
+@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class, DateConverter::class)
 data class Farm(
-    @ColumnInfo(name = "siteId")
-    var siteId: Long,
-    @ColumnInfo(name = "remote_id")
-    var remoteId: UUID = UUID.randomUUID(),
-    @ColumnInfo(name = "farmerPhoto")
-    var farmerPhoto: String,
-    @ColumnInfo(name = "farmerName")
-    var farmerName: String,
-    @ColumnInfo(name = "memberId")
-    var memberId: String,
-    @ColumnInfo(name = "village")
-    var village: String,
-    @ColumnInfo(name = "district")
-    var district: String,
-    @ColumnInfo(name = "purchases")
-    var purchases: Float?,
-    @ColumnInfo(name = "size")
-    var size: Float,
-    @ColumnInfo(name = "latitude")
-    var latitude: String,
-    @ColumnInfo(name = "longitude")
-    var longitude: String,
-    @ColumnInfo(name = "coordinates")
-    @TypeConverters(CoordinateListConvert::class)
-    var coordinates: List<Pair<Double?, Double?>>?,
-    @ColumnInfo(name = "accuracyArray")  // New field
-    @TypeConverters(AccuracyListConvert::class)
-    var accuracyArray: List<Float?>?,     // List to store accuracies
-    @ColumnInfo(name = "synced", defaultValue = "0")
-    val synced: Boolean = false,
-    @ColumnInfo(name = "scheduledForSync", defaultValue = "0")
-    val scheduledForSync: Boolean = false,
-    @ColumnInfo(name = "createdAt")
-    @TypeConverters(DateConverter::class)
-    val createdAt: Long,
-    @ColumnInfo(name = "updatedAt")
-    @TypeConverters(DateConverter::class)
-    var updatedAt: Long,
-    @ColumnInfo(name = "needsUpdate", defaultValue = "0")
-    var needsUpdate: Boolean = false,
-) : Parcelable {
-    @PrimaryKey(autoGenerate = true)
-    var id: Long = 0L
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Farm
-
-        return id == other.id
-    }
-
-    override fun hashCode(): Int = id.hashCode()
-
-    constructor(parcel: Parcel) : this(
-        parcel.readLong(),
-        UUID.fromString(parcel.readString()),
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readValue(Float::class.java.classLoader) as? Float,
-        parcel.readFloat(),
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.createTypedArrayList(ParcelablePair.CREATOR)?.map { Pair(it.first, it.second) },
-        parcel.createFloatArray()?.toList(),  // Read accuracyArray as a List<Float?>
-        parcel.readByte() != 0.toByte(),
-        parcel.readByte() != 0.toByte(),
-        parcel.readLong(),
-        parcel.readLong(),
-        parcel.readByte() != 0.toByte()
-    ) {
-        id = parcel.readLong()
-    }
-
-    override fun describeContents(): Int = 0
-
-    companion object : Parceler<Farm> {
-
-        override fun Farm.write(parcel: Parcel, flags: Int) {
-            parcel.writeLong(siteId)
-            parcel.writeString(remoteId.toString())
-            parcel.writeString(farmerPhoto)
-            parcel.writeString(farmerName)
-            parcel.writeString(memberId)
-            parcel.writeString(village)
-            parcel.writeString(district)
-            parcel.writeValue(purchases)
-            parcel.writeFloat(size)
-            parcel.writeString(latitude)
-            parcel.writeString(longitude)
-            parcel.writeTypedList(coordinates?.map {
-                it.first?.let { it1 ->
-                    it.second?.let { it2 ->
-                        ParcelablePair(
-                            it1,
-                            it2
-                        )
-                    }
-                }
-            })
-            parcel.writeFloatArray(
-                accuracyArray?.filterNotNull()?.toFloatArray()
-            )  // Write accuracyArray
-            parcel.writeByte(if (synced) 1 else 0)
-            parcel.writeByte(if (scheduledForSync) 1 else 0)
-            parcel.writeLong(createdAt)
-            parcel.writeLong(updatedAt)
-            parcel.writeByte(if (needsUpdate) 1 else 0)
-            parcel.writeLong(id)
-        }
-
-        override fun create(parcel: Parcel): Farm {
-            return Farm(parcel)
-        }
-    }
-}
+    @ColumnInfo(name = "siteId") var siteId: Long = 0L,
+    @ColumnInfo(name = "remote_id") var remoteId: UUID = UUID.randomUUID(),
+    @ColumnInfo(name = "farmerPhoto") var farmerPhoto: String = "",
+    @ColumnInfo(name = "farmerName") var farmerName: String = "",
+    @ColumnInfo(name = "memberId") var memberId: String = "",
+    @ColumnInfo(name = "village") var village: String = "",
+    @ColumnInfo(name = "district") var district: String = "",
+    @ColumnInfo(name = "purchases") var purchases: Float? = null,
+    @ColumnInfo(name = "size") var size: Float = 0f,
+    @ColumnInfo(name = "latitude") var latitude: String = "",
+    @ColumnInfo(name = "longitude") var longitude: String = "",
+    @ColumnInfo(name = "coordinates") var coordinates: List<Pair<Double?, Double?>>? = emptyList(),
+    @ColumnInfo(name = "accuracyArray") var accuracyArray: List<Float?>? = emptyList(),
+    @ColumnInfo(name = "synced", defaultValue = "0") val synced: Boolean = false,
+    @ColumnInfo(name = "scheduledForSync", defaultValue = "0") val scheduledForSync: Boolean = false,
+    @ColumnInfo(name = "createdAt") val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "updatedAt") var updatedAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "needsUpdate", defaultValue = "0") var needsUpdate: Boolean = false,
+    @PrimaryKey(autoGenerate = true) var id: Long = 0L
+) : Parcelable
 
 

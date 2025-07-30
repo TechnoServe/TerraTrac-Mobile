@@ -7,6 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,12 +26,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -45,6 +50,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
@@ -64,12 +70,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.models.Farm
 import org.technoserve.farmcollector.database.models.ParcelableFarmData
 import org.technoserve.farmcollector.database.models.ParcelablePair
+import org.technoserve.farmcollector.ui.components.BackupConfirmationDialog
 
 import org.technoserve.farmcollector.viewmodels.FarmViewModel
 import org.technoserve.farmcollector.viewmodels.FarmViewModelFactory
@@ -84,11 +94,15 @@ import org.technoserve.farmcollector.ui.components.FormatSelectionDialog
 import org.technoserve.farmcollector.ui.components.ImportFileDialog
 import org.technoserve.farmcollector.ui.components.RestoreDataAlert
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
+import org.technoserve.farmcollector.utils.BackupPreferences
 
 import org.technoserve.farmcollector.utils.createFile
 import org.technoserve.farmcollector.utils.createFileForSharing
 import org.technoserve.farmcollector.utils.isSystemInDarkTheme
+import org.technoserve.farmcollector.viewmodels.MapViewModel
+import org.technoserve.farmcollector.viewmodels.MapViewModelFactory
 import java.io.File
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -131,6 +145,7 @@ fun FarmList(
         viewModel(
             factory = FarmViewModelFactory(context.applicationContext as Application),
         )
+    val mapViewModel: MapViewModel =  viewModel(factory = MapViewModelFactory())// Use Hilt's hiltViewModel()
     val selectedIds = remember { mutableStateListOf<Long>() }
     val selectedFarm = remember { mutableStateOf<Farm?>(null) }
     val showDeleteDialog = remember { mutableStateOf(false) }
@@ -142,6 +157,9 @@ fun FarmList(
     var exportFormat by remember { mutableStateOf("") }
     var showImportDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
+    var includeFarmerNames by remember { mutableStateOf(true) } // Default: Include names
+    var showIncludeFarmerNamesDialog by remember { mutableStateOf(false) }
+
     val (searchQuery, setSearchQuery) = remember { mutableStateOf("") }
 
     val tabs =
@@ -164,11 +182,30 @@ fun FarmList(
     var showRestoreAlert by remember { mutableStateOf(false) }
 
 
+    // val coroutineScope = rememberCoroutineScope()
+
+    // Observe backup state
+    val isBackupEnabled by BackupPreferences.isBackupEnabled(context).collectAsState(initial = false)
+
+    // Observe last sync time
+    val lastSyncTime by BackupPreferences.getLastBackupTime(context).collectAsState(initial = "Never")
+
+    // Boolean state to control if Last Sync Time is shown
+    var showLastSync by remember { mutableStateOf(true) } // Default is true, can be toggled
+
+    // State for Confirmation Dialog
+    var showDialog by remember { mutableStateOf(false) }
+    var pendingBackupState by remember { mutableStateOf(isBackupEnabled) }
+
+
+
     val isDarkTheme = isSystemInDarkTheme()
     val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
+    // Class-level variable to store the latest plot data
+    var latestPlotData: String? = null
 
     LaunchedEffect(Unit) {
         deviceId = DeviceIdUtil.getDeviceId(context)
@@ -179,13 +216,15 @@ fun FarmList(
         delay(2000)
         isLoading.value = false
     }
+    // State to store the final list before export
+    var finalList by remember { mutableStateOf(listItems) }
 
     val createDocumentLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
                     if (createFile(
-                           context, uri,listItems,
+                           context, uri,finalList,
                                 exportFormat,
                                 siteID ,
                                 cwsListItems
@@ -196,23 +235,26 @@ fun FarmList(
                 }
             }
         }
+// Function to initiate file creation with the selected data
+fun initiateFileCreation(selectedList: List<Farm>) {
+    finalList = selectedList // Store the filtered list before export
 
-    fun initiateFileCreation() {
-        val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
-        val intent =
-            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = mimeType
-                val getSiteById = cwsListItems.find { it.siteId == siteID }
-                val siteName = getSiteById?.name ?: "SiteName"
-                val timestamp =
-                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val filename =
-                    if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
-                putExtra(Intent.EXTRA_TITLE, filename)
-            }
-        createDocumentLauncher.launch(intent)
-    }
+    val mimeType = if (exportFormat == "CSV") "text/csv" else "application/geo+json"
+    val intent =
+        Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mimeType
+            val getSiteById = cwsListItems.find { it.siteId == siteID }
+            val siteName = getSiteById?.name ?: "SiteName"
+            val timestamp =
+                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val filename =
+                if (exportFormat == "CSV") "farms_${siteName}_$timestamp.csv" else "farms_${siteName}_$timestamp.geojson"
+            putExtra(Intent.EXTRA_TITLE, filename)
+        }
+    createDocumentLauncher.launch(intent)
+}
+
 
     // Function to share the file
     fun shareFile(file: File) {
@@ -252,41 +294,104 @@ fun FarmList(
             onFormatSelected = { format ->
                 exportFormat = format
                 showFormatDialog = false
-                when (action) {
-                    Action.Export -> exportFile()
-                    Action.Share -> shareFileAction()
-                    else -> {}
-                }
+                showIncludeFarmerNamesDialog = true // Show the next dialog
             },
         )
     }
+
+    if (showIncludeFarmerNamesDialog) {
+        AlertDialog(
+            onDismissRequest = { showIncludeFarmerNamesDialog = false },
+            title = { Text(stringResource(id = R.string.include_farmer_names_title)) },
+            text = { Text(stringResource(id = R.string.include_farmer_names_text)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        includeFarmerNames = true
+                        showIncludeFarmerNamesDialog = false
+                        showConfirmationDialog = true
+                    }
+                ) { Text(stringResource(id = R.string.yes))  }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        includeFarmerNames = false
+                        showIncludeFarmerNamesDialog = false
+                        showConfirmationDialog = true
+                    }
+                ) { Text(stringResource(id = R.string.no)) }
+            }
+        )
+    }
+
+//    if (showConfirmationDialog) {
+//        CustomizedConfirmationDialog(
+//            listItems,
+//            action = action!!, // Ensure action is not null
+//            onConfirm = {
+//                when (action) {
+//                    Action.Export -> initiateFileCreation()
+//                    Action.Share -> {
+//                        // file = createFileForSharing()
+//                        val file = createFileForSharing(
+//                            context,
+//                            listItems,
+//                        exportFormat,
+//                        siteID,
+//                        cwsListItems
+//                        )
+//                        if (file != null) {
+//                            shareFile(file)
+//                        }
+//                    }
+//
+//                    else -> {}
+//                }
+//            },
+//            onDismiss = { showConfirmationDialog = false },
+//        )
+//    }
+
+    fun List<Farm>.filterWithoutFarmerNames(): List<Farm> {
+        return this.map { dataItem ->
+            dataItem.copy(farmerName = "") // Exclude farmer names if the user chooses
+        }
+    }
+
+
     if (showConfirmationDialog) {
         CustomizedConfirmationDialog(
             listItems,
             action = action!!, // Ensure action is not null
             onConfirm = {
+                val selectedList  = if (!includeFarmerNames) {
+                    listItems.filterWithoutFarmerNames() // Remove farmer names
+                } else {
+                    listItems // Keep original list
+                }
+
                 when (action) {
-                    Action.Export -> initiateFileCreation()
+                    Action.Export -> initiateFileCreation(selectedList)
                     Action.Share -> {
-                        // file = createFileForSharing()
                         val file = createFileForSharing(
                             context,
-                            listItems,
-                        exportFormat,
-                        siteID,
-                        cwsListItems
+                            selectedList, // Use user-selected data
+                            exportFormat,
+                            siteID,
+                            cwsListItems
                         )
                         if (file != null) {
                             shareFile(file)
                         }
                     }
-
                     else -> {}
                 }
             },
             onDismiss = { showConfirmationDialog = false },
         )
     }
+
     if (showImportDialog) {
         ImportFileDialog(
             siteId,
@@ -310,6 +415,21 @@ fun FarmList(
             showDeleteDialog.value = false
         }
     }
+
+
+
+    @JavascriptInterface
+    fun receivePlotData(plotDataJson: String) {
+        Log.d("JavaScriptInterface", "Received Plot Data: $plotDataJson")
+        // Store the received plot data
+        latestPlotData = plotDataJson
+    }
+
+    // Function to clear plot data
+    fun clearPlotData() {
+        latestPlotData = null
+    }
+
 
     // Function to show data or no data message
     @Composable
@@ -369,11 +489,11 @@ fun FarmList(
                         .weight(1f)
                         .fillMaxWidth(),
                 ) { page ->
-                    // Determine which category to display based on the current tab index
                     val filteredListItems = when (page) {
-                        1 -> filteredListItemsNeedUpdate // Farms that need update
-                        else -> filteredListItemsNoUpdate // Farms that do not need update
+                        1 -> filteredListItemsNeedUpdate // Farms that need updates
+                        else -> filteredListItemsNoUpdate // Farms that do not need updates
                     }
+
                     if (filteredListItems.isNotEmpty() || searchQuery.isNotEmpty()) {
                         LazyColumn(
                             modifier = Modifier
@@ -381,24 +501,28 @@ fun FarmList(
                                 .padding(bottom = 90.dp)
                         ) {
                             val pageSize = 5
-                            val startIndex = maxOf(0, (currentPage - 1) * pageSize) // Ensure startIndex is non-negative
-                            val endIndex = minOf(filteredListItems.size, startIndex + pageSize) // Ensure endIndex is within bounds
+                            val startIndex = maxOf(0, (currentPage - 1) * pageSize)
+                            val endIndex = minOf(filteredListItems.size, startIndex + pageSize)
 
-                            // Safeguard: Ensure indices are within bounds
-                            if (filteredListItems.isNotEmpty()) {
-                                // Show the items for the current page
-                                items(endIndex - startIndex) { index ->
-                                    val item = filteredListItems[startIndex + index]
+                            if (startIndex < endIndex) { // Ensure we only proceed if indices are valid
+                                items(
+                                    count = filteredListItems.subList(startIndex, endIndex).size,
+                                    key = { item ->
+                                        val item = filteredListItems[startIndex + item]
+                                        item.id
+                                    }
+                                ) { item ->
+                                    val item = filteredListItems[startIndex + item]
                                     FarmCard(
                                         farm = item,
                                         onCardClick = {
                                             navController.currentBackStackEntry?.arguments?.apply {
                                                 putParcelableArrayList(
                                                     "coordinates",
-                                                    item.coordinates?.map {
-                                                        it.first?.let { it1 ->
-                                                            it.second?.let { it2 ->
-                                                                ParcelablePair(it1, it2)
+                                                    item.coordinates?.mapNotNull { coord ->
+                                                        coord.first?.let { lat ->
+                                                            coord.second?.let { lon ->
+                                                                ParcelablePair(lat, lon)
                                                             }
                                                         }
                                                     }?.let { ArrayList(it) }
@@ -408,7 +532,8 @@ fun FarmList(
                                                     ParcelableFarmData(item, "view")
                                                 )
                                             }
-                                            navController.navigate(route = "setPolygon")
+                                            mapViewModel.submitForm()
+                                            navController.navigate(route = "setPolygon/${siteId}")
                                         },
                                         onDeleteClick = {
                                             selectedIds.add(item.id)
@@ -416,15 +541,15 @@ fun FarmList(
                                             showDeleteDialog.value = true
                                         }
                                     )
-                                   // Spacer(modifier = Modifier.height(16.dp))
                                 }
 
+                                // Pagination Controls
                                 item {
                                     CustomPaginationControls(
                                         currentPage = currentPage,
                                         totalPages = when (currentCategoryIndex) {
-                                            0 -> totalPagesNoUpdate // Pages for farms that do not need updates
-                                            1 -> totalPagesNeedUpdate // Pages for farms needing updates
+                                            0 -> totalPagesNoUpdate
+                                            1 -> totalPagesNeedUpdate
                                             else -> 0
                                         },
                                         onPageChange = { newPage ->
@@ -432,9 +557,8 @@ fun FarmList(
                                         }
                                     )
                                 }
-                            }
-
-                            else {
+                            } else {
+                                // Show "No Results" message if the list is empty
                                 item {
                                     Text(
                                         text = stringResource(R.string.no_results_found),
@@ -446,7 +570,6 @@ fun FarmList(
                                     )
                                 }
                             }
-
                         }
                     } else {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -460,6 +583,7 @@ fun FarmList(
                         )
                     }
                 }
+
             }
         } else {
             // Display a message or image indicating no data available
@@ -495,21 +619,14 @@ fun FarmList(
                 showShare = listItems.isNotEmpty(),
                 showSearch = listItems.isNotEmpty(),
                 onRestoreClicked = {
-//                    farmViewModel.restoreData(
-//                        deviceId = deviceId,
-//                        phoneNumber = "",
-//                        email = "",
-//                        farmViewModel = farmViewModel
-//                    ) { success ->
-//                        if (success) {
-//                            finalMessage = context.getString(R.string.data_restored_successfully)
-//                            showFinalMessage = true
-//                        } else {
-//                            showFinalMessage = true
-//                            showRestorePrompt = true
-//                        }
-//                    }
                     showRestoreAlert = true
+                },
+                isBackupEnabled = isBackupEnabled, // Pass backup state
+                showLastSync = showLastSync, // Boolean to toggle visibility
+                lastSyncTime = lastSyncTime, // Pass last sync timestamp
+                onBackupToggleClicked = { newState ->
+                    pendingBackupState = newState // Store user's choice before confirmation
+                    showDialog = true // Show confirmation dialog
                 }
 
             )
@@ -524,7 +641,16 @@ fun FarmList(
                         val sharedPref =
                             context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
                         sharedPref.edit().remove("plot_size").remove("selectedUnit").apply()
-                        navController.navigate("addFarm/${siteId}")
+                        if (latestPlotData != null) {
+                            val encodedPlotData = Uri.encode(latestPlotData)
+                           // navController.navigate("addFarm/${siteId}/${encodedPlotData}")
+                            navController.navigate("addFarm/$siteId/${URLEncoder.encode(latestPlotData, "UTF-8")}")
+
+                            // Clear the plot data after navigation if needed
+                            clearPlotData()
+                        } else {
+                            navController.navigate("addFarm/${siteId}")
+                        }
                     },
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -552,6 +678,24 @@ fun FarmList(
                     deviceId = deviceId,
                     farmViewModel = farmViewModel
                 )
+
+
+                // Show Confirmation Dialog when toggling backup
+                if (showDialog) {
+                    BackupConfirmationDialog(
+                        isEnablingBackup = pendingBackupState,
+                        onConfirm = {
+                            coroutineScope.launch {
+                                BackupPreferences.setBackupEnabled(context, pendingBackupState) // Save choice
+                                if (pendingBackupState) {
+                                    BackupPreferences.setLastBackupTime(context) // Update sync time
+                                }
+                            }
+                            showDialog = false
+                        },
+                        onCancel = { showDialog = false }
+                    )
+                }
 
                 showDataContent()
             }

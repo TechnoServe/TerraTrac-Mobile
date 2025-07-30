@@ -5,7 +5,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import org.technoserve.farmcollector.database.converters.DateConverter
-/*
+import org.technoserve.farmcollector.database.mappers.CommodityConverter
+
+/**
  *
  * This class represents a collection site, with additional fields for agent name, phone number, email, village,
  * district, and timestamps for created and updated at.
@@ -33,9 +35,27 @@ data class CollectionSite(
     @ColumnInfo(name = "updatedAt")
     @TypeConverters(DateConverter::class)
     var updatedAt: Long,
+    @ColumnInfo(name = "commodity")
+    @TypeConverters(CommodityConverter::class)
+    var commodity: Commodity = Commodity.COFFEE,
 ) {
     @PrimaryKey(autoGenerate = true)
     var siteId: Long = 0L
 }
 
+enum class Commodity(val displayName: String) {
+    COFFEE("coffee"),
+    COCOA("cocoa");
+
+    companion object {
+        fun fromDisplayName(name: String): Commodity {
+            return Commodity.entries.firstOrNull { it.displayName.equals(name, ignoreCase = true) }
+                ?: COFFEE // default
+        }
+
+        fun displayNames(): List<String> {
+            return Commodity.entries.map { it.displayName }
+        }
+    }
+}
 

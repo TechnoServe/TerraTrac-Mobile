@@ -2,12 +2,18 @@ package org.technoserve.farmcollector.viewmodels
 
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.webkit.WebView
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -20,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.technoserve.farmcollector.database.models.map.MapState
 import org.technoserve.farmcollector.database.models.map.ZoneClusterItem
 import org.technoserve.farmcollector.database.helpers.map.ZoneClusterManager
+import org.technoserve.farmcollector.database.models.Farm
 import org.technoserve.farmcollector.utils.GeoCalculator
 import org.technoserve.farmcollector.utils.map.calculateCameraViewPoints
 import org.technoserve.farmcollector.utils.map.getCenterOfPolygon
@@ -57,6 +64,167 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
     private val _showDialog = MutableStateFlow(false)
     val showDialog: StateFlow<Boolean> = _showDialog.asStateFlow()
+    private val _showClearMapDialog: MutableState<Boolean> = mutableStateOf(false)
+    val showClearMapDialog: MutableState<Boolean> = _showClearMapDialog
+
+
+    fun showClearDialog() {
+        _showClearMapDialog.value = true
+    }
+
+    fun dismissClearDialog() {
+        _showClearMapDialog.value = false
+    }
+
+    fun clearMap(webView: WebView ?) {
+
+        if (webView == null) {
+            Log.e("MapViewModel", "WebView is null! Cannot execute JavaScript.")
+            return
+        }
+
+        Log.d("MapViewModel", "Clearing map...")
+
+        Handler(Looper.getMainLooper()).post {
+            Handler(Looper.getMainLooper()).post {
+                webView.evaluateJavascript(
+                    """ 
+        (function() {
+            if (typeof window.clearMapConfirmed === "function") {
+                window.clearMapConfirmed();
+                console.log("clearMapConfirmed() executed successfully");
+                return "success";
+            } else {
+                console.error("clearMapConfirmed() is not defined");
+                return "error: function not found";
+            }
+        })();
+        """
+                ) { result ->
+                    Log.d("MapViewModel", "JavaScript execution result: $result")
+                }
+                Log.d("MapViewModel", "Clear map request sent to WebView")
+            }
+        }
+            _showClearMapDialog.value = false
+    }
+
+
+    private val _showConfirmDialog = mutableStateOf(false)
+    val showConfirmDialog: MutableState<Boolean> = _showConfirmDialog
+
+
+    // Show Dialogs
+    fun showConfirmPolygonDialog() {
+        _showConfirmDialog.value = true
+    }
+
+    fun dismissConfirmPolygonDialog() {
+        _showConfirmDialog.value = false
+    }
+
+
+    private val _showInvalidPolygonDialog = mutableStateOf(false)
+    val showInvalidPolygonDialog: MutableState<Boolean> = _showInvalidPolygonDialog
+
+    fun showInvalidPolygonDialog() {
+        _showInvalidPolygonDialog.value = true
+    }
+
+    fun dismissInvalidPolygonDialog() {
+        _showInvalidPolygonDialog.value = false
+    }
+    
+    fun confirmFinishPolygon(webView: WebView?) {
+        Log.d("MapViewModel", "confirmFinishPolygon() called")
+
+        if (webView == null) {
+            Log.e("MapViewModel", "WebView is null! Cannot execute JavaScript.")
+            return
+        }
+
+        Handler(Looper.getMainLooper()).post {
+            Log.d("MapViewModel", "Sending JavaScript execution request...")
+
+            webView.evaluateJavascript(
+                """ 
+            (function() {
+                if (typeof window.stopCaptureConfirmed === "function") {
+                    console.log("Calling stopCaptureConfirmed()");
+                    window.stopCaptureConfirmed();
+                    return "success";
+                } else {
+                    console.error("stopCaptureConfirmed() is not defined");
+                    return "error: function not found";
+                }
+            })();
+            """
+            ) { result ->
+                Log.d("MapViewModel", "JavaScript execution result: $result")
+            }
+
+            Log.d("MapViewModel", "JavaScript execution request sent to WebView.")
+        }
+
+        dismissConfirmPolygonDialog()
+        Log.d("MapViewModel", "confirmFinishPolygon() finished execution")
+    }
+
+
+    private val _showAlertDialog = mutableStateOf(false)
+    val showAlertDialog: MutableState<Boolean> = _showAlertDialog
+
+    fun showAlertDialog() {
+        _showAlertDialog.value = true
+    }
+
+    fun dismissAlertDialog() {
+        _showAlertDialog.value = false
+    }
+
+
+
+
+
+
+
+    private val _plotData = MutableStateFlow(Farm()) // colors Ensure non-null default value
+    val plotData: StateFlow<Farm> = _plotData.asStateFlow()
+
+    fun updatePlotData(
+        siteId: Long? = null, // Allow siteId to be updated
+        coordinates: List<Pair<Double, Double>>? = null,
+        latitude: String? = null,
+        longitude: String? = null,
+        size: Float? = null,
+        accuracyArray: List<Float>? = null,
+        farmerName: String? = null,
+        memberId: String? = null,
+        farmerPhoto: String? = null,
+        village: String? = null,
+        district: String? = null
+    ) {
+        _plotData.value = _plotData.value.copy(
+            siteId = siteId ?: _plotData.value.siteId, // colors Update siteId if provided
+            coordinates = coordinates ?: _plotData.value.coordinates,
+            latitude = latitude ?: _plotData.value.latitude,
+            longitude = longitude ?: _plotData.value.longitude,
+            size = size ?: _plotData.value.size,
+            accuracyArray = accuracyArray ?: _plotData.value.accuracyArray,
+            farmerName = farmerName ?: _plotData.value.farmerName,
+            memberId = memberId ?: _plotData.value.memberId,
+            farmerPhoto = farmerPhoto ?: _plotData.value.farmerPhoto,
+            village = village ?: _plotData.value.village,
+            district = district ?: _plotData.value.district
+        )
+    }
+
+    fun submitForm() {
+        // colors Perform form submission logic here (e.g., API call, database update)
+
+        // colors Reset the form after successful submission
+        _plotData.value = Farm() // Clears all values
+    }
 
 
     // Method to set coordinates and calculated area
@@ -191,4 +359,15 @@ class MapViewModel @Inject constructor() : ViewModel() {
         state.value = state.value.copy(mapType = mapType)
     }
 
+}
+
+class MapViewModelFactory @Inject constructor() : ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MapViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MapViewModel() as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

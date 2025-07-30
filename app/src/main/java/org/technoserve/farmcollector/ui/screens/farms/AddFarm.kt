@@ -5,13 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.location.LocationManager
+import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -30,11 +41,11 @@ import com.google.android.gms.maps.model.LatLng
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.models.Farm
-import org.technoserve.farmcollector.database.models.ParcelablePair
 
 import org.technoserve.farmcollector.viewmodels.FarmViewModel
 import org.technoserve.farmcollector.ui.components.FarmForm
 import org.technoserve.farmcollector.ui.components.FarmListHeader
+import org.technoserve.farmcollector.viewmodels.MapViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.UUID
@@ -47,18 +58,29 @@ import java.util.UUID
  * @param siteId the id of the collection site to which the farm belongs
  * @param coordinatesData the initial coordinates of the farm's location
  */
+
 @Composable
-fun AddFarm(navController: NavController, siteId: Long) {
-    var coordinatesData: List<Pair<Double, Double>>? = null
-    var accuracyArrayData: List<Float?>? = null
-    if (navController.currentBackStackEntry!!.savedStateHandle.contains("coordinates")) {
-        val parcelableCoordinates = navController.currentBackStackEntry!!
-            .savedStateHandle
-            .get<List<ParcelablePair>>("coordinates")
-        coordinatesData = parcelableCoordinates?.map { Pair(it.first, it.second) }
-        accuracyArrayData =
-            navController.currentBackStackEntry!!.savedStateHandle.get<List<Float?>>("accuracyArray")
-    }
+fun AddFarm(
+    navController: NavController,
+    siteId: Long,
+    plotData: Farm?,
+    mapViewModel: MapViewModel
+) {
+
+    Log.d("Farm Data on add farm ", "Farm Data on add farm: $plotData")
+    // State to hold farm data
+    var farmData by remember { mutableStateOf(plotData) }
+
+    // Extract coordinates and accuracy array from farmData
+    val coordinatesData = farmData?.coordinates as List<Pair<Double, Double>>?
+    val accuracyArrayData = farmData?.accuracyArray
+
+    // Log the coordinates and accuracy array
+    Log.d("Coordinates Data", "Coordinates Data: $coordinatesData")
+    Log.d("Accuracy Array Data", "Accuracy Array Data: $accuracyArrayData")
+    Log.d("Size", "Size: ${farmData?.size}")
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -70,12 +92,17 @@ fun AddFarm(navController: NavController, siteId: Long) {
             onBackClicked = { navController.popBackStack() },
             showSearch = false,
             showRestore = false,
-            onRestoreClicked = {}
+            onRestoreClicked = {},
+            isBackupEnabled = false,
+            showLastSync = false,
+            lastSyncTime="",
+            onBackupToggleClicked= {}
         )
         Spacer(modifier = Modifier.height(16.dp))
-        FarmForm(navController, siteId, coordinatesData, accuracyArrayData)
+        FarmForm(navController, siteId, coordinatesData, accuracyArrayData,mapViewModel)
     }
 }
+
 
 // Helper function to truncate a string representation of a number to a specific number of decimal places
 fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
@@ -85,13 +112,6 @@ fun truncateToDecimalPlaces(value: String, decimalPlaces: Int): String {
     } else {
         value.substring(0, dotIndex + decimalPlaces + 1)
     }
-}
-
-// Function to read and format stored value
-fun readStoredValue(sharedPref: SharedPreferences): String {
-    val storedValue = sharedPref.getString("plot_size", "") ?: ""
-    val formattedValue = truncateToDecimalPlaces(storedValue, 9)
-    return formattedValue
 }
 
 fun formatInput(input: String): String {
@@ -179,12 +199,12 @@ fun promptEnableLocation(context: Context) {
     context.startActivity(intent)
 }
 
-
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LocationPermissionRequest(
     onLocationEnabled: () -> Unit,
     onPermissionsGranted: () -> Unit,
+    onPermissionsDenied: () -> Unit,
     showLocationDialogNew: MutableState<Boolean>,
     hasToShowDialog: Boolean
 ) {
@@ -196,53 +216,86 @@ fun LocationPermissionRequest(
         )
     )
 
+
     LaunchedEffect(Unit) {
         if (isLocationEnabled(context)) {
-            if (multiplePermissionsState.allPermissionsGranted) {
-                onPermissionsGranted()
-            } else {
-                multiplePermissionsState.launchMultiplePermissionRequest()
+            when {
+                multiplePermissionsState.allPermissionsGranted -> {
+                    onPermissionsGranted()
+                }
+                multiplePermissionsState.shouldShowRationale -> {
+                    showLocationDialogNew.value = true // Show rationale dialog
+                }
+                else -> {
+                    multiplePermissionsState.launchMultiplePermissionRequest()
+                }
             }
         } else {
             onLocationEnabled()
         }
     }
 
+    if (!multiplePermissionsState.allPermissionsGranted && hasToShowDialog) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialogNew.value = false },
+            title = { Text(stringResource(id = R.string.enable_location)) },
+            text = { Text(stringResource(id = R.string.enable_location_msg)) },
+            confirmButton = {
+                Button(onClick = {
+                    multiplePermissionsState.launchMultiplePermissionRequest()
+                    showLocationDialogNew.value = false
+                }) {
+                    Text(stringResource(id = R.string.yes))
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showLocationDialogNew.value = false
+                    onPermissionsDenied()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.location_permission_denied_message),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }) {
+                    Text(stringResource(id = R.string.no))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 6.dp
+        )
+    }
 
-    if ((!multiplePermissionsState.allPermissionsGranted) && hasToShowDialog) {
-        Column {
-            AlertDialog(
-                onDismissRequest = { showLocationDialogNew.value = false },
-                title = { Text(stringResource(id = R.string.enable_location)) },
-                text = { Text(stringResource(id = R.string.enable_location_msg)) },
-                confirmButton = {
-                    Button(onClick = {
-                        // Perform action to enable location permissions
-                        promptEnableLocation(context)
-                        showLocationDialogNew.value = false
-                    }) {
-                        Text(stringResource(id = R.string.yes))
+    // Handle case when permission is permanently denied (user selected "Don't ask again")
+    if (!multiplePermissionsState.allPermissionsGranted && !multiplePermissionsState.shouldShowRationale) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialogNew.value = false },
+            title = { Text(stringResource(id = R.string.permission_required)) },
+            text = { Text(stringResource(id = R.string.go_to_settings_msg)) },
+            confirmButton = {
+                Button(onClick = {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
                     }
-                },
-                dismissButton = {
-                    Button(onClick = {
-                        // Show a toast message indicating that the permission was denied
-                        Toast.makeText(
-                            context,
-                            R.string.location_permission_denied_message,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        showLocationDialogNew.value = false
-                    }) {
-                        Text(stringResource(id = R.string.no))
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.background,
-                tonalElevation = 6.dp
-            )
-        }
+                    context.startActivity(intent)
+                    showLocationDialogNew.value = false
+                }) {
+                    Text(stringResource(id = R.string.open_settings))
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showLocationDialogNew.value = false
+                }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 6.dp
+        )
     }
 }
+
 
 fun List<Pair<Double, Double>>.toLatLngList(): List<LatLng> {
     return map { LatLng(it.first, it.second) }

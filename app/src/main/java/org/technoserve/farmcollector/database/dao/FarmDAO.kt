@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import org.technoserve.farmcollector.database.models.CollectionSite
 import org.technoserve.farmcollector.database.models.Farm
 import java.util.UUID
@@ -55,6 +56,9 @@ interface FarmDAO {
 
     @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId")
     suspend fun getSiteById(siteId: Long): CollectionSite?
+
+    @Query("SELECT * FROM CollectionSites WHERE siteId = :siteId")
+    fun getSiteByIdNew(siteId: Long): Flow<CollectionSite?>
 
     @Update
     fun updateSite(site: CollectionSite)
@@ -156,5 +160,7 @@ interface FarmDAO {
     @Query("SELECT * FROM CollectionSites LIMIT :limit OFFSET :offset")
     fun getCollectionSites(offset: Int, limit: Int): List<CollectionSite>
 
+    @Query("SELECT * FROM farms WHERE id = :id")
+    fun getFarm(id: Long): Farm?
 
 }

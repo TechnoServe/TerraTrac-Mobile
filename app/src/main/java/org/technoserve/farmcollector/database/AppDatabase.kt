@@ -1,6 +1,7 @@
 package org.technoserve.farmcollector.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -13,8 +14,10 @@ import org.technoserve.farmcollector.database.converters.DateConverter
 import org.technoserve.farmcollector.database.dao.FarmDAO
 import org.technoserve.farmcollector.database.helpers.ContextProvider
 import org.technoserve.farmcollector.database.helpers.MigrationHelper
+import org.technoserve.farmcollector.database.mappers.CommodityConverter
 import org.technoserve.farmcollector.database.models.CollectionSite
 import org.technoserve.farmcollector.database.models.Farm
+import timber.log.Timber
 
 /**
  * This class is used to create app database and to run migrations from one db version to another
@@ -27,8 +30,10 @@ import org.technoserve.farmcollector.database.models.Farm
  *
  */
 
-@Database(entities = [Farm::class, CollectionSite::class], version = 20, exportSchema = true)
-@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class, DateConverter::class)
+@Database(entities = [Farm::class, CollectionSite::class], version = 21, exportSchema = true)
+@TypeConverters(CoordinateListConvert::class, AccuracyListConvert::class, DateConverter::class,
+    CommodityConverter::class
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun farmsDAO(): FarmDAO
 
@@ -85,6 +90,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE CollectionSites ADD COLUMN commodity TEXT NOT NULL DEFAULT 'coffee'")
+                Timber.d("Migration 20_21: Column 'commodity' added to CollectionSites")
+            }
+        }
+
+
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
                 var instance = INSTANCE
@@ -101,7 +114,8 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_16_17,
                             MIGRATION_17_18,
                             MIGRATION_18_19,
-                            MIGRATION_19_20
+                            MIGRATION_19_20,
+                            MIGRATION_20_21
                         )
                         .build()
 

@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.models.map.LocationState
+import org.technoserve.farmcollector.ui.screens.farms.siteID
 import org.technoserve.farmcollector.viewmodels.MapViewModel
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -228,7 +229,7 @@ class LocationHelper(private val context: Context) : SensorEventListener {
 
         if (enteredSize >= 4f) {
             navController.currentBackStackEntry?.arguments?.putParcelable("farmData", null)
-            navController.navigate("setPolygon")
+            navController.navigate("setPolygon/${siteID}")
             mapViewModel.clearCoordinates()
         }
     }

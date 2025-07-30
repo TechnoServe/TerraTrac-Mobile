@@ -2,7 +2,7 @@ package org.technoserve.farmcollector.database.models
 
 import android.os.Parcel
 import android.os.Parcelable
-/*
+/**
  * Parcelable class representing a pair of a Farm and a String representing the view.
  * Used to pass data between Activities or Fragments.
  *

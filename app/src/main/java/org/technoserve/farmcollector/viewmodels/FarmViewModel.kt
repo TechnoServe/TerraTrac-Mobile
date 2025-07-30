@@ -22,6 +22,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.Instant
@@ -835,6 +836,11 @@ class FarmViewModel(
         withContext(Dispatchers.IO) {
             repository.getAllSites()
         }
+    // GET SITE BY ID
+    fun getSiteByIdNew(id: Long): Flow<CollectionSite?> {
+        return repository.getSiteByIdNew(id)
+    }
+
 
     private val TAG = "FarmConversion"
 
@@ -956,6 +962,8 @@ class FarmViewModel(
 
         return farm
     }
+
+
 
     /**
      * Restore data from the server

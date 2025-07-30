@@ -44,7 +44,6 @@ fun createFile(
     exportFormat: String,
     siteID : Long,
     cwsListItems: List<CollectionSite>
-
 ): Boolean {
 
     val getSiteById = cwsListItems.find { it.siteId == siteID }
@@ -53,32 +52,57 @@ fun createFile(
             BufferedWriter(OutputStreamWriter(outputStream)).use { writer ->
                 if (exportFormat == "CSV") {
                     writer.write(
-                        "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
+                        "remote_id,commodity,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
                     )
                     listItems.forEach { farm ->
                         val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                         val matches = regex.findAll(farm.coordinates.toString())
+//                        val reversedCoordinates =
+//                            matches
+//                                .map { match ->
+//                                    val (lat, lon) = match.destructured
+//                                    "[$lon, $lat]"
+//                                }.toList()
+//                                .let { coordinates ->
+//                                    if (coordinates.isNotEmpty()) {
+//                                        // Always include brackets, even for a single point
+//                                        coordinates.joinToString(
+//                                            ", ",
+//                                            prefix = "[",
+//                                            postfix = "]"
+//                                        )
+//                                    } else {
+//                                        ""
+//                                    }
+//                                }
                         val reversedCoordinates =
                             matches
                                 .map { match ->
                                     val (lat, lon) = match.destructured
                                     "[$lon, $lat]"
-                                }.toList()
+                                }
+                                .toList()
                                 .let { coordinates ->
-                                    if (coordinates.isNotEmpty()) {
-                                        // Always include brackets, even for a single point
-                                        coordinates.joinToString(
-                                            ", ",
-                                            prefix = "[",
-                                            postfix = "]"
-                                        )
+                                    val closedCoordinates = if (coordinates.isNotEmpty()) {
+                                        if (coordinates.first() != coordinates.last()) {
+                                            coordinates + coordinates.first() // add first again to close the polygon
+                                        } else {
+                                            coordinates
+                                        }
+                                    } else {
+                                        emptyList()
+                                    }
+
+                                    if (closedCoordinates.isNotEmpty()) {
+                                        closedCoordinates.joinToString(", ", prefix = "[", postfix = "]")
                                     } else {
                                         ""
                                     }
                                 }
 
+
                         val line =
-                            "${farm.remoteId},\"${
+                            "${farm.remoteId},\"${getSiteById?.commodity ?: "Unknown Commodity"}\",\"${
                                 farm.farmerName.split(" ").joinToString(" ")
                             }\",${farm.memberId},${getSiteById?.name},\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",\"${farm.accuracyArray}\",${
                                 Date(farm.createdAt)
@@ -92,12 +116,31 @@ fun createFile(
                             listItems.forEachIndexed { index, farm ->
                                 val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                                 val matches = regex.findAll(farm.coordinates.toString())
-                                val geoJsonCoordinates =
-                                    matches
-                                        .map { match ->
-                                            val (lat, lon) = match.destructured
-                                            "[$lon, $lat]"
-                                        }.joinToString(", ", prefix = "[", postfix = "]")
+//                                val geoJsonCoordinates =
+//                                    matches
+//                                        .map { match ->
+//                                            val (lat, lon) = match.destructured
+//                                            "[$lon, $lat]"
+//                                        }.joinToString(", ", prefix = "[", postfix = "]")
+                                val geoJsonCoordinates = matches
+                                    .map { match ->
+                                        val (lat, lon) = match.destructured
+                                        "[$lon, $lat]"
+                                    }
+                                    .toList()
+                                    .let { coordinates ->
+                                        val closedCoordinates = if (
+                                            coordinates.isNotEmpty() &&
+                                            coordinates.first() != coordinates.last()
+                                        ) {
+                                            coordinates + coordinates.first() // Close the polygon
+                                        } else {
+                                            coordinates
+                                        }
+
+                                        closedCoordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                    }
+
                                 // Ensure latitude and longitude are not null
                                 val latitude =
                                     farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
@@ -110,6 +153,7 @@ fun createFile(
                                             "type": "Feature",
                                             "properties": {
                                                 "remote_id": "${farm.remoteId}",
+                                                "commodity": "${getSiteById?.commodity ?: "Unknown Commodity"}",
                                                 "farmer_name": "${
                                         farm.farmerName.split(" ").joinToString(" ")
                                     }",
@@ -128,7 +172,7 @@ fun createFile(
                                             },
                                             "geometry": {
                                                 "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                                 "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
+                                                 "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$longitude, $latitude]"}
                                             }
                                         }
                                         """.trimIndent()
@@ -176,28 +220,53 @@ fun createFileForSharing(
         file.bufferedWriter().use { writer ->
             if (exportFormat == "CSV") {
                 writer.write(
-                    "remote_id,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
+                    "remote_id,commodity,farmer_name,member_id,collection_site,agent_name,farm_village,farm_district,farm_size,latitude,longitude,polygon,accuracyArray,created_at,updated_at\n",
                 )
                 listItems.forEach { farm ->
                     val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                     val matches = regex.findAll(farm.coordinates.toString())
+//                    val reversedCoordinates =
+//                        matches
+//                            .map { match ->
+//                                val (lat, lon) = match.destructured
+//                                "[$lon, $lat]"
+//                            }.toList()
+//                            .let { coordinates ->
+//                                if (coordinates.isNotEmpty()) {
+//                                    // Always include brackets, even for a single point
+//                                    coordinates.joinToString(", ", prefix = "[", postfix = "]")
+//                                } else {
+//                                    ""
+//                                }
+//                            }
                     val reversedCoordinates =
                         matches
                             .map { match ->
                                 val (lat, lon) = match.destructured
                                 "[$lon, $lat]"
-                            }.toList()
+                            }
+                            .toList()
                             .let { coordinates ->
-                                if (coordinates.isNotEmpty()) {
-                                    // Always include brackets, even for a single point
-                                    coordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                val closedCoordinates = if (coordinates.isNotEmpty()) {
+                                    if (coordinates.first() != coordinates.last()) {
+                                        coordinates + coordinates.first() // add first again to close the polygon
+                                    } else {
+                                        coordinates
+                                    }
+                                } else {
+                                    emptyList()
+                                }
+
+                                if (closedCoordinates.isNotEmpty()) {
+                                    closedCoordinates.joinToString(", ", prefix = "[", postfix = "]")
                                 } else {
                                     ""
                                 }
                             }
 
+
                     val line =
-                        "${farm.remoteId},\"${
+                        "${farm.remoteId},\"${getSiteById?.commodity ?: "Unknown Commodity"}\",\"${
                             farm.farmerName.split(" ").joinToString(" ")
                         }\",${farm.memberId},\"${getSiteById?.name}\",\"${getSiteById?.agentName}\",\"${farm.village}\",\"${farm.district}\",${farm.size},${farm.latitude},${farm.longitude},\"${reversedCoordinates}\",\"${farm.accuracyArray}\",${
                             Date(
@@ -213,12 +282,31 @@ fun createFileForSharing(
                         listItems.forEachIndexed { index, farm ->
                             val regex = "\\(([^,]+), ([^)]+)\\)".toRegex()
                             val matches = regex.findAll(farm.coordinates.toString())
-                            val geoJsonCoordinates =
-                                matches
-                                    .map { match ->
-                                        val (lat, lon) = match.destructured
-                                        "[$lon, $lat]"
-                                    }.joinToString(", ", prefix = "[", postfix = "]")
+//                            val geoJsonCoordinates =
+//                                matches
+//                                    .map { match ->
+//                                        val (lat, lon) = match.destructured
+//                                        "[$lon, $lat]"
+//                                    }.joinToString(", ", prefix = "[", postfix = "]")
+                            val geoJsonCoordinates = matches
+                                .map { match ->
+                                    val (lat, lon) = match.destructured
+                                    "[$lon, $lat]"
+                                }
+                                .toList()
+                                .let { coordinates ->
+                                    val closedCoordinates = if (
+                                        coordinates.isNotEmpty() &&
+                                        coordinates.first() != coordinates.last()
+                                    ) {
+                                        coordinates + coordinates.first() // Close the polygon
+                                    } else {
+                                        coordinates
+                                    }
+
+                                    closedCoordinates.joinToString(", ", prefix = "[", postfix = "]")
+                                }
+
                             val latitude =
                                 farm.latitude.toDoubleOrNull()?.takeIf { it != 0.0 } ?: 0.0
                             val longitude =
@@ -230,6 +318,7 @@ fun createFileForSharing(
                                         "type": "Feature",
                                         "properties": {
                                             "remote_id": "${farm.remoteId}",
+                                             "commodity": "${getSiteById?.commodity ?: "Unknown Commodity"}",
                                             "farmer_name":"${
                                     farm.farmerName.split(" ").joinToString(" ")
                                 }",
@@ -247,7 +336,7 @@ fun createFileForSharing(
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                             "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
+                                             "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$longitude, $latitude]"}
                                         }
                                     }
                                     """.trimIndent()

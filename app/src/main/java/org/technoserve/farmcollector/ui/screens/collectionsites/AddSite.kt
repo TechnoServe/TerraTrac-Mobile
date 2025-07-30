@@ -12,10 +12,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,6 +56,7 @@ import androidx.navigation.NavController
 import org.joda.time.Instant
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.models.CollectionSite
+import org.technoserve.farmcollector.database.models.Commodity
 import org.technoserve.farmcollector.ui.components.FarmListHeader
 import org.technoserve.farmcollector.ui.components.SiteForm
 import org.technoserve.farmcollector.utils.isSystemInDarkTheme
@@ -77,7 +82,11 @@ fun AddSite(navController: NavController) {
             onBackClicked = { navController.popBackStack() },
             showSearch = false,
             showRestore = false,
-            onRestoreClicked = {}
+            onRestoreClicked = {},
+            isBackupEnabled = false,
+            showLastSync = false,
+            lastSyncTime="",
+            onBackupToggleClicked= {}
         )
         Spacer(modifier = Modifier.height(16.dp))
         SiteForm(navController)
@@ -92,6 +101,7 @@ fun addSite(
     email: String,
     village: String,
     district: String,
+    commodity: Commodity
 ): CollectionSite {
     val site = CollectionSite(
         name,
@@ -101,7 +111,8 @@ fun addSite(
         village,
         district,
         createdAt = Instant.now().millis,
-        updatedAt = Instant.now().millis
+        updatedAt = Instant.now().millis,
+        commodity = commodity
     )
     farmViewModel.addSite(site) { isAdded ->
         if (isAdded) {

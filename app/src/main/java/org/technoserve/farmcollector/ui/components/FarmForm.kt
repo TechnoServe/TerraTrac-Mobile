@@ -5,8 +5,14 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -35,9 +43,11 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,8 +69,13 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.maps.model.LatLngBounds
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.helpers.map.LocationHelper
+import org.technoserve.farmcollector.database.models.Commodity
+import org.technoserve.farmcollector.database.models.Farm
 import org.technoserve.farmcollector.database.models.map.LocationState
 import org.technoserve.farmcollector.viewmodels.MapViewModel
 import org.technoserve.farmcollector.utils.map.getCenterOfPolygon
@@ -69,7 +84,7 @@ import org.technoserve.farmcollector.ui.screens.farms.addFarm
 import org.technoserve.farmcollector.ui.screens.farms.formatInput
 import org.technoserve.farmcollector.ui.screens.farms.isLocationEnabled
 import org.technoserve.farmcollector.ui.screens.farms.promptEnableLocation
-import org.technoserve.farmcollector.ui.screens.farms.readStoredValue
+//import org.technoserve.farmcollector.ui.screens.farms.readStoredValue
 import org.technoserve.farmcollector.ui.screens.farms.toLatLngList
 import org.technoserve.farmcollector.ui.screens.farms.truncateToDecimalPlaces
 import org.technoserve.farmcollector.ui.screens.farms.validateNumber
@@ -86,6 +101,20 @@ import java.util.regex.Pattern
  * FarmForm.kt
  *
  */
+
+@Composable
+fun FarmCommodityText(siteId: Long,farmViewModel: FarmViewModel) {
+    print("Site ID: $siteId")
+      val siteState by farmViewModel.getSiteByIdNew(siteId).collectAsState(initial = null)
+
+    siteState?.let { site ->
+        println("Site: $site")
+        Text(text = "Commodity: ${site.commodity.displayName}")
+    } ?: Text("Loading commodity...")
+}
+
+
+
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -93,26 +122,17 @@ fun FarmForm(
     navController: NavController,
     siteId: Long,
     coordinatesData: List<Pair<Double, Double>>?,
-    accuracyArrayData: List<Float?>?
+    accuracyArrayData: List<Float?>?,
+   mapViewModel: MapViewModel
 ) {
     val context = LocalContext.current as Activity
     var isValid by remember { mutableStateOf(true) }
-    var farmerName by rememberSaveable { mutableStateOf("") }
-    var memberId by rememberSaveable { mutableStateOf("") }
-    val farmerPhoto by rememberSaveable { mutableStateOf("") }
-    var village by rememberSaveable { mutableStateOf("") }
-    var district by rememberSaveable { mutableStateOf("") }
-    var latitude by rememberSaveable { mutableStateOf("") }
-    var longitude by rememberSaveable { mutableStateOf("") }
-    var accuracyArray by rememberSaveable { mutableStateOf(listOf<Float>()) }
     val items = listOf("Ha", "Acres", "Sqm", "Timad", "Fichesa", "Manzana", "Tarea")
     var expanded by remember { mutableStateOf(false) }
     val sharedPref = context.getSharedPreferences("FarmCollector", Context.MODE_PRIVATE)
     val farmViewModel: FarmViewModel = viewModel(
         factory = FarmViewModelFactory(context.applicationContext as Application)
     )
-    val mapViewModel: MapViewModel = viewModel()
-    var size by rememberSaveable { mutableStateOf(readStoredValue(sharedPref)) }
     var selectedUnit by rememberSaveable {
         mutableStateOf(
             sharedPref.getString(
@@ -121,6 +141,44 @@ fun FarmForm(
             ) ?: items[0]
         )
     }
+    // Collect plotData from ViewModel
+    val farmData by mapViewModel.plotData.collectAsState()
+
+    // ✅ Use state variables linked to ViewModel
+    var farmerName by remember { mutableStateOf(farmData.farmerName) }
+    var memberId by remember { mutableStateOf(farmData.memberId) }
+    var farmerPhoto by remember { mutableStateOf(farmData.farmerPhoto) }
+    var village by remember { mutableStateOf(farmData.village) }
+    var district by remember { mutableStateOf(farmData.district) }
+    var coordinates by remember { mutableStateOf(farmData.coordinates) }
+    var latitude by remember { mutableStateOf(farmData.latitude) }
+    var longitude by remember { mutableStateOf(farmData.longitude) }
+    var size by remember { mutableStateOf(truncateToDecimalPlaces(farmData.size.takeIf { it != 0f }?.toString().orEmpty(), 9)) }
+    var accuracyArray by remember { mutableStateOf(farmData.accuracyArray) }
+    // Handle Back Press to Clear Form Only on Back Navigation
+    BackHandler {
+        mapViewModel.submitForm() // Clears form ONLY when the user presses back
+        navController.popBackStack() // Navigate back
+    }
+
+    // Ensure state updates when farmData changes
+    LaunchedEffect(farmData) {
+        Log.d("SITE ID", "$siteId")
+        Log.d("FarmDataChanged", "FarmData changed: $farmData")
+        farmerName = farmData.farmerName
+        memberId = farmData.memberId
+        farmerPhoto = farmData.farmerPhoto
+        village = farmData.village
+        district = farmData.district
+        coordinates = farmData.coordinates
+        latitude = farmData.latitude
+        longitude = farmData.longitude
+        size = farmData.size.toString()
+        accuracyArray = farmData.accuracyArray
+    }
+
+
+
     var isValidSize by remember { mutableStateOf(true) }
     var isFormSubmitted by remember { mutableStateOf(false) }
     val scientificNotationPattern = Pattern.compile("([+-]?\\d*\\.?\\d+)[eE][+-]?\\d+")
@@ -135,17 +193,26 @@ fun FarmForm(
     val locationHelper = LocationHelper(context)
     var locationState by remember { mutableStateOf<LocationState?>(null) }
 
+    // Add a state to track permission denial attempts
+    var permissionDenialCount by remember { mutableStateOf(0) }
+
+    // Add loading state
+    var isLoadingLocation by remember { mutableStateOf(false) }
+    // Add rememberCoroutineScope at the start of your composable
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(locationHelper) {
         locationHelper.locationState.collect { state ->
             locationState = state
         }
     }
 
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                size = sharedPref.getString("plot_size", "") ?: ""
+               size = sharedPref.getString("plot_size", "") ?: ""
                 selectedUnit = sharedPref.getString("selectedUnit", "Ha") ?: "Ha"
                 with(sharedPref.edit()) {
                     remove("plot_size")
@@ -192,6 +259,7 @@ fun FarmForm(
     }
 
     fun saveFarm() {
+        Log.d("Save Farm", " Data to save  $farmData")
         // Validate size input if the size is empty we use the default size 0
         if (size.isEmpty()) {
             size = "0.0"
@@ -201,8 +269,8 @@ fun FarmForm(
         val coordinatesSize =
             coordinatesData?.size ?: 0
         val finalAccuracyArray = when {
-            accuracyArray.isEmpty() -> emptyList()
-            coordinatesSize == 0 -> listOf(accuracyArray[0])
+            accuracyArrayData?.isEmpty() == true -> emptyList()
+            coordinatesSize == 0 -> listOf(accuracyArrayData?.get(0))
             else -> {
                 val result = accuracyArrayData!!.toMutableList()
                 if (coordinatesSize > 1) {
@@ -230,6 +298,8 @@ fun FarmForm(
         val returnIntent = Intent()
         context.setResult(Activity.RESULT_OK, returnIntent)
         navController.navigate("farmList/${siteId}")
+        // Submit the form
+        mapViewModel.submitForm() // Submits and clears the form
     }
     if (showDialog.value) {
         AlertDialog(
@@ -252,7 +322,7 @@ fun FarmForm(
                 TextButton(onClick =
                 {
                     showDialog.value = false
-                    navController.navigate("setPolygon")
+                    navController.navigate("setPolygon/$siteId")
                 }) {
                     Text(text = stringResource(id = R.string.set_polygon))
                 }
@@ -308,6 +378,11 @@ fun FarmForm(
             .padding(16.dp)
             .verticalScroll(state = scrollState)
     ) {
+        FarmCommodityText(
+            siteId = siteId,
+            farmViewModel = farmViewModel
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         TextField(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -317,6 +392,7 @@ fun FarmForm(
             value = farmerName,
             onValueChange = {
                 farmerName = it
+                mapViewModel.updatePlotData(farmerName = it)
                 isfarmerNameValid =
                     farmerName.isNotBlank() && farmerName.matches(textWithNumbersRegex)
             },
@@ -360,7 +436,9 @@ fun FarmForm(
                 onDone = { focusRequester1.requestFocus() }
             ),
             value = memberId,
-            onValueChange = { memberId = it },
+            onValueChange = { memberId = it
+                mapViewModel.updatePlotData(memberId = it)
+                },
             label = { Text(stringResource(id = R.string.member_id), color = inputLabelColor) },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.background,
@@ -386,6 +464,7 @@ fun FarmForm(
             value = village,
             onValueChange = {
                 village = it
+                mapViewModel.updatePlotData(village = it)
                 isvillageValid = village.isNotBlank() && village.matches(textWithNumbersRegex)
             },
             label = {
@@ -425,6 +504,7 @@ fun FarmForm(
             value = district,
             onValueChange = {
                 district = it
+                mapViewModel.updatePlotData(district = it)
                 isDistrictValid = district.isNotBlank() && district.matches(textWithNumbersRegex)
             },
             label = {
@@ -462,6 +542,25 @@ fun FarmForm(
         ) {
             TextField(
                 singleLine = true,
+//                value = truncateToDecimalPlaces(size, 9),
+////                value = formatInput(size.takeIf { it != "0.0" }?.toString().orEmpty()),
+//                onValueChange = { inputValue ->
+//                    val formattedValue = when {
+//                        validateSize(inputValue.takeIf { it != "0.0" }?.toString().orEmpty()) -> inputValue.takeIf { it != "0.0" }?.toString().orEmpty()
+//                        scientificNotationPattern.matcher(inputValue).matches() -> {
+//                            truncateToDecimalPlaces(formatInput(inputValue), 9)
+//                        }
+//                        else -> inputValue.takeIf { it != "0.0" }?.toString().orEmpty()
+//                    }
+//                    size = formattedValue
+//                    isValidSize = validateSize(formattedValue)
+//                    with(sharedPref.edit()) {
+//                        putString("plot_size", formattedValue)
+//                        apply()
+//                    }
+//                },
+
+
                 value = truncateToDecimalPlaces(size, 9),
                 onValueChange = { inputValue ->
                     val formattedValue = when {
@@ -674,7 +773,20 @@ fun FarmForm(
                     showLocationDialog.value = true
                 },
                 onPermissionsGranted = {
+                    // Reset denial count on successful permission grant
+                    permissionDenialCount = 0
                     showPermissionRequest.value = false
+                },
+                onPermissionsDenied = {
+                    // Optional: Additional handling for denied permissions
+                    if (permissionDenialCount > 1) {
+                        // You can add a toast or snackbar explaining why permissions are needed
+                        Toast.makeText(
+                            context,
+                            R.string.location_permission_required_for_this_feature,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 },
                 showLocationDialogNew = showLocationDialogNew,
                 hasToShowDialog = showLocationDialogNew.value
@@ -690,35 +802,57 @@ fun FarmForm(
         /**
          * Function to handle location permission and coordinate calculation
          */
-        fun handleLocationAndNavigate(size: String, selectedUnit: String) {
+
+        suspend fun handleLocationAndNavigate(size: String, selectedUnit: String) {
             val enteredSize =
                 size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+
             if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
                 val center = coordinatesData.toLatLngList().getCenterOfPolygon()
                 val bounds: LatLngBounds = center
                 latitude = roundToDecimalPlaces(bounds.northeast.longitude.toString().toDouble())
                 longitude = roundToDecimalPlaces(bounds.southwest.latitude.toString().toDouble())
             }
-            locationHelper.requestLocationPermissionAndUpdateCoordinates(
-                enteredSize = enteredSize,
-                navController = navController,
-                mapViewModel = mapViewModel,
-                onLocationResult = { newLatitude, newLongitude, accuracy ->
-                    latitude = newLatitude
-                    longitude = newLongitude
-                    accuracyArray = accuracyArray + accuracy.toFloat()
 
-                }
-            )
+            // Ensure permission request runs asynchronously
+            withContext(Dispatchers.Main) { // Runs on the UI thread
+                locationHelper.requestLocationPermissionAndUpdateCoordinates(
+                    enteredSize = enteredSize,
+                    navController = navController,
+                    mapViewModel = mapViewModel,
+                    onLocationResult = { newLatitude, newLongitude, accuracy ->
+                        latitude = newLatitude
+                        longitude = newLongitude
+                        accuracyArrayData
+                    }
+                )
+            }
         }
 
         Button(
             onClick = {
                 if (isLocationEnabled(context)) {
-                    handleLocationAndNavigate(size, selectedUnit)
+                    isLoadingLocation = true // Start loading
+                    // Wrap the location handling in a coroutine
+                    coroutineScope.launch {
+                        try {
+                            handleLocationAndNavigate(size, selectedUnit)
+                        } finally {
+                            isLoadingLocation = false // Stop loading regardless of result
+                        }
+                    }
+                } else {
+                    permissionDenialCount++
+                    if (permissionDenialCount <= 2) {
+                        showLocationDialog.value = true
+                        showPermissionRequest.value = true
+                    } else {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        val uri: Uri = Uri.fromParts("package", context.packageName, null)
+                        intent.data = uri
+                        context.startActivity(intent)
+                    }
                 }
-                else
-                    showPermissionRequest.value = true
             },
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)
@@ -726,22 +860,42 @@ fun FarmForm(
                 .fillMaxWidth(0.7f)
                 .height(50.dp)
                 .padding(bottom = 5.dp),
-            enabled = size.isNotBlank()
+            enabled = size.isNotBlank() && !isLoadingLocation // Disable button while loading
         ) {
-            val enteredSize =
-                size.toDoubleOrNull()?.let { convertSize(it, selectedUnit).toFloat() } ?: 0f
+            val enteredSize = size.toDoubleOrNull()?.let {
+                convertSize(it, selectedUnit).toFloat()
+            } ?: 0f
 
-            Text(
-                text = if (enteredSize >= 4f) {
-                    stringResource(id = R.string.set_polygon)
-                } else {
-                    stringResource(id = R.string.get_coordinates)
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isLoadingLocation) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .padding(end = 8.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 2.dp
+                    )
                 }
-            )
+                Text(
+                    text = if (isLoadingLocation) {
+                        stringResource(id = R.string.fetching_location)
+                    } else if (enteredSize >= 4f) {
+                        stringResource(id = R.string.set_polygon)
+                    } else {
+                        stringResource(id = R.string.get_coordinates)
+                    }
+                )
+            }
         }
+
+
         Button(
             onClick = {
                 isFormSubmitted = true
+
                 // Finding the center of the polygon captured
                 if (coordinatesData?.isNotEmpty() == true && latitude.isBlank() && longitude.isBlank()) {
                     val center = coordinatesData.toLatLngList().getCenterOfPolygon()
@@ -770,9 +924,4 @@ fun FarmForm(
             locationHelper.cleanup()
         }
     }
-}
-
-@Composable
-fun isTablet(): Boolean {
-    return LocalConfiguration.current.screenWidthDp > 600
 }

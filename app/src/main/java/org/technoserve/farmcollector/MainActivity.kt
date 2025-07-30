@@ -6,7 +6,10 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -26,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,12 +38,24 @@ import androidx.navigation.compose.rememberNavController
 //import androidx.navigation.navArgument
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.delay
+import org.json.JSONObject
+import org.technoserve.farmcollector.database.helpers.PreferencesManager
 import org.technoserve.farmcollector.viewmodels.AppUpdateViewModel
 //import org.technoserve.farmcollector.viewmodels.ExitConfirmationDialog
 import org.technoserve.farmcollector.viewmodels.FarmViewModel
 import org.technoserve.farmcollector.viewmodels.FarmViewModelFactory
 import org.technoserve.farmcollector.viewmodels.UpdateAlert
 import org.technoserve.farmcollector.database.helpers.map.LocationHelper
+//import org.technoserve.farmcollector.database.mappers.CoordinatesDeserializer
+import org.technoserve.farmcollector.database.models.Farm
+import org.technoserve.farmcollector.ui.components.UserGuideScreen
 import org.technoserve.farmcollector.viewmodels.MapViewModel
 import org.technoserve.farmcollector.ui.screens.farms.AddFarm
 import org.technoserve.farmcollector.ui.screens.collectionsites.AddSite
@@ -50,10 +66,18 @@ import org.technoserve.farmcollector.ui.screens.settings.ScreenWithSidebar
 import org.technoserve.farmcollector.ui.screens.map.SetPolygon
 import org.technoserve.farmcollector.ui.screens.settings.SettingsScreen
 import org.technoserve.farmcollector.ui.screens.farms.UpdateFarmForm
+import org.technoserve.farmcollector.ui.screens.map.PlotVisualizationApp
+import org.technoserve.farmcollector.ui.screens.map.WebViewPage
+import org.technoserve.farmcollector.ui.screens.map.cacheMapInBackground
 import org.technoserve.farmcollector.ui.theme.FarmCollectorTheme
 import org.technoserve.farmcollector.viewmodels.LanguageViewModel
 import org.technoserve.farmcollector.viewmodels.LanguageViewModelFactory
+import java.io.Serializable
+import java.lang.reflect.Type
+import java.time.Instant
 import java.util.Locale
+import java.util.UUID
+import org.technoserve.farmcollector.ui.screens.privacy.PrivacyPolicyScreen
 
 
 /**
@@ -69,18 +93,19 @@ import java.util.Locale
  * const val UPDATE_FARM = "updateFarm/{farmId}"
  *
  */
-
-
 object Routes {
     const val HOME = "home"
     const val SITE_LIST = "siteList"
     const val FARM_LIST = "farmList/{siteId}"
-    const val ADD_FARM = "addFarm/{siteId}"
+    const val ADD_FARM = "addFarm/{siteId}/{plotDataJson}"
     const val ADD_SITE = "addSite"
     const val UPDATE_FARM = "updateFarm/{farmId}"
-    const val SET_POLYGON = "setPolygon"
+    const val SET_POLYGON = "setPolygon/{siteId}"
     const val SETTINGS = "settings"
+    const val PRIVACY_POLICY = "privacy_policy"
 }
+
+var loadURL = "file:///android_asset/leaflet_map.html"
 
 /**
  * MainActivity is the entry point for the Android app. It sets up the navigation graph,
@@ -100,11 +125,27 @@ class MainActivity : ComponentActivity() {
         getSharedPreferences("FarmCollector", MODE_PRIVATE)
     }
 
-
     @SuppressLint("InlinedApi")
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Preload the map in the background
+        cacheMapInBackground(
+            context = this,
+            mapUrl = "file:///android_asset/leaflet_map.html"
+        )
+        // Preload the map in the background
+        cacheMapInBackground(
+            context = this,
+            mapUrl = "file:///android_asset/index.html"
+        )
+
+
+        // Enable WebView debugging
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
         locationHelper = LocationHelper(this)
 
@@ -129,51 +170,23 @@ class MainActivity : ComponentActivity() {
         // Apply language preference when the activity starts
         applyLanguagePreference()
 
+        val preferencesManager = PreferencesManager(this)
+
         setContent {
             val navController = rememberNavController()
             val context = LocalContext.current
             var canExitApp by remember { mutableStateOf(false) }
-//            var showExitToast by remember { mutableStateOf(false) }
 
             val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
             val appUpdateViewModel: AppUpdateViewModel = viewModel()
             val updateAvailable by appUpdateViewModel.updateAvailable.collectAsState()
 
-           //  var showExitDialog by remember { mutableStateOf(false) }
-
 
             // Initialize update check
             LaunchedEffect(Unit) {
                 appUpdateViewModel.initializeAppUpdateCheck(context as Activity)
             }
-
-
-//            // Handle back press
-//            BackHandler {
-//                if (canExitApp) {
-//                    // Exit the app
-//                    (context as? Activity)?.finish()
-//                } else {
-//                    showExitToast = true
-//                    canExitApp = true
-//                }
-//            }
-//
-//
-//            // Show exit toast with delay for reset
-//            if (showExitToast) {
-//                Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
-//
-//                // Delay resetting `showExitToast` and `canExitApp`
-//                LaunchedEffect(showExitToast) {
-//                    kotlinx.coroutines.delay(2000) // 2 seconds delay
-//                    showExitToast = false
-//                    canExitApp = false
-//                }
-//            }
-
-
 
             // Update Alert
             UpdateAlert(
@@ -186,15 +199,6 @@ class MainActivity : ComponentActivity() {
                     })
                 }
             )
-
-//            // Exit Confirmation
-//            ExitConfirmationDialog(
-//                showDialog = showExitDialog,
-//                onDismiss = { showExitDialog = false },
-//                onConfirm = { (context as? Activity)?.finish() }
-//            )
-
-
 
             LaunchedEffect(currentLanguage) {
                 languageViewModel.updateLocale(context = applicationContext, Locale(currentLanguage.code))
@@ -229,20 +233,8 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Routes.HOME,
                     ) {
-//                        composable(Routes.HOME) {
-//                            BackHandler(enabled = canExitApp) {
-//                                (context as? Activity)?.finish()
-//                            }
-//                            LaunchedEffect(Unit) {
-//                                canExitApp = true
-//                            }
-//                            Home(navController, languageViewModel, languages)
-//                        }
                         composable(Routes.HOME) {
-                            //val context = LocalContext.current
-                            // var canExitApp by remember { mutableStateOf(false) }
                             var showExitToast by remember { mutableStateOf(false) }
-
                             // Handle back press with confirmation
                             BackHandler {
                                 if (canExitApp) {
@@ -257,11 +249,15 @@ class MainActivity : ComponentActivity() {
                             // Show exit toast and reset the state after a delay
                             if (showExitToast) {
                                 // Show the toast
-                                Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.press_back_again),
+                                    Toast.LENGTH_SHORT
+                                ).show()
 
                                 // Reset `showExitToast` and `canExitApp` after 2 seconds
                                 LaunchedEffect(Unit) {
-                                    kotlinx.coroutines.delay(2000) // 2 seconds delay
+                                    delay(2000) // 2 seconds delay
                                     showExitToast = false
                                     canExitApp = false
                                 }
@@ -271,10 +267,25 @@ class MainActivity : ComponentActivity() {
                             Home(navController, languageViewModel, languages)
                         }
 
+                        composable("userGuideScreen"){
+                            UserGuideScreen(navController)
+                        }
+
                         composable(Routes.SITE_LIST) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
+//                            // Check if user has agreed to terms
+//                            if (preferencesManager.hasAgreedToTerms) {
+//                                ScreenWithSidebar(navController) {
+//                                    CollectionSiteList(navController)
+//                                }
+//                            } else {
+//                                // Redirect to privacy policy screen if not agreed
+//                                navController.navigate(Routes.PRIVACY_POLICY) {
+//                                    popUpTo(Routes.HOME) { inclusive = true } // Clear back stack
+//                                }
+//                            }
                             ScreenWithSidebar(navController) {
                                 CollectionSiteList(navController)
                             }
@@ -288,20 +299,42 @@ class MainActivity : ComponentActivity() {
                                 ScreenWithSidebar(navController) {
                                     FarmList(
                                         navController = navController,
-                                        siteId = siteId.toLong(),
+                                        siteId = siteId.toLong()
                                     )
                                 }
                             }
                         }
-                        composable(Routes.ADD_FARM) { backStackEntry ->
-                            val siteId = backStackEntry.arguments?.getString("siteId")
-                            LaunchedEffect(Unit) {
-                                canExitApp = false
-                            }
-                            if (siteId != null) {
-                                AddFarm(navController = navController, siteId = siteId.toLong())
-                            }
+
+
+                        composable(
+                            route = "addFarm/{siteId}?plotDataJson={plotDataJson}",
+                            arguments = listOf(
+                                navArgument("siteId") { type = NavType.LongType },
+                                navArgument("plotDataJson") {
+                                    type =
+                                        NavType.StringType
+                                    nullable = true
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val siteId = backStackEntry.arguments?.getLong("siteId") ?: 0L
+                            val plotDataJson = backStackEntry.arguments?.getString("plotDataJson") ?:""
+                            Log.d("Navigation", "Received siteId: $siteId, plotDataJson: $plotDataJson")
+                            Log.d("Navigation", "Received siteId: $siteId, plotDataJson: $plotDataJson")
+
+                            val plotData: Farm? = if (plotDataJson.isNotEmpty()) {
+                                try {
+                                    val gson = Gson()
+                                    gson.fromJson(plotDataJson, Farm::class.java)
+                                } catch (e: Exception) {
+                                    Log.e("Navigation", "Error deserializing plot data: ${e.message}")
+                                    null
+                                }
+                            } else null
+
+                            AddFarm(navController = navController, siteId = siteId, plotData = plotData, mapViewModel=viewModel)
                         }
+
                         composable(Routes.ADD_SITE) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
@@ -324,15 +357,19 @@ class MainActivity : ComponentActivity() {
 
                         composable(Routes.SET_POLYGON,
                             arguments = listOf(
+                                navArgument("siteId") { type = NavType.LongType },
                                 navArgument("coordinates") { type = NavType.StringType },
                                 navArgument("accuracyArray") { type = NavType.StringType }
                             )
                         ) { backStackEntry ->
+                            val siteId = backStackEntry.arguments?.getLong("siteId") ?: 0L
                             LaunchedEffect(Unit) {
                                 canExitApp = false
                             }
-                            SetPolygon(navController, viewModel)
+                            PlotVisualizationApp(navController, viewModel,siteId,languageViewModel)
                         }
+
+
                         composable(Routes.SETTINGS) {
                             LaunchedEffect(Unit) {
                                 canExitApp = false
@@ -343,6 +380,15 @@ class MainActivity : ComponentActivity() {
                                 languageViewModel,
                                 languages,
                             )
+                        }
+
+                        composable(Routes.PRIVACY_POLICY) {
+                            PrivacyPolicyScreen(BuildConfig.DATA_PRIVACY_URL, onAgree = {
+                                navController.navigate(Routes.ADD_SITE) {
+                                    popUpTo(Routes.HOME) { inclusive = true } // Optional: clear back stack
+                                }
+
+                            })
                         }
                     }
                 }

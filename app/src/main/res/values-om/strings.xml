@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">Daataan walitti fufaa jira…</string>
     <string name="sync_service_channel_id">sinkii_tajaajila_kaanaalii</string>
     <string name="sync_complete">Sinkii Xumurameera</string>
-    <string name="successfully_syncronized">Lafotuun milkiidhaan sirriitti seerveratti walfudhateera.</string>
+    <string name="successfully_syncronized">Datalawwan qonnaa milkaa’inaan deeggaramanii jiru.</string>
     <string name="sync_channel_name">Kaanaalii Sinkii</string>
     <string name="sync_channel_description">Kaanaalii beeksisa sinkii tajaajilu</string>
     <string name="sync_channel_id">sinkii_kaanaalii_id</string>
@@ -155,7 +155,7 @@
     <string name="restore_data">Odeeffannoo Deebi\'aa</string>
     <string name="restoration_error">Odeeffannoo deebi\'uu hin dandeenye: %1$s</string>
     <string name="sync_failed">Sinksii kufaatee</string>
-    <string name="syncronization_failed">Daataa Fardeen Sinksii Saffisa waliin galchuu hin danda\'amne</string>
+    <string name="syncronization_failed">Datalawwan qonnaa deeggeruun hin milkoofne.</string>
 
     <string name="update_polygon">Poligoonii Haaromsuu?</string>
     <string name="keep_existing_polygon_or_capture_new">Poligoonii jiru qabachuuf moo haaraa qabsiisuuf?</string>
@@ -178,6 +178,44 @@
     <string name="total_farms_with_incomplete_data">%1$d odeeffannoo hin guutamne waliin</string>
     <string name="error_loading_more_sites">Bakkaa dabalataa fe’uuf dogoggora</string>
 
+    <string name="press_back_again">Dubbii duubatti deebi’aa ba’uu</string>
+    <string name="permission_required">Hayyama Barbaachisa</string>
+    <string name="go_to_settings_msg">Hayyama bakka argachuu idilee dhoorkiteetta. Maaloo gara settings deemi itti dabaluu.</string>
+    <string name="map_tiles_cached">Kaartaan fayyadamaa milkaa’inaan kuufame.</string>
+    <string name="unable_to_get_location">Iddoo argachuu hin dandeenye. Kuufama kaartaa dhiisame.</string>
+    <string name="no_internet">Toora interneetii hin jiru. Kuufama kaartaa dhiisame.</string>
+    <string name="include_farmer_names_title">Maqaa qonnaan bultoota dabaluu?</string>
+    <string name="include_farmer_names_text">Maqaa qonnaan bultoota erguuf dabaluuf barbaadaa?</string>
 
+    <string name="back">Gadi Deebi’i</string>
+    <string name="last_synced">Waggaa Dhuma Simimne:</string>
+    <string name="backup_now">Kuusdeebi’aa</string>
+    <string name="restore">Deebisi</string>
+    <string name="share">Qooduu</string>
+    <string name="import_">Galeessa</string>
+    <string name="enable_backup_title">Kuusdeebi’aa bana?</string>
+    <string name="disable_backup_title">Kuusdeebi’aa cufaa?</string>
+    <string name="proceed_question">Sii deemsaa?</string>
+    <string name="enable_data_backup_title">Kuusdeebi’aa bana?</string>
+    <string name="enable_backup_message">Deebisaa haalaa gochuun, yommuu walqunnaamtii interneetii argattu, odeeffannoo kee sirriitti tajaajilaa irratti kuusa. Kun yoo meeshaan kee badaa, manca’a yookaan haaraa ta’ee, deebisuu akka dandeessu siif mirkaneessa. Itti fufuu barbaaddaa?</string>
+    <string name="disable_backup_message">Deebisaa haalaa gochuu dhiisuu, yeroo interneetiin jiru, odeeffannoo kee tajaajilaa irratti otuu hin kuufamin hambisa. Odeeffannoon duraan kuufamee ture deebisuu ni danda’ama, garuu jijjiirraan haaraan hin kuufamu. Itti fufuu barbaaddaa?</string>
+
+    <string name="enable_backup">Kuusdeebi’aa bana</string>
+    <string name="disable_backup">Kuusdeebi’aa cufaa</string>
+    <string name="location_permission_required_for_this_feature">Ijaarsa kana fayyadamuuf eeyyama iddoo barbaachisa</string>
+    <string name="fetching_location">Bakka argachaa jira…</string>
+
+    <string name="user_guide_title">Qajeelfama Fayyadamtootaa</string>
+    <string name="welcome_message">
+        Baga nagaan dhufte! Qajeelfamni kun muuxannoo gabaabaa amaloota fi tajaajiloota app kanaa ibsa. Qajeelfama guutuu argachuuf, galmee guutuu assets irraa buufadhaa.
+    </string>
+    <string name="download_user_guide">Qajeelfama Fayyadamtootaa Buufadhu</string>
+    <string name="download_success">Qajeelfamni Fayyadamtootaa milkaa’inaan buufameera.</string>
+    <string name="download_failed">Buufachuun hin milkoofne: %1$s</string>
+    <string name="no_location_selected">Bakki filatame hin jiru.</string>
+
+    <string name="accept_privacy_policy">Heera dhuunfaa keenya </string>
+    <string name="privacy_policy_link_text">fudhachiisaa</string>
+    <string name="please_accept_privacy_policy">Itti fufuu dura heera dhuunfaa fudhachuu qabda.</string>
 
 </resources>

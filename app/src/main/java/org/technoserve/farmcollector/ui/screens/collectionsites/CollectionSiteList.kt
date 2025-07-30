@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -27,11 +28,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -54,8 +57,12 @@ import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.technoserve.farmcollector.R
 import org.technoserve.farmcollector.database.models.CollectionSite
+import org.technoserve.farmcollector.database.models.Commodity
+import org.technoserve.farmcollector.database.models.Farm
+import org.technoserve.farmcollector.ui.components.BackupConfirmationDialog
 import org.technoserve.farmcollector.ui.components.CustomPaginationControls
 import org.technoserve.farmcollector.ui.components.FarmListHeader
 import org.technoserve.farmcollector.ui.components.RestoreDataAlert
@@ -65,9 +72,9 @@ import org.technoserve.farmcollector.ui.components.SkeletonSiteCard
 import org.technoserve.farmcollector.viewmodels.FarmViewModel
 import org.technoserve.farmcollector.viewmodels.FarmViewModelFactory
 import org.technoserve.farmcollector.viewmodels.RestoreStatus
-import org.technoserve.farmcollector.viewmodels.UndoDeleteSnackbar
 import org.technoserve.farmcollector.utils.DeviceIdUtil
 import org.technoserve.farmcollector.ui.composes.isValidPhoneNumber
+import org.technoserve.farmcollector.utils.BackupPreferences
 import org.technoserve.farmcollector.utils.isSystemInDarkTheme
 
 
@@ -112,7 +119,7 @@ fun CollectionSiteList(navController: NavController) {
     var showFinalMessage by remember { mutableStateOf(false) }
 
     val isDarkTheme = isSystemInDarkTheme()
-    val inputLabelColor = if (isDarkTheme) Color.LightGray else Color.DarkGray
+    val inputLabelColor = if (isDarkTheme) Color.White else Color.Black
     val inputTextColor = if (isDarkTheme) Color.White else Color.Black
     val inputBorder = if (isDarkTheme) Color.LightGray else Color.DarkGray
 
@@ -137,6 +144,21 @@ fun CollectionSiteList(navController: NavController) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val coroutineScope = rememberCoroutineScope()
+
+    //  Observe backup state
+    val isBackupEnabled by BackupPreferences.isBackupEnabled(context).collectAsState(initial = false)
+
+    //  Observe last sync time
+    val lastSyncTime by BackupPreferences.getLastBackupTime(context).collectAsState(initial = "Never")
+
+    //  Boolean state to control if Last Sync Time is shown
+    var showLastSync by remember { mutableStateOf(true) } // Default is true, can be toggled
+
+    //  State for Confirmation Dialog
+    var showDialog by remember { mutableStateOf(false) }
+    var pendingBackupState by remember { mutableStateOf(isBackupEnabled) }
+
 
 
     LaunchedEffect(Unit) {
@@ -159,20 +181,14 @@ fun CollectionSiteList(navController: NavController) {
                 showSearch = true,
                 showRestore = true,
                 onRestoreClicked = {
-//                    farmViewModel.restoreData(
-//                        deviceId = deviceId,
-//                        phoneNumber = "",
-//                        email = "",
-//                        farmViewModel = farmViewModel
-//                    ) { success ->
-//                        if (success) {
-//                            finalMessage = context.getString(R.string.data_restored_successfully)
-//                        } else {
-//                            showFinalMessage = true
-//                            showRestorePrompt = true
-//                        }
-//                    }
                     showRestoreAlert = true
+                },
+                isBackupEnabled = isBackupEnabled, //  Pass backup state
+                showLastSync = showLastSync, //  Boolean to toggle visibility
+                lastSyncTime = lastSyncTime, //  Pass last sync timestamp
+                onBackupToggleClicked = { newState ->
+                    pendingBackupState = newState // Store user's choice before confirmation
+                    showDialog = true // Show confirmation dialog
                 }
             )
         },
@@ -219,23 +235,29 @@ fun CollectionSiteList(navController: NavController) {
                 }
 
                 // Restore Alert Dialog
-                // Show restore alert dialog
                 RestoreDataAlert(
                     showDialog = showRestoreAlert,
                     onDismiss = { showRestoreAlert = false },
                     deviceId = deviceId,
                     farmViewModel = farmViewModel
                 )
-//
-//                // Undo Delete Snackbar
-//                UndoDeleteSnackbar(
-//                    show = showUndoSnackbar,
-//                    onDismiss = { showUndoSnackbar = false },
-//                    onUndo = {
-//                        // Implement undo logic here
-//                        showUndoSnackbar = false
-//                    }
-//                )
+
+                //  Show Confirmation Dialog when toggling backup
+                if (showDialog) {
+                    BackupConfirmationDialog(
+                        isEnablingBackup = pendingBackupState,
+                        onConfirm = {
+                            coroutineScope.launch {
+                                BackupPreferences.setBackupEnabled(context, pendingBackupState) // Save choice
+                                if (pendingBackupState) {
+                                    BackupPreferences.setLastBackupTime(context) // Update sync time
+                                }
+                            }
+                            showDialog = false
+                        },
+                        onCancel = { showDialog = false }
+                    )
+                }
 
                 when {
                     pagedData.loadState.refresh is LoadState.Loading -> {
@@ -535,7 +557,6 @@ fun CollectionSiteList(navController: NavController) {
     }
 
     if (showDeleteDialog.value) {
-       // SiteDeleteAllDialogPresenter(showDeleteDialog, onProceedFn = { onDelete() })
 
         selectedSite.value?.let {
             SiteDeleteAllDialogPresenter(
@@ -545,7 +566,6 @@ fun CollectionSiteList(navController: NavController) {
                 snackbarHostState = snackbarHostState,
                 onProceedFn = {
                     farmViewModel.deleteListSite(selectedIds)
-                    // Show the undo snackbar
                 },
                 showUndoSnackbar = showUndoSnackbar
 

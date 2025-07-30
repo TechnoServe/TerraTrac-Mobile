@@ -4,6 +4,7 @@ import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.technoserve.farmcollector.database.dao.FarmDAO
 import org.technoserve.farmcollector.database.models.CollectionSite
@@ -38,7 +39,10 @@ class FarmRepository(private val farmDAO: FarmDAO) {
     fun readAllFarmsSync(siteId: Long): List<Farm> {
         return farmDAO.getAllSync(siteId)
     }
-
+    // GET SITE BY SITE ID
+    fun getSiteByIdNew(siteId: Long): Flow<CollectionSite?> {
+        return farmDAO.getSiteByIdNew(siteId)
+    }
     suspend fun addFarm(farm: Farm) {
         try {
             farmDAO.getCollectionSiteById(farm.siteId)

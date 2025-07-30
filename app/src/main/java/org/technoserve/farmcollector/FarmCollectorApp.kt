@@ -10,46 +10,63 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import org.technoserve.farmcollector.database.helpers.ContextProvider
 import org.technoserve.farmcollector.database.sync.SyncWorker
+import org.technoserve.farmcollector.utils.BackupPreferences
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 /**
  *
  * This class initializes WorkManager and sets up a periodic sync job to fetch and update data from the server.
  *
  */
 
-//class FarmCollectorApp : Application(), Configuration.Provider {
-class FarmCollectorApp : Application(){
+class FarmCollectorApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
         ContextProvider.initialize(this)
-        initializeWorkManager()
+        observeBackupPreference() // colors Start observing backup setting
     }
 
+    /**
+     * colors Observe user's backup setting and enable WorkManager only when backup is ON
+     */
+    private fun observeBackupPreference() {
+        val isBackupEnabled = runBlocking { BackupPreferences.isBackupEnabled(this@FarmCollectorApp).first() }
+
+        if (isBackupEnabled) {
+            initializeWorkManager() // colors Start WorkManager if backup is enabled
+        } else {
+            cancelWorkManager() // colors Stop WorkManager if backup is disabled
+        }
+    }
+
+    /**
+     * colors Initialize WorkManager when backup is enabled
+     */
     private fun initializeWorkManager() {
-        // Build the constraints for the work
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED) // Requires a connected network
+            .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        // Create the periodic work request
         val workRequest = PeriodicWorkRequestBuilder<SyncWorker>(2, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .build()
 
-        // Enqueue the periodic work with a unique name to avoid duplicate schedules
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "sync_work_tag", // Unique name for the work
-            ExistingPeriodicWorkPolicy.UPDATE, // Replace if already exists
+            "sync_work_tag",
+            ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
 
-        Log.d("WorkManager", "WorkManager is initialized successfully")
+        Log.d("WorkManager", "WorkManager started because backup is enabled")
     }
 
-//    // Provide the WorkManager configuration
-//    override val workManagerConfiguration: Configuration
-//        get() = Configuration.Builder()
-//            .setMinimumLoggingLevel(Log.DEBUG) // Set logging level
-//            .build()
+    /**
+     * colors Cancel WorkManager when backup is disabled
+     */
+    private fun cancelWorkManager() {
+        WorkManager.getInstance(this).cancelUniqueWork("sync_work_tag")
+        Log.d("WorkManager", "WorkManager canceled because backup is disabled")
+    }
 }

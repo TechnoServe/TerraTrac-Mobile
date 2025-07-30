@@ -69,6 +69,7 @@ fun SiteCard(
     val showDeleteDialog = remember { mutableStateOf(false) }
     val showUndoSnackbar = remember { mutableStateOf(false) }
 
+
     // Handle the delete dialog and undo snackbar
     SiteDeleteAllDialogPresenter(
         showDeleteDialog = showDeleteDialog,

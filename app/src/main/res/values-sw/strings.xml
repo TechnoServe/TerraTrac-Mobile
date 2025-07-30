@@ -142,7 +142,7 @@
     <string name="sync_service_notification_text">Inasawazisha data…</string>
     <string name="sync_service_channel_id">usawazishaji_huduma_kanali</string>
     <string name="sync_complete">Usawazishaji Umekamilika</string>
-    <string name="successfully_syncronized">Mashamba yamesawazishwa kwa mafanikio na seva.</string>
+    <string name="successfully_syncronized">Data za mashamba zimehifadhiwa nakala kwa mafanikio.</string>
     <string name="sync_channel_name">Kanali ya Usawazishaji</string>
     <string name="sync_channel_description">Kanali kwa taarifa za usawazishaji</string>
     <string name="sync_channel_id">kanali_usawazishaji_id</string>
@@ -155,7 +155,7 @@
     <string name="restore_data">Rejesha Data</string>
     <string name="restoration_error">Imeshindwa kurejesha data: %1$s</string>
     <string name="sync_failed">Usawazishaji Umeshindwa</string>
-    <string name="syncronization_failed">Imeshindwa kusawazisha Data za Mashamba na seva</string>
+    <string name="syncronization_failed">Imeshindwa kuhifadhi nakala za data za mashamba.</string>
 
     <string name="update_polygon">Sasisha Poligoni?</string>
     <string name="keep_existing_polygon_or_capture_new">Je, ungependa kuweka poligoni iliyopo au kunasa mpya?</string>
@@ -179,8 +179,43 @@
     <string name="error_loading_more_sites">Hitilafu katika kupakia tovuti zaidi</string>
 
 
+    <string name="press_back_again">Bonyeza nyuma tena ili utoke</string>
+    <string name="permission_required">Ruhusa Inahitajika</string>
+    <string name="go_to_settings_msg">Umezuia ruhusa ya eneo kabisa. Tafadhali nenda kwenye mipangilio ili kuiwezesha.</string>
+    <string name="map_tiles_cached">Vigae vya ramani vimehifadhiwa kwenye kache kwa mafanikio.</string>
+    <string name="unable_to_get_location">Imeshindikana kupata eneo. Uhifadhi wa ramani umepitwa.</string>
+    <string name="no_internet">Hakuna muunganisho wa intaneti. Uhifadhi wa ramani umepitwa.</string>
+    <string name="include_farmer_names_title">Je, ujumuishwe majina ya wakulima?</string>
+    <string name="include_farmer_names_text">Je, unataka kujumuisha majina ya wakulima katika usafirishaji wa data?</string>
 
+    <string name="back">Rudi</string>
+    <string name="last_synced">Mwisho kusawazishwa:</string>
+    <string name="backup_now">Hifadhi</string>
+    <string name="restore">Rejesha</string>
+    <string name="share">Shiriki</string>
+    <string name="import_">Ingiza</string>
+    <string name="enable_backup_title">Washa chelezo?</string>
+    <string name="disable_backup_title">Zima chelezo?</string>
+    <string name="proceed_question">Je, unataka kuendelea?</string>
+    <string name="enable_data_backup_title">Washa chelezo cha data?</string>
+    <string name="enable_backup_message">Kuwasha chelezo huhifadhi data yako salama kwenye seva kila wakati unapo kuwa na muunganisho wa intaneti. Hii inahakikisha kuwa unaweza kuirejesha ikiwa kifaa chako kitapotea, kuharibika, au kurejeshwa upya. Je, unataka kuendelea?</string>
+    <string name="disable_backup_message">Kuzima chelezo kutazuia kuhifadhi data yako moja kwa moja kwenye seva wakati kuna muunganisho wa intaneti. Data zilizochelezwa hapo awali zitaendelea kupatikana kwa urejeshaji, lakini mabadiliko mapya hayatahifadhiwa. Je, unataka kuendelea?</string>
 
+    <string name="enable_backup">Washa chelezo</string>
+    <string name="disable_backup">Zima chelezo</string>
+    <string name="location_permission_required_for_this_feature">Ruhusa ya mahali inahitajika kwa kipengele hiki</string>
+    <string name="fetching_location">Inapata eneo…</string>
 
+    <string name="user_guide_title">Mwongozo wa Mtumiaji</string>
+    <string name="welcome_message">
+        Karibu kwenye Mwongozo wa Mtumiaji! Mwongozo huu unatoa muhtasari wa vipengele na utendaji wa programu. Kwa maelekezo kamili, pakua mwongozo kamili kutoka rasilimali zetu.
+    </string>
+    <string name="download_user_guide">Pakua Mwongozo wa Mtumiaji</string>
+    <string name="download_success">Mwongozo wa Mtumiaji umefanikiwa kupakuliwa.</string>
+    <string name="download_failed">Pakua imeshindwa: %1$s</string>
+    <string name="no_location_selected">Hakuna eneo lililochaguliwa.</string>
+    <string name="accept_privacy_policy">Kubali </string>
+    <string name="privacy_policy_link_text">sera zetu za faragha ya data</string>
+    <string name="please_accept_privacy_policy">Tafadhali kubali sera ya faragha ili kuendelea.</string>
 
 </resources>

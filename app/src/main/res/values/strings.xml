@@ -141,7 +141,7 @@
     <string name="sync_service_notification_text">Syncing data…</string>
     <string name="sync_service_channel_id">sync_service_channel</string>
     <string name="sync_complete">Sync Complete</string>
-    <string name="successfully_syncronized">Farms have been successfully synchronized with the server.</string>
+    <string name="successfully_syncronized">Farms data have been backed up successfully. </string>
     <string name="sync_channel_name">Sync Channel</string>
     <string name="sync_channel_description">Channel for sync notifications</string>
     <string name="sync_channel_id">sync_channel_id</string>
@@ -153,7 +153,7 @@
     <string name="restore_data">Restore Data</string>
     <string name="restoration_error">Failed to restore data: %1$s</string>
     <string name="sync_failed">Sync Failed</string>
-    <string name="syncronization_failed">Failed to synchronize Farms Data with the server</string>
+    <string name="syncronization_failed">Failed to backup the Farms data.</string>
 
     <string name="update_polygon">Update Polygon?"</string>
     <string name="keep_existing_polygon_or_capture_new">Would you like to keep the existing polygon or capture a new one?</string>
@@ -173,6 +173,47 @@
     <string name="total_farms">%1$d total farms</string>
     <string name="total_farms_with_incomplete_data">%1$d with incomplete data</string>
     <string name="error_loading_more_sites">Error Loading More Sites</string>
+    <string name="press_back_again">Press back again to exit</string>
+
+    <string name="permission_required">Permission Required</string>
+    <string name="go_to_settings_msg">You have permanently denied location permission. Please go to settings to enable it.</string>
+    <string name="map_tiles_cached">Map tiles cached successfully.</string>
+    <string name="unable_to_get_location">Unable to get location. Map caching skipped.</string>
+    <string name="no_internet">No internet connection. Map caching skipped.</string>
+    <string name="include_farmer_names_title">Include Farmer Names?</string>
+    <string name="include_farmer_names_text">Do you want to include farmer names in the export?</string>
+
+    <string name="back">Back</string>
+    <string name="last_synced">Last Synced:</string>
+    <string name="backup_now">Backup</string>
+    <string name="restore">Restore</string>
+    <string name="share">Share</string>
+    <string name="import_">Import</string>
+
+    <string name="enable_backup_title">Enable Backup?</string>
+    <string name="disable_backup_title">Disable Backup?</string>
+    <string name="proceed_question">Do you want to proceed?</string>
+    <string name="enable_data_backup_title">Enable Data Backup?</string>
+    <string name="enable_backup_message">Enabling backup securely stores your data on the server whenever an internet connection is available. This ensures you can restore it if your device is lost, damaged, or reset. Do you want to proceed?</string>
+    <string name="disable_backup_message">Disabling backup will stop automatically saving your data on the server when an internet connection is available. Any previously backed-up data will remain accessible for restoration, but new changes won\'t be saved. Do you want to proceed?.</string>
+<!--    <string name="backup_prompt_message">Enabling backup securely stores your data on the server whenever an internet connection is available. This ensures you can restore it if your device is lost, damaged, or reset. Do you want to proceed?</string>-->
+<!--    <string name="backup_disable_warning">Disabling backup will stop automatically saving your data on the server when an internet connection is available. Any previously backed-up data will remain accessible for restoration, but new changes won\'t be saved. Do you want to proceed?</string>-->
+    <string name="enable_backup">Enable Backup</string>
+    <string name="disable_backup">Disable Backup</string>
+    <string name="location_permission_required_for_this_feature">Location permissions are required for this feature</string>
+    <string name="fetching_location">Fetching location…</string>
+
+    <string name="user_guide_title">User Guide</string>
+    <string name="welcome_message">
+        Welcome to the User Guide! This guide provides a brief overview of the app\'s features and functionalities. For detailed instructions, download the complete guide from our assets.
+    </string>
+    <string name="download_user_guide">Download User Guide</string>
+    <string name="download_success">User Guide downloaded successfully.</string>
+    <string name="download_failed">Download failed: %1$s</string>
+    <string name="no_location_selected">No location selected.</string>
+    <string name="accept_privacy_policy">Accept our </string>
+    <string name="privacy_policy_link_text">data privacy policies</string>
+    <string name="please_accept_privacy_policy">Please accept the privacy policy to continue.</string>
 
 
 </resources>

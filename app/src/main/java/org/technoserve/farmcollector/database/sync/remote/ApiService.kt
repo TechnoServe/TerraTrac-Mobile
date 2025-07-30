@@ -1,10 +1,14 @@
 package org.technoserve.farmcollector.database.sync.remote
 
+import okhttp3.ResponseBody
 import org.technoserve.farmcollector.database.models.DeviceFarmDto
 import org.technoserve.farmcollector.database.models.FarmRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 /**
  *  this is the  implementation of the API interface that will be used to connect to the device farm server TO sync the farm plots to remote server
@@ -26,4 +30,9 @@ interface ApiService {
 
     @POST("/api/farm/restore/")
     suspend fun getFarmsByDeviceId(@Body request: FarmRequest): List<Any>
+
+    // Use the @Url parameter to pass the full URL of the PDF file.
+    @Streaming
+    @GET
+    suspend fun downloadUserGuide(@Url fileUrl: String): Response<ResponseBody>
 }
