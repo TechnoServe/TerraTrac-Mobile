@@ -172,7 +172,7 @@ fun createFile(
                                             },
                                             "geometry": {
                                                 "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                                 "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
+                                                 "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$longitude, $latitude]"}
                                             }
                                         }
                                         """.trimIndent()
@@ -336,7 +336,7 @@ fun createFileForSharing(
                                         },
                                         "geometry": {
                                             "type": "${if ((farm.coordinates?.size ?: 0) > 1) "Polygon" else "Point"}",
-                                             "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$latitude, $longitude]"}
+                                             "coordinates": ${if ((farm.coordinates?.size ?: 0) > 1) "[$geoJsonCoordinates]" else "[$longitude, $latitude]"}
                                         }
                                     }
                                     """.trimIndent()
