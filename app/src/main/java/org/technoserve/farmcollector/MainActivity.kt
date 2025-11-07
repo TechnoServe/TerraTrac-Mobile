@@ -14,10 +14,13 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -128,6 +131,10 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("InlinedApi")
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // Enable edge-to-edge BEFORE setContent
+        enableEdgeToEdge()
+
         super.onCreate(savedInstanceState)
 
         // Preload the map in the background
@@ -218,10 +225,14 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(true) {
                     multiplePermissionsState.launchMultiplePermissionRequest()
                 }
-                Surface(
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colorScheme.background,
+//                ) {
+                Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
+                    containerColor = MaterialTheme.colorScheme.background,
+                ) { innerPadding ->
 //                    val languages = getLocalizedLanguages(applicationContext)
                     val languages = languageViewModel.languages
                     val farmViewModel: FarmViewModel =
@@ -232,6 +243,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = Routes.HOME,
+                        modifier = Modifier.padding(innerPadding)
                     ) {
                         composable(Routes.HOME) {
                             var showExitToast by remember { mutableStateOf(false) }
